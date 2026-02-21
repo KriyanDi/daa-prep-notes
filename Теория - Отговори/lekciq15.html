@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лекция 15 — SAT и Теоремата на Cook. NP-пълни редукции | ДАА 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #1a1d27; --bg3: #242838;
+    --accent: #4f8ef7; --accent2: #7c5cbf; --green: #2ecc71;
+    --yellow: #f39c12; --red: #e74c3c; --text: #e8eaf0;
+    --text2: #9ca3af; --border: #2d3148;
+    --def-bg: #0d2137; --def-border: #1e5799;
+    --ex-bg: #0d2d1a; --ex-border: #1e7d3e;
+    --key-bg: #2d2100; --key-border: #7d5c00;
+    --code-bg: #141822;
+  }
+  [data-theme="light"] {
+    --bg: #f0f2f8; --bg2: #ffffff; --bg3: #e8ecf5;
+    --accent: #2563eb; --accent2: #7c3aed; --green: #16a34a;
+    --yellow: #d97706; --red: #dc2626; --text: #1e293b;
+    --text2: #64748b; --border: #cbd5e1;
+    --def-bg: #eff6ff; --def-border: #3b82f6;
+    --ex-bg: #f0fdf4; --ex-border: #22c55e;
+    --key-bg: #fffbeb; --key-border: #f59e0b;
+    --code-bg: #1e293b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  #layout { display: flex; min-height: 100vh; }
+  #sidebar {
+    width: 280px; background: var(--bg2); border-right: 1px solid var(--border);
+    position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto;
+    transition: transform 0.3s; z-index: 100; padding: 20px 0;
+  }
+  #sidebar h2 { color: var(--accent); font-size: 0.85rem; text-transform: uppercase;
+    letter-spacing: 1px; padding: 0 20px 10px; border-bottom: 1px solid var(--border); }
+  #sidebar ul { list-style: none; padding: 10px 0; }
+  #sidebar li a { display: block; padding: 8px 20px; color: var(--text2); text-decoration: none;
+    font-size: 0.88rem; border-left: 3px solid transparent; transition: all 0.2s; }
+  #sidebar li a:hover, #sidebar li a.active { color: var(--accent); border-left-color: var(--accent);
+    background: rgba(79,142,247,0.08); }
+  #main { margin-left: 280px; flex: 1; padding: 40px; max-width: 1000px; }
+  #topbar { position: sticky; top: 0; background: var(--bg2); border-bottom: 1px solid var(--border);
+    z-index: 50; display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 40px; margin: -40px -40px 40px; }
+  #topbar h1 { font-size: 1.1rem; color: var(--accent); }
+  .btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text); cursor: pointer; font-size: 0.85rem; }
+  .btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  #progress-wrap { background: var(--bg3); border-radius: 8px; padding: 16px 20px;
+    margin-bottom: 32px; border: 1px solid var(--border); }
+  #progress-wrap h3 { font-size: 0.9rem; color: var(--text2); margin-bottom: 10px; }
+  #progress-bar-outer { background: var(--bg); border-radius: 99px; height: 8px; overflow: hidden; }
+  #progress-bar-inner { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 99px; transition: width 0.5s; }
+  #progress-label { font-size: 0.85rem; color: var(--text2); margin-top: 6px; }
+  .topic { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 40px; overflow: hidden; scroll-margin-top: 80px; }
+  .topic-header { padding: 20px 24px; background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: space-between; }
+  .topic-header h2 { color: white; font-size: 1.15rem; }
+  .topic-num { background: rgba(255,255,255,0.2); color: white; border-radius: 50%;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .topic-body { padding: 24px; }
+  .card { border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .card.def { background: var(--def-bg); border-left: 4px solid var(--def-border); }
+  .card.def .card-label { color: var(--accent); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.ex { background: var(--ex-bg); border-left: 4px solid var(--ex-border); }
+  .card.ex .card-label { color: var(--green); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.key { background: var(--key-bg); border-left: 4px solid var(--key-border); }
+  .card.key .card-label { color: var(--yellow); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.warn { background: rgba(231,76,60,0.07); border-left: 4px solid var(--red); }
+  .card.warn .card-label { color: var(--red); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .sec-h { font-size: 0.95rem; font-weight: 700; color: var(--accent); margin: 20px 0 8px;
+    display: flex; align-items: center; gap: 8px; }
+  .sec-h::before { content: ''; display: inline-block; width: 3px; height: 16px;
+    background: var(--accent); border-radius: 2px; }
+  pre { background: var(--code-bg); color: #cdd6f4; border-radius: 8px; padding: 16px 20px;
+    overflow-x: auto; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem;
+    line-height: 1.6; margin: 12px 0; border: 1px solid var(--border); }
+  code { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem; }
+  .kw { color: #cba6f7; } .cm { color: #6c7086; font-style: italic; }
+  .viz { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 20px; font-family: monospace; font-size: 0.85rem; color: #cdd6f4;
+    white-space: pre; overflow-x: auto; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+  th { background: var(--bg3); color: var(--accent); padding: 10px 12px; text-align: left;
+    border-bottom: 2px solid var(--accent); }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: rgba(79,142,247,0.05); }
+  ul.bullet { list-style: none; padding: 0; }
+  ul.bullet li { padding: 6px 0 6px 24px; position: relative; }
+  ul.bullet li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+  .exam-box { background: linear-gradient(135deg, rgba(231,76,60,0.1), rgba(231,76,60,0.05));
+    border: 1px solid var(--red); border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .exam-box .card-label { color: var(--red); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .conn-box { background: rgba(124,92,191,0.1); border: 1px solid var(--accent2);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .conn-box .card-label { color: var(--accent2); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .thm { background: rgba(79,142,247,0.07); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+  .thm-title { color: var(--accent); font-weight: 700; margin-bottom: 8px; }
+  .gadget { background: var(--bg3); border: 2px dashed var(--accent2); border-radius: 8px;
+    padding: 16px; margin: 12px 0; font-family: monospace; font-size: 0.82rem; color: #cdd6f4; }
+  .gadget-title { color: var(--accent2); font-weight: 700; margin-bottom: 8px; font-size: 0.85rem; }
+  p { margin: 10px 0; }
+  b, strong { color: var(--accent); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  .chain-box { background: var(--bg3); border: 2px solid var(--green); border-radius: 8px;
+    padding: 16px 20px; margin: 16px 0; text-align: center; font-family: monospace; font-size: 0.9rem; }
+  @media (max-width: 768px) {
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; padding: 20px; }
+    #topbar { padding: 12px 20px; margin: -20px -20px 20px; }
+  }
+</style>
+</head>
+<body data-theme="dark">
+<div id="layout">
+<nav id="sidebar">
+  <h2>Лекция 15 — Навигация</h2>
+  <ul>
+    <li><a href="#t1">Булеви формули и удовлетворимост</a></li>
+    <li><a href="#t2">SAT — Изч. Задача 65</a></li>
+    <li><a href="#t3">Теорема на Cook (Теорема 135)</a></li>
+    <li><a href="#t4">Теорема 136 — Инструментът</a></li>
+    <li><a href="#t5">Редукция 10: SAT ≤p 3SAT</a></li>
+    <li><a href="#t6">Редукция 14: 3SAT ≤p Vertex Cover</a></li>
+    <li><a href="#t7">Редукции 15, 16, 17</a></li>
+    <li><a href="#t8">Верига от редукции</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+  <div id="topbar">
+    <h1>ДАА 2026 — Лекция 15+16: SAT, Теорема на Cook, NP-пълни редукции</h1>
+    <button class="btn" onclick="toggleTheme()">Тема</button>
+  </div>
+
+  <div id="progress-wrap">
+    <h3>Готовност за изпит</h3>
+    <div id="progress-bar-outer"><div id="progress-bar-inner" style="width:0%"></div></div>
+    <div id="progress-label">Отметнете темите, които сте научили</div>
+    <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;">
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Булеви формули</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> SAT</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Теорема на Cook</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Теорема 136</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> SAT ≤p 3SAT</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> 3SAT ≤p VertexCover</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> VC ≤p IS ≤p Clique</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> VC ≤p DomSet</label>
+    </div>
+  </div>
+
+  <!-- TOPIC 1: Булеви формули и удовлетворимост -->
+  <section class="topic" id="t1">
+    <div class="topic-header">
+      <h2>Булеви формули, валюации и удовлетворимост (Определение 146/149)</h2>
+      <div class="topic-num">1</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точни дефиниции</div>
+        <p><strong>Определение 147: Синтаксис на булевите формули</strong></p>
+        <p>Булевите формули са дефинирани индуктивно над множеството от <strong>булеви променливи</strong> \(X = \{x_1, x_2, \ldots\}\):</p>
+        <ul class="bullet">
+          <li>Всеки <strong>положителен литерал</strong> \(x_i\) е формула</li>
+          <li>Всеки <strong>отрицателен литерал</strong> \(\overline{x_i}\) е формула</li>
+          <li>Ако \(\varphi\) е формула, то \(\neg\varphi\) е формула</li>
+          <li>Ако \(\varphi, \psi\) са формули, то \((\varphi \wedge \psi)\) и \((\varphi \vee \psi)\) са формули</li>
+        </ul>
+        <hr>
+        <p><strong>Определение 148: Валюация</strong></p>
+        <p>За \(Y \subseteq X\), <strong>валюация</strong> на \(Y\) е всяка функция \(t: Y \to \{0, 1\}\).</p>
+        <hr>
+        <p><strong>Определение 149: Стойността на булева формула под валюация. Удовлетворимост.</strong></p>
+        <p>Функцията \(\text{TV}(\alpha, t)\) дефинира стойността на \(\alpha\) под валюация \(t\):</p>
+        <ul class="bullet">
+          <li>Ако \(\alpha = x_i\): \(\text{TV}(x_i, t) = t(x_i)\)</li>
+          <li>Ако \(\alpha = \overline{x_i}\): \(\text{TV}(\overline{x_i}, t) = 1 - t(x_i)\)</li>
+          <li>Ако \(\alpha = \neg\varphi\): \(\text{TV}(\neg\varphi, t) = 1 - \text{TV}(\varphi, t)\)</li>
+          <li>Ако \(\alpha = (\varphi \wedge \psi)\): \(\text{TV} = 1\) тстк и двете имат стойност 1</li>
+          <li>Ако \(\alpha = (\varphi \vee \psi)\): \(\text{TV} = 1\) тстк поне едната има стойност 1</li>
+        </ul>
+        <p>Казваме \(t \models \alpha\) (<strong>t удовлетворява α</strong>), ако \(\text{TV}(\alpha, t) = 1\).</p>
+        <p>Формулата \(\alpha\) е <strong>удовлетворима</strong>, ако съществува валюация \(t\), такава че \(t \models \alpha\).</p>
+        <p>Формулата \(\alpha\) е <strong>фалшифицируема</strong>, ако съществува валюация \(t\), такава че \(\text{TV}(\alpha, t) = 0\).</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Булева формула е логически израз с AND (^), OR (v), NOT (-). Валюацията задава стойности (0 или 1) на всички променливи. Формулата е удовлетворима, ако съществува "даване на стойности", при което целият израз е истина (1).</p>
+
+      <div class="card ex">
+        <div class="card-label">Конкретен пример</div>
+        <p><strong>Формула:</strong> \(\alpha = (x_1 \wedge (x_2 \vee \overline{x_3}))\)</p>
+        <table>
+          <tr><th>t(x₁)</th><th>t(x₂)</th><th>t(x₃)</th><th>TV(α, t)</th><th>t |= α?</th></tr>
+          <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>Не</td></tr>
+          <tr><td>1</td><td>0</td><td>0</td><td>1</td><td>Да</td></tr>
+          <tr><td>1</td><td>0</td><td>1</td><td>0</td><td>Не</td></tr>
+          <tr><td>1</td><td>1</td><td>1</td><td>1</td><td>Да</td></tr>
+        </table>
+        <p>α е УДОВЛЕТВОРИМА (например t = (1, 0, 0)) и ФАЛШИФИЦИРУЕМА (например t = (0, 0, 0)).</p>
+        <p>Пример за НЕУДОВЛЕТВОРИМА формула: \((x_1 \wedge \overline{x_1})\) — противоречие.</p>
+        <p>Пример за ТАВТОЛОГИЯ (нефалшифицируема): \((x_1 \vee \overline{x_1})\).</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Валюация = даване на булеви стойности на промениливите</li>
+          <li>Удовлетворима ≠ тавтология: тавтологията е вярна при ВСЯКА валюация</li>
+          <li>КНФ (Конюнктивна Нормална Форма) = AND на клаузи, всяка от които е OR на литерали</li>
+          <li>ДНФ (Дизюнктивна Нормална Форма) = OR на конюнкции на литерали</li>
+          <li>TV(α, t) е добре дефинирана рекурсивно по структурата на α</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дефинирайте стойността на булева формула под валюация (Определение 149). Какво е удовлетворима и фалшифицируема формула? Дайте пример за всяко от: удовлетворима, неудовлетворима, тавтология."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 2: SAT -->
+  <section class="topic" id="t2">
+    <div class="topic-header">
+      <h2>SAT (Satisfiability) — Изч. Задача 65</h2>
+      <div class="topic-num">2</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция</div>
+        <p><strong>Изч. Задача 65: SAT (Boolean Satisfiability)</strong></p>
+        <p><strong>Екземпляр:</strong> КНФ \(\varphi\) — булева формула в конюнктивна нормална форма (AND на дизюнктивни клаузи).</p>
+        <p><strong>Въпрос:</strong> Дали \(\varphi\) е удовлетворима?</p>
+        <p>Тоест: Съществува ли валюация \(t\) на \(\text{Var}(\varphi)\), такава че \(t \models \varphi\)?</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>SAT е задачата: "Дадена система от OR-условия (клаузи), свързани с AND — може ли да се зададат стойности на булевите променливи, така че всяко условие да е изпълнено?"</p>
+      <p>Наивното решение: проверяваме всички \(2^n\) валюации — ЕКСПОНЕНЦИАЛНО. SAT е NP-пълна — не знаем по-бърз алгоритъм.</p>
+
+      <div class="card ex">
+        <div class="card-label">Пример за SAT</div>
+        <p><strong>КНФ:</strong> \(\varphi = (x_1 \vee x_2 \vee \overline{x_3}) \wedge (\overline{x_1} \vee x_3) \wedge (\overline{x_2} \vee \overline{x_3})\)</p>
+        <p><strong>Клауза 1:</strong> x₁=1, или x₂=1, или x₃=0 — поне едно трябва да е 1</p>
+        <p><strong>Клауза 2:</strong> x₁=0, или x₃=1</p>
+        <p><strong>Клауза 3:</strong> x₂=0, или x₃=0</p>
+        <p><strong>Опит: t = (1, 0, 1)</strong></p>
+        <ul class="bullet">
+          <li>Клауза 1: x₁=1 → 1 ✓</li>
+          <li>Клауза 2: x₃=1 → 1 ✓</li>
+          <li>Клауза 3: x₂=0 → 1 ✓</li>
+        </ul>
+        <p>t |= φ → φ е УДОВЛЕТВОРИМА!</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>SAT е задача за разпознаване: "Удовлетворима ли е тази КНФ?"</li>
+          <li>n промениливи → 2ⁿ валюации (наивен алгоритъм = експоненциален)</li>
+          <li>SAT е NP-пълна (Теорема на Cook)</li>
+          <li>3SAT = SAT с клаузи от точно 3 литерала → и тя е NP-пълна</li>
+          <li>2SAT = SAT с клаузи от точно 2 литерала → тя е в P!</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дефинирайте задачата SAT. Дайте пример за удовлетворима КНФ. Защо е интересна за теорията на NP-пълнотата?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 3: Теорема на Cook -->
+  <section class="topic" id="t3">
+    <div class="topic-header">
+      <h2>Теорема на Cook — Теорема 135</h2>
+      <div class="topic-num">3</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="thm">
+        <div class="thm-title">Теорема 135: Теорема на Cook (1971) — SAT е NP-пълна</div>
+        <p>\(\text{SAT} \in \text{NP-complete}\), тоест:</p>
+        <ol style="padding-left: 20px;">
+          <li>\(\text{SAT} \in \text{NP}\)</li>
+          <li>За всяка задача \(\Pi \in \text{NP}\): \(\Pi \le_p \text{SAT}\)</li>
+        </ol>
+      </div>
+
+      <div class="sec-h">Защо SAT е в NP (Lесна посока)</div>
+      <p>Сертификатът за Да-екземпляр на SAT е удовлетворяващата валюация \(t\). Верификацията: при дадени \(\varphi\) и \(t\), проверяваме дали \(t \models \varphi\) в полиномиално (линейно) время. Ерго, SAT ∈ NP.</p>
+
+      <div class="sec-h">Защо за всяка П ∈ NP: П ≤p SAT (Трудната посока — идея)</div>
+      <div class="card def">
+        <div class="card-label">Идея на доказателството (Cook, 1971)</div>
+        <p>Нека \(\Pi \in NP\). Тогава съществува полиномиална НМТ M, такава че \(\Pi = L_M\).</p>
+        <p>При даден вход \(x\), конструираме КНФ \(\varphi\), която кодира изчислението на M върху x. Клаузите описват:</p>
+        <ul class="bullet">
+          <li>Началната конфигурация на M</li>
+          <li>Правилата за преход (функцията δ) на M — всеки допустим преход е клауза</li>
+          <li>Приемащата конфигурация (q_Y трябва да бъде достигнато)</li>
+        </ul>
+        <p>Конструкцията е полиномиална в |x|. Коректността: \(\varphi\) е удовлетворима тстк M приема x тстк x ∈ L(П).</p>
+        <p><strong>Ключовото:</strong> Булевата логика е достатъчно изразителна, за да кодира произволно изчисление на МТ!</p>
+      </div>
+
+      <div class="viz">
+Идея на Cook: Кодиране на НМТ изчисление в КНФ
+
+НМТ M, вход x, полиномиално ограничение p(|x|)
+
+Таблица на конфигурациите:
+  стъпка:  1    2    3    ...   p(n)
+  лента:  [q₀] [q₁] [q₂] ...  [q_Y]   ← трябва да завърши с q_Y
+           a₁   a₂   a₃  ...
+  глава:   i₁   i₂   i₃  ...
+
+Булеви промениливи:
+  • Q[t][q] = 1 ако на стъпка t машината е в q
+  • A[t][j][a] = 1 ако на стъпка t, клетка j съдържа a
+  • H[t][j] = 1 ако на стъпка t главата е на позиция j
+
+КНФ клаузи кодират:
+  • Началното условие (Q[1][q₀] = 1, ...)
+  • Преходите (δ: ако A[t][j][a] и Q[t][q] и H[t][j], тогава ...)
+  • Финалното условие (поне едно Q[t][q_Y] = 1 за някое t)
+
+Ако x ∈ Π → НМТ приема x → КНФ удовлетворима
+Ако x ∉ Π → НМТ отхвърля x → КНФ неудовлетворима
+</div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>SAT ∈ NP: сертификат = удовлетворяваща валюация, верификация в линейно время</li>
+          <li>SAT е NP-hard: всяка НМТ изчисление може да се кодира в КНФ</li>
+          <li>Теоремата на Cook (1971) е началото на цялата теория на NP-пълнотата</li>
+          <li>Едновременно и независимо: Левин (СССР, 1973) — затова и "Теорема на Cook-Левин"</li>
+          <li>На практика: SAT solver-ите са мощни инструменти (DPLL, CDCL) въпреки NP-пълнотата</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Формулирайте Теорема 135 (Теорема на Cook). Покажете, че SAT ∈ NP (лесната посока). Опишете идеята на доказателството за NP-hardness."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 4: Теорема 136 -->
+  <section class="topic" id="t4">
+    <div class="topic-header">
+      <h2>Теорема 136 — Инструментът за NP-пълнота</h2>
+      <div class="topic-num">4</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="thm">
+        <div class="thm-title">Теорема 136: Как доказваме NP-пълнота чрез редукция</div>
+        <p>Ако \(\Pi \in \text{NP}\) и \(\Pi'\) е NP-пълна и \(\Pi' \le_p \Pi\), то \(\Pi\) е NP-пълна.</p>
+      </div>
+
+      <div class="sec-h">Доказателство</div>
+      <p>Трябва да покажем:</p>
+      <ol style="padding-left: 20px;">
+        <li>\(\Pi \in NP\) — дадено по условие</li>
+        <li>За всяка \(\Pi'' \in NP\): \(\Pi'' \le_p \Pi\)</li>
+      </ol>
+      <p>За (2): Тъй като \(\Pi'\) е NP-пълна, за всяка \(\Pi'' \in NP\): \(\Pi'' \le_p \Pi'\). По условие \(\Pi' \le_p \Pi\). По транзитивността на \(\le_p\) (Теорема 128): \(\Pi'' \le_p \Pi\). Ерго \(\Pi\) е NP-hard. Заедно с \(\Pi \in NP\) → \(\Pi\) е NP-пълна.</p>
+
+      <div class="sec-h">Как се прилага на практика</div>
+      <div class="viz">
+Типична стратегия за доказване на NP-пълнота на нова задача Π:
+
+Стъпка 1: Покажи Π ∈ NP
+  → Намери полиномиален сертификат и верификатор
+
+Стъпка 2: Избери известна NP-пълна задача Π' (обикновено 3SAT)
+
+Стъпка 3: Конструирай полиномиална редукция f: Π' ≤p Π
+  → f трябва да трансформира екземпляри на Π' в екземпляри на Π
+  → "Да-случаите" на Π' да се映射 в "Да-случаите" на Π
+  → Конструкцията трябва да е полиномиална
+
+Стъпка 4: Приложи Теорема 136 → Π е NP-пълна!
+</div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Теорема 136 е основният инструмент за нови доказателства за NP-пълнота</li>
+          <li>Нужно е: (1) Π ∈ NP и (2) известна NP-пълна Π' ≤p Π</li>
+          <li>Не е нужно да доказваме, че ВСЯКА NP задача ≤p Π — транзитивността свършва работата</li>
+          <li>Редукцията е в "грешна" посока: от трудната (Π') към лесната (Π)!</li>
+          <li>По-трудната Π' ≤p по-лесната Π означава, че Π е поне толкова трудна</li>
+        </ul>
+      </div>
+
+      <div class="card warn">
+        <div class="card-label">Честа грешка</div>
+        <p>Студентите объркват посоката на редукцията! Ако искаме да покажем, че Π е трудна, трябваме редукция от ИЗВЕСТНО ТРУДНА задача КЪМ Π. Редукцията ΠΠ' ≤p Π (не Π ≤p Π')!</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Формулирайте Теорема 136 и я докажете. Опишете стратегията за доказване на NP-пълнота на нова задача. Защо редукцията е в 'обратна' посока?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 5: SAT ≤p 3SAT -->
+  <section class="topic" id="t5">
+    <div class="topic-header">
+      <h2>Редукция 10: SAT ≤p 3SAT (Конструкция с гаджети)</h2>
+      <div class="topic-num">5</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция на 3SAT</div>
+        <p><strong>Изч. Задача 73: 3SAT</strong></p>
+        <p><strong>Екземпляр:</strong> КНФ \(\varphi\), в която всяка дизюнктивна клауза има <em>точно три</em> литерала.</p>
+        <p><strong>Въпрос:</strong> Дали \(\varphi\) е удовлетворима?</p>
+      </div>
+
+      <div class="sec-h">Конструкция на редукцията</div>
+      <p>Дадена е произволна КНФ \(\varphi = \alpha_1 \wedge \alpha_2 \wedge \ldots \wedge \alpha_m\). Заменяме всяка клауза \(\alpha_i\) с нова КНФ \(\beta_i\) с клаузи от точно три литерала. Получаваме \(\psi = \beta_1 \wedge \ldots \wedge \beta_m\).</p>
+      <p><strong>Инвариант:</strong> \(\alpha_i\) е удовлетворима тстк \(\beta_i\) е удовлетворима (за нови свободни промениливи).</p>
+
+      <div class="sec-h">Гаджети за всеки случай</div>
+
+      <div class="gadget">
+        <div class="gadget-title">Случай 1: Клауза с 1 литерал — α = (λ)</div>
+        <p>Въвеждаме нови промениливи y₁, y₂. Конструираме:</p>
+        <p>β = (λ ∨ y₁ ∨ y₂) ∧ (λ ∨ y₁ ∨ ¬y₂) ∧ (λ ∨ ¬y₁ ∨ y₂) ∧ (λ ∨ ¬y₁ ∨ ¬y₂)</p>
+        <p>Верификация: β може да се удовлетвори САМО "чрез" λ (за всяка валюация на y₁, y₂ има клауза, в която y-литералите нямат стойност 1). Ерго: α уд. тстк β уд.</p>
+      </div>
+
+      <div class="gadget">
+        <div class="gadget-title">Случай 2: Клауза с 2 литерала — α = (λ ∨ μ)</div>
+        <p>Въвеждаме нова промениливa y. Конструираме:</p>
+        <p>β = (λ ∨ μ ∨ y) ∧ (λ ∨ μ ∨ ¬y)</p>
+        <p>Верификация: β уд. тстк α уд. (y не може "да спаси" β, ако нито λ, нито μ е 1).</p>
+      </div>
+
+      <div class="gadget">
+        <div class="gadget-title">Случай 3: Клауза с 3 литерала — α = (λ ∨ μ ∨ ν)</div>
+        <p>β = α (тривиална замяна — нищо не се променя).</p>
+      </div>
+
+      <div class="gadget">
+        <div class="gadget-title">Случай 4: Клауза с k &gt; 3 литерала — α = (λ₁ ∨ λ₂ ∨ ... ∨ λₖ)</div>
+        <p>Въвеждаме k-3 нови промениливи y₁, ..., y_{k-3}. Конструираме "верига":</p>
+        <p>β = (λ₁ ∨ λ₂ ∨ y₁) ∧ (¬y₁ ∨ λ₃ ∨ y₂) ∧ (¬y₂ ∨ λ₄ ∨ y₃) ∧ ... ∧ (¬y_{k-3} ∨ λ_{k-1} ∨ λ_k)</p>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">Пример за редукцията</div>
+        <p><strong>Вход (SAT):</strong> \(\varphi = (x_1)(x_2 \vee x_3)(x_4 \vee x_5 \vee x_6)(x_1 \vee x_2 \vee x_7 \vee x_8 \vee x_9)\)</p>
+        <p><strong>Изход (3SAT):</strong></p>
+        <ul class="bullet">
+          <li>Клауза 1 (k=1): \((x_1 \vee y_1 \vee y_2) \wedge (x_1 \vee y_1 \vee \overline{y_2}) \wedge (x_1 \vee \overline{y_1} \vee y_2) \wedge (x_1 \vee \overline{y_1} \vee \overline{y_2})\)</li>
+          <li>Клауза 2 (k=2): \((x_2 \vee x_3 \vee z) \wedge (x_2 \vee x_3 \vee \overline{z})\)</li>
+          <li>Клауза 3 (k=3): \((x_4 \vee x_5 \vee x_6)\)</li>
+          <li>Клауза 4 (k=5): \((x_1 \vee x_2 \vee w_1) \wedge (\overline{w_1} \vee x_7 \vee w_2) \wedge (\overline{w_2} \vee x_8 \vee x_9)\)</li>
+        </ul>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>4 случая: 1 литерал (4 клаузи + 2 нови), 2 литерала (2 клаузи + 1 нова), 3 литерала (тривиално), k&gt;3 литерала (верига, k-3 нови)</li>
+          <li>Новите промениливи за клауза αᵢ не се споделят с клауза αⱼ (j≠i)</li>
+          <li>Конструкцията е полиномиална: φ → ψ в O(|φ|) времe</li>
+          <li>φ уд. тстк ψ уд. — ключовата коректност</li>
+          <li>3SAT ∈ NP (очевидно) + SAT ≤p 3SAT → 3SAT е NP-пълна</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Опишете редукцията SAT ≤p 3SAT. Обяснете конструкцията за всеки от 4-те случая. Докажете коректността за случай 1 (клауза с 1 литерал)."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 6: 3SAT ≤p Vertex Cover -->
+  <section class="topic" id="t6">
+    <div class="topic-header">
+      <h2>Редукция 14: 3SAT ≤p Vertex Cover</h2>
+      <div class="topic-num">6</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция на конструкцията</div>
+        <p>Дадена е 3SAT формула \(\varphi\) с промениливи \(x_1, \ldots, x_n\) и клаузи \(\alpha_1, \ldots, \alpha_m\). Конструираме граф \(G = (V, E)\) и число \(k\), такива че \(\varphi\) е удовлетворима тстк G има Vertex Cover с мощност \(\le k\).</p>
+        <p><strong>Конструкция:</strong></p>
+        <ul class="bullet">
+          <li><strong>За всяка промениливa \(x_i\)</strong> (Variable gadget): Добавяме два върха \(x_i\) и \(\overline{x_i}\) и ребро \((x_i, \overline{x_i})\) между тях. Трябва да вземем поне един от двата.</li>
+          <li><strong>За всяка клауза \(\alpha_j = (\lambda_{j,1} \vee \lambda_{j,2} \vee \lambda_{j,3})\)</strong> (Clause gadget): Добавяме три върха \(v_{j,1}, v_{j,2}, v_{j,3}\) и три ребра образуващи триъгълник: \((v_{j,1}, v_{j,2}), (v_{j,2}, v_{j,3}), (v_{j,1}, v_{j,3})\). Трябва да вземем поне 2 от 3-те.</li>
+          <li><strong>Свързващи ребра:</strong> За всеки литерал \(\lambda_{j,i}\): ребро между \(v_{j,i}\) и съответния литерален връх в variable gadget-а.</li>
+        </ul>
+        <p><strong>k = n + 2m</strong> (n от variable gadget-ите, 2m от clause gadget-ите).</p>
+      </div>
+
+      <div class="sec-h">Визуализация — Гаджети</div>
+      <div class="viz">
+VARIABLE GADGET за x₁:          CLAUSE GADGET за α = (x₁ ∨ ¬x₂ ∨ x₃):
+
+     x₁ ───── ¬x₁               v₁ ─── v₂
+     (ребро между тях)           │       │
+                                 └─── v₃ ┘
+  От двата ─ поне 1 ∈ VC        (триъгълник ─ поне 2 ∈ VC)
+
+СВЪРЗВАЩИ РЕБРА:
+  v₁ свързан с x₁  (literal node в variable gadget)
+  v₂ свързан с ¬x₂ (literal node в variable gadget)
+  v₃ свързан с x₃  (literal node в variable gadget)
+
+Пълна конструкция за φ = (x₁ ∨ x₂ ∨ ¬x₃):
+
+    x₁ ─── ¬x₁    x₂ ─── ¬x₂    x₃ ─── ¬x₃
+     │                               │
+    v₁ ────────────── v₂ ─── v₃ ───┘
+     └──────────────── (триъгълник) ─┘
+
+k = 3 (variable gadgets) + 2 (clause gadget) = 5
+</div>
+
+      <div class="sec-h">Доказателство за коректност</div>
+      <div class="card def">
+        <div class="card-label">Коректност на Редукция 14</div>
+        <p><strong>Посока 1 (φ уд. → G има VC с ≤ k):</strong></p>
+        <p>Нека t |= φ. За всяка промениливa xᵢ: вземаме в VC литерала с стойност 1 (от variable gadget-а). За всяка клауза αⱼ: тъй като t |= αⱼ, поне един литерал λⱼ,ₗ има стойност 1 — оставяме го извън VC, а другите два вземаме. Така имаме n + 2m върха. Проверяваме: всяко ребро е покрито.</p>
+        <p><strong>Посока 2 (G има VC с ≤ k → φ уд.):</strong></p>
+        <p>Нека U е VC с |U| ≤ k = n + 2m. Трябва да покрием всяко variable gadget ребро → поне 1 от xᵢ, ¬xᵢ. Трябва да покрием всички три ребра на всеки триъгълник → поне 2 от vⱼ,₁, vⱼ,₂, vⱼ,₃. Общо: n + 2m ≤ k → точно n + 2m. Следователно точно 1 от всеки variable gadget и точно 2 от всеки clause gadget. За всяка клауза: вⱼ,ₗ ∉ U → свързващото ребро с variable gadget трябва да е покрито от литерала в VC → литералът в VC = 1 → клаузата е удовлетворена.</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>k = n + 2m (n промениливи, m клаузи)</li>
+          <li>Variable gadget: 2 върха + 1 ребро (xᵢ ─ ¬xᵢ) → 1 в VC</li>
+          <li>Clause gadget: 3 върха + 3 ребра (триъгълник) → 2 в VC</li>
+          <li>Свързващи ребра: свързват clause gadget с variable gadget</li>
+          <li>φ уд. тстк G има VC с ≤ k — двупосочна коректност</li>
+          <li>Конструкцията е полиномиална: O(n + m) върха, O(n + m) ребра</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Опишете редукцията 3SAT ≤p Vertex Cover. Опишете двата вида гаджети (variable и clause). Каква е стойността на k? Докажете едната посока на коректността."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 7: Редукции 15, 16, 17 -->
+  <section class="topic" id="t7">
+    <div class="topic-header">
+      <h2>Редукции 15, 16, 17: VC ≤p IS ≤p Clique; VC ≤p Dominating Set</h2>
+      <div class="topic-num">7</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="sec-h">Редукция 15: Vertex Cover ≤p Independent Set</div>
+      <div class="card def">
+        <div class="card-label">Конструкция и доказателство</div>
+        <p><strong>Конструкция:</strong> Дадена е задача VC: (G, k) — има ли G Vertex Cover с ≤ k върха? Конструираме задача IS: <strong>(G, n-k)</strong> — има ли G Independent Set с ≥ n-k върха? (Тоест, <strong>същият граф G</strong>, само с различен праг!)</p>
+        <p><strong>Доказателство (Теорема 110):</strong> \(U\) е Vertex Cover тстк \(V \setminus U\) е Independent Set.</p>
+        <ul class="bullet">
+          <li>Ако U е VC с |U| = k → V\U е IS с |V\U| = n-k → (G, n-k) е Да-екземпляр на IS</li>
+          <li>Ако V\U е IS с |V\U| ≥ n-k → U = V\(V\U) е VC с |U| ≤ k → (G, k) е Да-екземпляр на VC</li>
+        </ul>
+        <p><strong>f(G, k) = (G, n-k)</strong> — полиномиална (линейна!) трансформация.</p>
+      </div>
+
+      <div class="viz">
+Редукция 15: VC ≤p IS
+
+Граф G:   1 ─── 2 ─── 3
+              │
+              4
+
+VC с k=2: U = {2, 1}   → VC е валидно (покрива всички ребра)
+IS с n-k=2: V\U = {3, 4} → IS е валидно (3 и 4 нямат ребро помежду си)
+
+f: (G, k=2) ─→ (G, n-k=4-2=2)
+   "Има ли VC с ≤2?"  тстк  "Има ли IS с ≥2?"
+</div>
+
+      <hr>
+
+      <div class="sec-h">Редукция 16: Independent Set ≤p Clique</div>
+      <div class="card def">
+        <div class="card-label">Конструкция и доказателство</div>
+        <p><strong>Клика:</strong> Подмножество \(C \subseteq V\), такова че всеки два върха от C са свързани с ребро.</p>
+        <p><strong>Конструкция:</strong> Дадена е задача IS: (G, k) — има ли G IS с ≥ k върха? Конструираме задача Clique: \((\overline{G}, k)\) — има ли допълнителния граф \(\overline{G}\) клика с ≥ k върха?</p>
+        <p><strong>Допълнителен граф \(\overline{G}\):</strong> Същите върхове, но ребро (u,v) е в \(\overline{G}\) тстк (u,v) НЕ е в G.</p>
+        <p><strong>Доказателство:</strong> U е IS в G тстк U е клика в \(\overline{G}\).</p>
+        <ul class="bullet">
+          <li>Ако u, v ∈ U (IS в G) → (u,v) ∉ E(G) → (u,v) ∈ E(\(\overline{G}\)) → U е клика в \(\overline{G}\)</li>
+          <li>Ако U е клика в \(\overline{G}\) → за всеки u,v ∈ U: (u,v) ∈ E(\(\overline{G}\)) → (u,v) ∉ E(G) → U е IS в G</li>
+        </ul>
+        <p><strong>f(G, k) = (\(\overline{G}\), k)</strong> — полиномиална (конструкцията на \(\overline{G}\) е \(O(n^2)\)).</p>
+      </div>
+
+      <div class="viz">
+Редукция 16: IS ≤p Clique
+
+G:         ─G (допълнение):
+1 ─ 2      1   2
+│   │  →   │ ╲ │
+3 ─ 4      3   4
+
+В G: {1,4} е IS (нямат ребро)
+В G_bar: {1,4} е Клика (имат ребро: (1,4) ∈ G_bar)
+
+f: (G, k) → (G_bar, k)
+</div>
+
+      <hr>
+
+      <div class="sec-h">Редукция 17: Vertex Cover ≤p Dominating Set</div>
+      <div class="card def">
+        <div class="card-label">Конструкция</div>
+        <p><strong>Конструкция:</strong> Дадена е задача VC: (G, k). Конструираме граф G' и число k'.</p>
+        <p>За всяко ребро (u, v) ∈ E(G), добавяме нов връх \(w_{uv}\) и ребра \((w_{uv}, u)\) и \((w_{uv}, v)\) — т.е. нов връх, свързан само с двата края на реброто. G' = G + всички тези нови върхове. k' = k.</p>
+        <p><strong>Коректност:</strong></p>
+        <ul class="bullet">
+          <li>G има VC с ≤ k → VC на G е DS на G' (нов връх w_{uv} е доминиран от u или v)</li>
+          <li>G' има DS с ≤ k → DS на G' (ограничен до V(G)) е VC на G (иначе w_{uv} не би бил доминиран)</li>
+        </ul>
+      </div>
+
+      <div class="viz">
+Редукция 17: VC ≤p Dominating Set
+
+G:   1 ─── 2         G':  1 ─── 2
+                           │       │
+                          w₁₂ ──/ └─ (w₁₂ е нов)
+
+Ребро (1,2) → нов връх w₁₂, свързан с 1 и 2
+
+VC на G: {1} покрива ребро (1,2) → {1} е DS на G':
+  - Връх 2: съсед 1 ∈ {1} ✓
+  - Връх w₁₂: съсед 1 ∈ {1} ✓
+  - Връх 1: 1 ∈ {1} ✓
+</div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне — трите редукции</div>
+        <ul class="bullet">
+          <li><strong>VC ≤p IS:</strong> Същият граф G, праг k → n-k. Базирана на Теорема 110 (двойственост)</li>
+          <li><strong>IS ≤p Clique:</strong> Допълнителният граф G̅, прагът остава k</li>
+          <li><strong>VC ≤p DS:</strong> Добавяме нов връх за всяко ребро; прагът остава k</li>
+          <li>И трите са линейни (полиномиални) конструкции</li>
+          <li>Всяка от тях установява NP-пълнота (заедно с NP-принадлежност)</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Опишете редукцията Vertex Cover ≤p Independent Set (Редукция 15). Опишете редукцията IS ≤p Clique (Редукция 16) — какво е допълнителен граф? Докажете коректността."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 8: Верига от редукции -->
+  <section class="topic" id="t8">
+    <div class="topic-header">
+      <h2>Верига от редукции — Обобщена картина</h2>
+      <div class="topic-num">8</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="sec-h">Пълната верига на редукциите</div>
+      <div class="chain-box" style="color: var(--text);">
+        <div style="color: var(--green); font-weight: 700; margin-bottom: 12px; font-size: 1rem;">Верига на NP-пълнотата</div>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; font-size: 0.88rem;">
+          <span style="background: rgba(231,76,60,0.2); border: 1px solid var(--red); padding: 6px 12px; border-radius: 6px; color: var(--red);">SAT</span>
+          <span style="color: var(--accent);">≤p</span>
+          <span style="background: rgba(79,142,247,0.2); border: 1px solid var(--accent); padding: 6px 12px; border-radius: 6px;">3SAT</span>
+          <span style="color: var(--accent);">≤p</span>
+          <span style="background: rgba(124,92,191,0.2); border: 1px solid var(--accent2); padding: 6px 12px; border-radius: 6px;">Vertex Cover</span>
+          <span style="color: var(--accent);">≤p</span>
+          <span style="background: rgba(46,204,113,0.2); border: 1px solid var(--green); padding: 6px 12px; border-radius: 6px;">Independent Set</span>
+          <span style="color: var(--accent);">≤p</span>
+          <span style="background: rgba(243,156,18,0.2); border: 1px solid var(--yellow); padding: 6px 12px; border-radius: 6px;">Clique</span>
+        </div>
+        <div style="margin-top: 16px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; font-size: 0.88rem;">
+          <span style="background: rgba(124,92,191,0.2); border: 1px solid var(--accent2); padding: 6px 12px; border-radius: 6px;">Vertex Cover</span>
+          <span style="color: var(--accent);">≤p</span>
+          <span style="background: rgba(231,76,60,0.2); border: 1px solid var(--red); padding: 6px 12px; border-radius: 6px;">Dominating Set</span>
+        </div>
+        <div style="margin-top: 12px; color: var(--text2); font-size: 0.8rem;">По транзитивност: SAT ≤p всяка от задачите → всички са NP-трудни</div>
+      </div>
+
+      <div class="sec-h">Резюмна таблица на всички редукции</div>
+      <table>
+        <tr><th>Редукция</th><th>От</th><th>До</th><th>Конструкция</th><th>k'</th></tr>
+        <tr><td>10</td><td>SAT</td><td>3SAT</td><td>Замяна на клаузи с 3-литерални еквиваленти (гаджети)</td><td>—</td></tr>
+        <tr><td>14</td><td>3SAT</td><td>Vertex Cover</td><td>Variable gadget + Clause gadget (триъгълник)</td><td>n + 2m</td></tr>
+        <tr><td>15</td><td>Vertex Cover</td><td>Independent Set</td><td>Същият граф, праг n-k</td><td>n - k</td></tr>
+        <tr><td>16</td><td>Independent Set</td><td>Clique</td><td>Допълнителен граф G̅</td><td>k</td></tr>
+        <tr><td>17</td><td>Vertex Cover</td><td>Dominating Set</td><td>Нов връх за всяко ребро</td><td>k</td></tr>
+      </table>
+
+      <div class="sec-h">Дървото на NP-пълните доказателства (Лекция 16)</div>
+      <div class="viz">
+                SAT (Cook, 1971)
+                 │
+               3SAT
+          ┌──────┴──────────────┐
+    Vertex Cover          Max2SAT   NAESAT
+     ┌────┴───────┐
+  Ind.Set  3Colorability  Dominating Set
+     │
+   Clique
+     │
+Hamiltonian Cycle
+     │
+Hamiltonian Path → Longest Path
+
+Забележка: NP-пълнотата се "разпространява" надолу в дървото
+чрез Теорема 136 и транзитивността на ≤p.
+</div>
+
+      <div class="sec-h">Ключовите концептуални различия</div>
+      <table>
+        <tr><th>Задача</th><th>Вид</th><th>Покрива</th><th>Оптимум</th></tr>
+        <tr><td>Vertex Cover</td><td>Минимизация</td><td>Всяко РЕБРО</td><td>Min |U|</td></tr>
+        <tr><td>Independent Set</td><td>Максимизация</td><td>Върхове без ребро помежду им</td><td>Max |U|</td></tr>
+        <tr><td>Clique</td><td>Максимизация</td><td>Върхове — всички по двойки свързани</td><td>Max |C|</td></tr>
+        <tr><td>Dominating Set</td><td>Минимизация</td><td>Всеки ВРЪХ (от себе си или съсед)</td><td>Min |D|</td></tr>
+      </table>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне — Обобщение</div>
+        <ul class="bullet">
+          <li>Теорема на Cook (Теорема 135) = началната точка: SAT е NP-пълна</li>
+          <li>Теорема 136 = инструментът: доказваме NP-пълнота чрез редукция от известна NP-пълна</li>
+          <li>SAT → 3SAT: гаджети за клаузи с различен брой литерали</li>
+          <li>3SAT → VC: variable gadget (двойка) + clause gadget (триъгълник), k = n + 2m</li>
+          <li>VC → IS: Теорема 110 (двойственост), СЪЩИЯТ граф, праг n-k</li>
+          <li>IS → Clique: допълнителен граф G̅, СЪЩИЯТ праг k</li>
+          <li>VC → DS: нов връх за всяко ребро, СЪЩИЯТ праг k</li>
+          <li>Всички задачи в NP (имат полиномиален верификатор) + NP-hard (по транзитивност от SAT)</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="card-label">Връзка с другите теми</div>
+        <p>Редукциите в Лекция 15/16 са практическите приложения на теорията от Лекция 14. Vertex Cover видяхме в Лекция 12 — има полиномиален алгоритъм върху ДЪРВЕТА, но е NP-пълна в ОБЩ ГРАФ. Тази разлика e ключова — структурата (дърво vs. общ граф) може напълно да промени сложността.</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Нарисувайте веригата SAT → 3SAT → Vertex Cover → Independent Set → Clique. За всяка редукция: каква е конструкцията и каква е стойността на новия параметър k'?"</p>
+        <p>"Докажете NP-пълнотата на Independent Set, знаейки, че Vertex Cover е NP-пълна (Теорема 136 + Редукция 15)."</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const body = document.body;
+  body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+function updateProgress() {
+  const boxes = document.querySelectorAll('input[type="checkbox"]');
+  const checked = Array.from(boxes).filter(b => b.checked).length;
+  const pct = Math.round(checked / boxes.length * 100);
+  document.getElementById('progress-bar-inner').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${pct}% готовност (${checked}/${boxes.length} теми)`;
+}
+const sections = document.querySelectorAll('.topic');
+const links = document.querySelectorAll('#sidebar a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+  links.forEach(a => { a.classList.remove('active'); if (a.getAttribute('href') === '#' + current) a.classList.add('active'); });
+});
+</script>
+</body>
+</html>

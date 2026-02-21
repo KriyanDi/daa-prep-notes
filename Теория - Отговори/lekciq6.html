@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лекция 6 - Разделяй-и-Владей. SELECT, Mergesort, Quicksort | ДАА 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #1a1d27; --bg3: #242838;
+    --accent: #4f8ef7; --accent2: #7c5cbf; --green: #2ecc71;
+    --yellow: #f39c12; --red: #e74c3c; --text: #e8eaf0;
+    --text2: #9ca3af; --border: #2d3148;
+    --def-bg: #0d2137; --def-border: #1e5799;
+    --ex-bg: #0d2d1a; --ex-border: #1e7d3e;
+    --key-bg: #2d2100; --key-border: #7d5c00;
+    --code-bg: #141822;
+  }
+  [data-theme="light"] {
+    --bg: #f0f2f8; --bg2: #ffffff; --bg3: #e8ecf5;
+    --accent: #2563eb; --accent2: #7c3aed; --green: #16a34a;
+    --yellow: #d97706; --red: #dc2626; --text: #1e293b;
+    --text2: #64748b; --border: #cbd5e1;
+    --def-bg: #eff6ff; --def-border: #3b82f6;
+    --ex-bg: #f0fdf4; --ex-border: #22c55e;
+    --key-bg: #fffbeb; --key-border: #f59e0b;
+    --code-bg: #1e293b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  #layout { display: flex; min-height: 100vh; }
+  #sidebar {
+    width: 280px; background: var(--bg2); border-right: 1px solid var(--border);
+    position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto;
+    transition: transform 0.3s; z-index: 100; padding: 20px 0;
+  }
+  #sidebar h2 { color: var(--accent); font-size: 0.85rem; text-transform: uppercase;
+    letter-spacing: 1px; padding: 0 20px 10px; border-bottom: 1px solid var(--border); }
+  #sidebar ul { list-style: none; padding: 10px 0; }
+  #sidebar li a { display: block; padding: 8px 20px; color: var(--text2); text-decoration: none;
+    font-size: 0.88rem; border-left: 3px solid transparent; transition: all 0.2s; }
+  #sidebar li a:hover, #sidebar li a.active { color: var(--accent); border-left-color: var(--accent);
+    background: rgba(79,142,247,0.08); }
+  #main { margin-left: 280px; flex: 1; padding: 40px; max-width: 1000px; }
+  #topbar { position: sticky; top: 0; background: var(--bg2); border-bottom: 1px solid var(--border);
+    z-index: 50; display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 40px; margin: -40px -40px 40px; }
+  #topbar h1 { font-size: 1.1rem; color: var(--accent); }
+  .btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text); cursor: pointer; font-size: 0.85rem; }
+  .btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  #progress-wrap { background: var(--bg3); border-radius: 8px; padding: 16px 20px;
+    margin-bottom: 32px; border: 1px solid var(--border); }
+  #progress-wrap h3 { font-size: 0.9rem; color: var(--text2); margin-bottom: 10px; }
+  #progress-bar-outer { background: var(--bg); border-radius: 99px; height: 8px; overflow: hidden; }
+  #progress-bar-inner { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 99px; transition: width 0.5s; }
+  #progress-label { font-size: 0.85rem; color: var(--text2); margin-top: 6px; }
+  .topic { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 40px; overflow: hidden; scroll-margin-top: 80px; }
+  .topic-header { padding: 20px 24px; background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: space-between; }
+  .topic-header h2 { color: white; font-size: 1.15rem; }
+  .topic-num { background: rgba(255,255,255,0.2); color: white; border-radius: 50%;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .topic-body { padding: 24px; }
+  .card { border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .card.def { background: var(--def-bg); border-left: 4px solid var(--def-border); }
+  .card.def .card-label { color: var(--accent); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.ex { background: var(--ex-bg); border-left: 4px solid var(--ex-border); }
+  .card.ex .card-label { color: var(--green); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.key { background: var(--key-bg); border-left: 4px solid var(--key-border); }
+  .card.key .card-label { color: var(--yellow); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.warn { background: rgba(231,76,60,0.07); border-left: 4px solid var(--red); }
+  .sec-h { font-size: 0.95rem; font-weight: 700; color: var(--accent); margin: 20px 0 8px;
+    display: flex; align-items: center; gap: 8px; }
+  .sec-h::before { content: ''; display: inline-block; width: 3px; height: 16px;
+    background: var(--accent); border-radius: 2px; }
+  pre { background: var(--code-bg); color: #cdd6f4; border-radius: 8px; padding: 16px 20px;
+    overflow-x: auto; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem;
+    line-height: 1.6; margin: 12px 0; border: 1px solid var(--border); }
+  code { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem; }
+  .kw { color: #cba6f7; } .cm { color: #6c7086; font-style: italic; }
+  .nm { color: #89dceb; } .op { color: #89b4fa; } .str { color: #a6e3a1; }
+  .num { color: #fab387; }
+  .viz { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 20px; font-family: monospace; font-size: 0.85rem; color: #cdd6f4;
+    white-space: pre; overflow-x: auto; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+  th { background: var(--bg3); color: var(--accent); padding: 10px 12px; text-align: left;
+    border-bottom: 2px solid var(--accent); }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: rgba(79,142,247,0.05); }
+  ul.bullet { list-style: none; padding: 0; }
+  ul.bullet li { padding: 6px 0 6px 24px; position: relative; }
+  ul.bullet li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+  .thm { background: rgba(79,142,247,0.08); border: 1px solid rgba(79,142,247,0.3);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .thm-label { color: var(--accent); font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; }
+  .exam-box { background: rgba(231,76,60,0.07); border: 1px solid rgba(231,76,60,0.4);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .exam-label { color: var(--red); font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; }
+  .conn-box { background: rgba(46,204,113,0.07); border: 1px solid rgba(46,204,113,0.3);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .conn-label { color: var(--green); font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; }
+  .check-wrap { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+  .check-wrap input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
+  .check-wrap label { font-size: 0.9rem; color: var(--text2); cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="layout">
+<nav id="sidebar">
+  <h2>Лекция 6 — Навигация</h2>
+  <ul>
+    <li><a href="#t1">1. Схема Разделяй-и-Владей</a></li>
+    <li><a href="#t2">2. Алгоритъм SELECT</a></li>
+    <li><a href="#t3">3. Теорема 69 — Коректност на SELECT</a></li>
+    <li><a href="#t4">4. Теорема 70 — Линейност на SELECT</a></li>
+    <li><a href="#t5">5. Merge и Теорема 71</a></li>
+    <li><a href="#t6">6. Mergesort и Теорема 72</a></li>
+    <li><a href="#t7">7. Partition-Lomuto и Теорема 74</a></li>
+  </ul>
+</nav>
+<div id="main">
+  <div id="topbar">
+    <h1>Лекция 6 — Разделяй-и-Владей: SELECT, Mergesort, Quicksort</h1>
+    <button class="btn" onclick="toggleTheme()">Светла тема</button>
+  </div>
+
+  <div id="progress-wrap">
+    <h3>Напредък</h3>
+    <div id="progress-bar-outer"><div id="progress-bar-inner" style="width:0%"></div></div>
+    <div id="progress-label">0 от 7 теми изучени</div>
+  </div>
+
+  <!-- TOPIC 1 -->
+  <div class="topic" id="t1">
+    <div class="topic-header">
+      <h2>Алгоритмична схема Разделяй-и-Владей</h2>
+      <div class="topic-num">1</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="sec-h">Точна дефиниция</div>
+      <div class="card def">
+        <div class="card-label">Дефиниция — схема Разделяй-и-Владей</div>
+        <p>Алгоритмичната схема <strong>Разделяй-и-Владей</strong> (Divide and Conquer) решава задача върху вход с размер \(n\) чрез три фази:</p>
+        <ul class="bullet" style="margin-top:10px">
+          <li><strong>Разделяй (Divide):</strong> Разбива входа на \(a \geq 1\) по-малки подзадачи, всяка с размер \(\approx n/b\).</li>
+          <li><strong>Владей (Conquer):</strong> Решава рекурсивно всяка подзадача (или директно, ако размерът е достатъчно малък).</li>
+          <li><strong>Комбинирай (Combine):</strong> Комбинира решенията на подзадачите в решение на оригиналната задача.</li>
+        </ul>
+        <p style="margin-top:10px">Сложността по време се описва от рекурентното уравнение \(T(n) = aT(n/b) + f(n)\), където \(f(n)\) е цената на фазите Разделяй и Комбинирай.</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение с аналогия</div>
+      <p>Представете си, че трябва да подредите 1000 книги по азбучен ред. Стратегията Разделяй-и-Владей казва: <em>раздели ги на две купчини от по 500, накарай двама помощника да наредят всяка купчина, след което слей двете наредени купчини</em>. Всеки помощник прави същото рекурсивно. В края два пъти по-малко работа, два пъти по-бързо — и така на всяко ниво.</p>
+      <p style="margin-top:10px">Ключовото наблюдение: при Mergesort <em>Разделяй</em> е тривиална (просто разрязваме), а <em>Комбинирай</em> е същинската работа. При Quicksort е обратното: <em>Разделяй</em> е същинската работа, а <em>Комбинирай</em> е празна.</p>
+
+      <div class="sec-h">Визуализация</div>
+      <div class="viz">
+Разделяй-и-Владей — структура на рекурсията:
+
+         Задача (n)
+        /           \
+  Подзадача(n/b)  Подзадача(n/b)  ...  (a подзадачи)
+      /   \              /   \
+  (n/b²)(n/b²)      (n/b²)(n/b²)
+      ...               ...
+   Базови случаи (размер ≤ n₀)
+
+Всяко ниво: a^k подзадачи с размер n/b^k
+Дълбочина на рекурсията: log_b(n) нива</div>
+
+      <div class="sec-h">Стъпка по стъпка — пример</div>
+      <div class="card ex">
+        <div class="card-label">Пример с Mergesort върху [5, 2, 3, 1, 4, 8, 7, 6]</div>
+        <div class="viz">
+Ниво 0:  [5 2 3 1 4 8 7 6]
+              /           \
+Ниво 1: [5 2 3 1]     [4 8 7 6]
+           /    \        /    \
+Ниво 2: [5 2] [3 1]  [4 8] [7 6]
+          /\    /\     /\    /\
+Ниво 3: [5][2][3][1] [4][8][7][6]
+
+Сливане нагоре:
+Ниво 2: [2 5] [1 3]  [4 8] [6 7]
+Ниво 1: [1 2 3 5]    [4 6 7 8]
+Ниво 0: [1 2 3 4 5 6 7 8]  ✓</div>
+      </div>
+
+      <div class="sec-h">Ключови точки за запомняне</div>
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Три фази: <strong>Разделяй, Владей, Комбинирай</strong> — задължително знай имената.</li>
+          <li>Сложността идва от рекурентното уравнение \(T(n) = aT(n/b) + f(n)\).</li>
+          <li>Mergesort: Divide=тривиална, Combine=същинска работа. Quicksort: обратното.</li>
+          <li>Базовият случай (спирачката на рекурсията) е когато \(n \leq n_0\).</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Връзка с другите теми</div>
+      <div class="conn-box">
+        <div class="conn-label">Връзки</div>
+        <ul class="bullet">
+          <li>Сложността на алгоритми по тази схема се решава с <strong>Мастър теоремата</strong> (Лекция 3).</li>
+          <li>Mergesort дава \(T(n) = 2T(n/2) + n \Rightarrow \Theta(n \log n)\) — втори случай на Мастър теоремата.</li>
+          <li>SELECT използва схемата с \(T(n) = T(n/5) + T(7n/10) + n\) — решава се чрез Теорема 39 или Akra-Bazzi.</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Опишете алгоритмичната схема Разделяй-и-Владей. Какви са трите фази? Дайте пример с Mergesort.</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c1" onchange="updateProgress()">
+        <label for="c1">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 2 -->
+  <div class="topic" id="t2">
+    <div class="topic-header">
+      <h2>Алгоритъм SELECT — намиране на k-тия елемент</h2>
+      <div class="topic-num">2</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="sec-h">Точна дефиниция</div>
+      <div class="card def">
+        <div class="card-label">Алгоритъм 10: Partition-Select</div>
+<pre><span class="cm">(* pivot е стойност, за която знаем, че се среща в A[l..h] *)</span>
+<span class="nm">Partition-Select</span>(<span class="nm">A</span>[<span class="nm">l</span>..<span class="nm">h</span>], <span class="nm">pivot</span>)
+<span class="num">1</span>  <span class="nm">k</span> ← <span class="nm">find-index</span>(<span class="nm">pivot</span>, <span class="nm">A</span>[<span class="nm">l</span>..<span class="nm">h</span>])
+<span class="num">2</span>  <span class="nm">swap</span>(<span class="nm">A</span>[<span class="nm">k</span>], <span class="nm">A</span>[<span class="nm">h</span>])
+<span class="num">3</span>  <span class="nm">pp</span> ← <span class="nm">l</span>
+<span class="num">4</span>  <span class="kw">for</span> <span class="nm">i</span> ← <span class="nm">l</span> <span class="kw">to</span> <span class="nm">h</span>-<span class="num">1</span>
+<span class="num">5</span>    <span class="kw">if</span> <span class="nm">A</span>[<span class="nm">i</span>] &lt; <span class="nm">pivot</span>
+<span class="num">6</span>      <span class="nm">swap</span>(<span class="nm">A</span>[<span class="nm">i</span>], <span class="nm">A</span>[<span class="nm">pp</span>])
+<span class="num">7</span>      <span class="nm">pp</span>++
+<span class="num">8</span>  <span class="nm">swap</span>(<span class="nm">A</span>[<span class="nm">pp</span>], <span class="nm">A</span>[<span class="nm">h</span>])
+<span class="num">9</span>  <span class="kw">return</span> <span class="nm">pp</span> - <span class="num">1</span>  <span class="cm">(* pivot е на позиция pp, броят на по-малките е pp-l *)</span></pre>
+        <div class="card-label" style="margin-top:12px">Алгоритъм 11: Select</div>
+<pre><span class="nm">Select</span>(<span class="nm">A</span>[<span class="num">1</span>..<span class="nm">n</span>]: <span class="kw">int</span>; <span class="nm">k</span> ∈ {<span class="num">0</span>,...,<span class="nm">n</span>-<span class="num">1</span>})
+<span class="cm">(* Враща A[k+1] ако масивът беше сортиран; т.е. k е 0-базиран ранг *)</span>
+<span class="num">1</span>   <span class="kw">if</span> <span class="nm">n</span> = <span class="num">1</span>
+<span class="num">2</span>     <span class="kw">return</span> <span class="nm">A</span>[<span class="num">1</span>]
+<span class="num">3</span>   <span class="nm">q</span> ← ⌊<span class="nm">n</span>/<span class="num">5</span>⌋, <span class="nm">r</span> ← <span class="nm">n</span> <span class="kw">mod</span> <span class="num">5</span>
+<span class="num">4</span>   <span class="kw">if</span> <span class="nm">r</span> = <span class="num">0</span>: разбий A на B₁,...,Bq, всеки с 5 елемента
+<span class="num">5</span>   <span class="kw">else</span>: разбий A на B₁,...,B_{q-1} (по 5 ел.) и B_q с r елемента
+<span class="num">6</span>   <span class="kw">if</span> <span class="nm">r</span> > <span class="num">0</span>: <span class="nm">q</span>++  <span class="cm">(* q = ⌈n/5⌉ *)</span>
+<span class="num">7</span>   Сортирай всяко Bᵢ и намери медианата mᵢ
+<span class="num">8</span>   <span class="nm">C</span> ← [<span class="nm">m</span>₁, <span class="nm">m</span>₂, ..., <span class="nm">m</span>_q]
+<span class="num">9</span>   <span class="nm">m</span> ← <span class="nm">Select</span>(<span class="nm">C</span>, ⌊(<span class="nm">q</span>-<span class="num">1</span>)/<span class="num">2</span>⌋)   <span class="cm">(* медиана на медианите *)</span>
+<span class="num">10</span>  <span class="nm">j</span> ← <span class="nm">Partition-Select</span>(<span class="nm">A</span>, <span class="nm">m</span>)
+<span class="num">11</span>  <span class="kw">if</span> <span class="nm">k</span> = <span class="nm">j</span> <span class="kw">return</span> <span class="nm">m</span>
+<span class="num">12</span>  <span class="kw">if</span> <span class="nm">k</span> &lt; <span class="nm">j</span> <span class="kw">return</span> <span class="nm">Select</span>(<span class="nm">A</span>[<span class="num">1</span>..<span class="nm">j</span>], <span class="nm">k</span>)
+<span class="num">13</span>  <span class="kw">else</span> <span class="kw">return</span> <span class="nm">Select</span>(<span class="nm">A</span>[<span class="nm">j</span>+<span class="num">2</span>..<span class="nm">n</span>], <span class="nm">k</span>-<span class="nm">j</span>-<span class="num">1</span>)</pre>
+      </div>
+
+      <div class="sec-h">Лесно обяснение с аналогия</div>
+      <p>Искаме да намерим медианата на 25 числа без да ги сортираме. Разделяме ги на 5 групи по 5, сортираме всяка малка група (5 сортирания са бързи), намираме медианата на всяка група — получаваме 5 медиани. Медианата на тези 5 медиани е нашият pivot <em>m</em>. Тъй като <em>m</em> е "средно голям", Partition поставя достатъчно много елементи отляво и отдясно, така рекурсията не дегенерира. Константата 5 е избрана точно така, че общата сложност да остане \(\Theta(n)\).</p>
+
+      <div class="sec-h">Визуализация — диаграма на Hasse за n=25</div>
+      <div class="viz">
+Групи по 5 (сортирани):
+  B₁:  1  2  3      B₂: 6  7  8      B₃: 11 12 13    B₄: 16 17 18    B₅: 21 22 23
+       4  5               9 10              14 15            19 20            24 25
+  m₁=3           m₂=8            m₃=13           m₄=18           m₅=23
+
+Медиани: [3, 8, 13, 18, 23]  →  m = медиана = 13
+
+Гарантирано по-малки от 13: {1,2,3,4,5,  6,7,8,9,10,  11,12} ≥ 12 елемента = 3*(q-1)/2+2
+Гарантирано по-големи от 13: {14,15, 16,...,25}              ≥ 12 елемента
+
+Следователно рекурсивното извикване е върху ≤ n - 12 = 13 елемента ≤ 7n/10</div>
+
+      <div class="sec-h">Ключови точки за запомняне</div>
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>SELECT намира k-тия по ред елемент (0-базиран ранг) в <strong>линейно</strong> \(\Theta(n)\) време.</li>
+          <li>Групи по <strong>5</strong> — магическата константа. С 3 или 4 алгоритъмът е \(\Theta(n \log n)\), с 5 или повече е линеен.</li>
+          <li>Стъпки: разбий на групи → сортирай → намери медианите → намери медиана на медианите → Partition → рекурсия.</li>
+          <li>Две рекурсивни викания: едно върху \(C\) (\(\leq n/5\) елемента), едно върху подмасив (\(\leq 7n/10\) елемента).</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="conn-label">Връзки</div>
+        <ul class="bullet">
+          <li>Partition-Select е сходна с Partition-Lomuto (Алгоритъм 14), но pivot-ът идва отвън.</li>
+          <li>SELECT се използва теоретично като pivot в Quicksort, за да го направи \(\Theta(n \log n)\) в най-лошия случай — но това е практически неизгодно.</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Опишете алгоритъма SELECT. Защо се използват групи по точно 5 елемента?</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c2" onchange="updateProgress()">
+        <label for="c2">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 3 -->
+  <div class="topic" id="t3">
+    <div class="topic-header">
+      <h2>Теорема 69 — Коректност на SELECT</h2>
+      <div class="topic-num">3</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="sec-h">Точна дефиниция</div>
+      <div class="thm">
+        <div class="thm-label">Теорема 69: Коректността на Select</div>
+        <p>Алгоритъмът Select е коректен: <strong>Select(A[1..n], k)</strong> връща елемента с 0-базиран ранг \(k\) в \(A\), тоест \((k+1)\)-вия елемент в сортиран вид, при условие \(A[x] \neq A[y]\) за \(1 \leq x < y \leq n\) (всички елементи са различни).</p>
+      </div>
+
+      <div class="sec-h">Идея на доказателството</div>
+      <p>Доказателството е по индукция по \(n\).</p>
+      <ul class="bullet">
+        <li><strong>База (n=1):</strong> Алгоритъмът директно връща A[1], което е коректно за k=0.</li>
+        <li><strong>Индукционна стъпка:</strong> Допускаме коректност за всички входове с размер &lt; n. Разглеждаме Select(A[1..n], k).</li>
+      </ul>
+      <p style="margin-top:10px">След намирането на медианата на медианите <em>m</em> и изпълнението на Partition-Select, <em>m</em> се оказва на позиция <em>j</em>, т.е. ако масивът беше сортиран, <em>m</em> ще е на позиция \(j+1\). Следват три случая:</p>
+      <div class="card ex">
+        <div class="card-label">Три случая</div>
+        <ul class="bullet">
+          <li><strong>Случай k = j:</strong> Търсим \((j+1)\)-вия елемент и той е точно <em>m</em>. Връщаме <em>m</em>. Коректно.</li>
+          <li><strong>Случай k &lt; j:</strong> Търсеният елемент е сред по-малките от <em>m</em>, тоест в A[1..j]. Рекурсивно викаме Select(A[1..j], k). По индукционно предположение (j &lt; n), то е коректно.</li>
+          <li><strong>Случай k &gt; j:</strong> Търсеният елемент е сред по-големите от <em>m</em>, в A[j+2..n]. Рекурсивно викаме Select(A[j+2..n], k-j-1). По индукционно предположение (n-j-1 &lt; n), то е коректно.</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Ключови точки за запомняне</div>
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Доказателство по <strong>индукция по n</strong>.</li>
+          <li>Три случая: k=j (намерихме), k&lt;j (рекурсия вляво), k&gt;j (рекурсия вдясно).</li>
+          <li>Всяко рекурсивно викане е върху <strong>по-малък</strong> масив — индукцията е приложима.</li>
+          <li>Коректността не зависи от избора на константата 5 — само сложността зависи.</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Докажете коректността на алгоритъма SELECT (Теорема 69).</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c3" onchange="updateProgress()">
+        <label for="c3">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 4 -->
+  <div class="topic" id="t4">
+    <div class="topic-header">
+      <h2>Теорема 70 — SELECT работи в линейно време</h2>
+      <div class="topic-num">4</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="sec-h">Точна дефиниция</div>
+      <div class="thm">
+        <div class="thm-label">Теорема 70: Линейна сложност на Select</div>
+        <p>Алгоритъмът Select работи в <strong>линейно</strong> \(\Theta(n)\) <strong>време</strong> в най-лошия случай.</p>
+      </div>
+
+      <div class="sec-h">Идея на доказателството</div>
+      <p>Ключово е да покажем, че рекурсивното извикване Select(A[1..j], k) или Select(A[j+2..n], k-j-1) се прави върху вход с размер <strong>не повече от \(7n/10\)</strong>.</p>
+
+      <div class="card def">
+        <div class="card-label">Брой елементи, гарантирано по-малки от m</div>
+        <p>Нека \(q = \lceil n/5 \rceil\) е броят на групите. Медианата на медианите \(m\) е медианата на \([m_1, \ldots, m_q]\). БОО, \(\lfloor (q-1)/2 \rfloor\) медиани са по-малки от \(m\). За всяка такава медиана \(m_i < m\), имаме и 2 елемента в \(B_i\), по-малки от \(m_i\), т.е. по-малки от \(m\). Следователно:</p>
+        <p style="margin-top:8px; text-align:center">Брой елементи гарантирано &lt; m: \(\displaystyle 3\left\lfloor \frac{q-1}{2} \right\rfloor + 2 \approx \frac{3n}{10}\)</p>
+        <p style="margin-top:8px">Следователно не повече от \(n - 3n/10 = 7n/10\) елемента могат да отидат в рекурсивното извикване.</p>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Рекурентното уравнение</div>
+        <p>Сложността по време на Select се описва от:</p>
+        <p style="text-align:center; margin:10px 0">\[T(n) = T\!\left(\frac{n}{5}\right) + T\!\left(\frac{7n}{10}\right) + n \tag{6.6}\]</p>
+        <ul class="bullet">
+          <li>\(T(n/5)\) — рекурсивното викане за намиране на медианата на медианите (C има ≤ n/5 елемента).</li>
+          <li>\(T(7n/10)\) — рекурсивното викане върху подмасива.</li>
+          <li>\(n\) — линейна работа: разбиване на групи, сортиране (константен брой сравнения), Partition.</li>
+        </ul>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Решение чрез Теорема 39</div>
+        <p>Важното наблюдение: \(\dfrac{1}{5} + \dfrac{7}{10} = \dfrac{2}{10} + \dfrac{7}{10} = \dfrac{9}{10} < 1\).</p>
+        <p style="margin-top:8px">Теорема 39 (за рекурентни уравнения от вида \(T(n) = T(\alpha n) + T(\beta n) + n\) с \(\alpha + \beta < 1\)) гарантира \(T(n) \sim n\), тоест \(T(n) = \Theta(n)\).</p>
+      </div>
+
+      <div class="sec-h">Ключови точки за запомняне</div>
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Рекурентното уравнение е \(T(n) = T(n/5) + T(7n/10) + n\).</li>
+          <li>\(1/5 + 7/10 = 9/10 < 1\) — именно това позволява линейното решение.</li>
+          <li>Ако константата е 4: \(T(n) = T(n/4) + T(3n/4) + n\), \(1/4+3/4=1\) → \(\Theta(n\log n)\).</li>
+          <li>Ако константата е 7: \(T(n) = T(n/7) + T(5n/7) + n\), \(1/7+5/7=6/7<1\) → \(\Theta(n)\).</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Докажете, че Select работи в линейно време. Запишете рекурентното уравнение и обяснете защо 1/5 + 7/10 &lt; 1 е ключово.</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c4" onchange="updateProgress()">
+        <label for="c4">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 5 -->
+  <div class="topic" id="t5">
+    <div class="topic-header">
+      <h2>Merge и Теорема 71 — Коректност на Merge</h2>
+      <div class="topic-num">5</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="sec-h">Точна дефиниция</div>
+      <div class="card def">
+        <div class="card-label">Алгоритъм 12: Merge</div>
+<pre><span class="nm">Merge</span>(<span class="nm">A</span>[<span class="num">1</span>..<span class="nm">n</span>]: <span class="kw">int</span>; <span class="nm">l</span>, <span class="nm">mid</span>, <span class="nm">h</span>: 1 ≤ l ≤ mid &lt; h ≤ n)
+<span class="cm">(* A[l..mid] и A[mid+1..h] са сортирани *)</span>
+<span class="num">1</span>  <span class="nm">n1</span> ← <span class="nm">mid</span> - <span class="nm">l</span> + <span class="num">1</span>; <span class="nm">n2</span> ← <span class="nm">h</span> - <span class="nm">mid</span>
+<span class="num">2</span>  Създай <span class="nm">L</span>[<span class="num">1</span>..<span class="nm">n1</span>+<span class="num">1</span>] и <span class="nm">R</span>[<span class="num">1</span>..<span class="nm">n2</span>+<span class="num">1</span>]
+<span class="num">3</span>  <span class="nm">L</span>[<span class="num">1</span>..<span class="nm">n1</span>] ← <span class="nm">A</span>[<span class="nm">l</span>..<span class="nm">mid</span>]; <span class="nm">R</span>[<span class="num">1</span>..<span class="nm">n2</span>] ← <span class="nm">A</span>[<span class="nm">mid</span>+<span class="num">1</span>..<span class="nm">h</span>]
+<span class="num">4</span>  <span class="nm">L</span>[<span class="nm">n1</span>+<span class="num">1</span>] ← ∞; <span class="nm">R</span>[<span class="nm">n2</span>+<span class="num">1</span>] ← ∞   <span class="cm">(* sentinel/пазач *)</span>
+<span class="num">5</span>  <span class="nm">i</span> ← <span class="num">1</span>; <span class="nm">j</span> ← <span class="num">1</span>
+<span class="num">6</span>  <span class="kw">for</span> <span class="nm">k</span> ← <span class="nm">l</span> <span class="kw">to</span> <span class="nm">h</span>
+<span class="num">7</span>    <span class="kw">if</span> <span class="nm">L</span>[<span class="nm">i</span>] ≤ <span class="nm">R</span>[<span class="nm">j</span>]
+<span class="num">8</span>      <span class="nm">A</span>[<span class="nm">k</span>] ← <span class="nm">L</span>[<span class="nm">i</span>]; <span class="nm">i</span>++
+<span class="num">9</span>    <span class="kw">else</span>
+<span class="num">10</span>     <span class="nm">A</span>[<span class="nm">k</span>] ← <span class="nm">R</span>[<span class="nm">j</span>]; <span class="nm">j</span>++</pre>
+      </div>
+
+      <div class="thm">
+        <div class="thm-label">Теорема 71: Коректността на Merge</div>
+        <p>Ако A[l..mid] и A[mid+1..h] са сортирани, тогава след изпълнение на Merge, A[l..h] съдържа точно елементите на входните A[l..mid] и A[mid+1..h], в сортиран вид.</p>
+        <p style="margin-top:8px"><strong>Доказателство (инвариант 19):</strong></p>
+        <ul class="bullet">
+          <li><strong>Инвариант:</strong> При всяко достигане на ред 6, A[l..k-1] съдържа k-l най-малки елементи на L и R, в сортиран вид. Освен това L[i] и R[j] са най-малките некопирани елементи в L и R.</li>
+          <li><strong>База (k=l):</strong> A[l..l-1] е празен — вярно в тривиален смисъл.</li>
+          <li><strong>Поддръжка:</strong> Копираме по-малкия от L[i] и R[j], инкрементираме съответния индекс. Инвариантът се запазва.</li>
+          <li><strong>Терминация (k=h+1):</strong> A[l..h] съдържа h-l+1 най-малки елемента = всички елементи.</li>
+        </ul>
+        <p style="margin-top:8px"><strong>Лема 31:</strong> При никое сравнение на ред 7 не могат едновременно L[i] и R[j] да са ∞, защото h-l+1 = n1+n2 и не всички некопирани елементи могат да са ∞.</p>
+      </div>
+
+      <div class="sec-h">Ключови точки за запомняне</div>
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Merge използва <strong>sentinel (пазач) ∞</strong> в края на L и R — избягва специален case за края на масив.</li>
+          <li>Инвариантът е двучастен: коректно сортирана лява половина + намиране на следващия минимум.</li>
+          <li>Merge е <strong>стабилен</strong> заради нестрокото ≤ на ред 7 (елементите от L са предпочитани).</li>
+          <li>Сложност: \(\Theta(n)\) по памет (копира L и R) и \(\Theta(n)\) по време.</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Докажете коректността на Merge (Теорема 71). Формулирайте инварианта и обяснете ролята на sentinel-а ∞.</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c5" onchange="updateProgress()">
+        <label for="c5">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 6 -->
+  <div class="topic" id="t6">
+    <div class="topic-header">
+      <h2>Mergesort и Теорема 72 — Коректност на Mergesort</h2>
+      <div class="topic-num">6</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="sec-h">Точна дефиниция</div>
+      <div class="card def">
+        <div class="card-label">Алгоритъм 13: Mergesort</div>
+<pre><span class="nm">Mergesort</span>(<span class="nm">A</span>[<span class="num">1</span>..<span class="nm">n</span>]: <span class="kw">int</span>; <span class="nm">l</span>, <span class="nm">h</span>: индекси)
+<span class="num">1</span>  <span class="kw">if</span> <span class="nm">l</span> &lt; <span class="nm">h</span>
+<span class="num">2</span>    <span class="nm">mid</span> ← ⌊(<span class="nm">l</span>+<span class="nm">h</span>)/<span class="num">2</span>⌋
+<span class="num">3</span>    <span class="nm">Mergesort</span>(<span class="nm">A</span>, <span class="nm">l</span>, <span class="nm">mid</span>)
+<span class="num">4</span>    <span class="nm">Mergesort</span>(<span class="nm">A</span>, <span class="nm">mid</span>+<span class="num">1</span>, <span class="nm">h</span>)
+<span class="num">5</span>    <span class="nm">Merge</span>(<span class="nm">A</span>, <span class="nm">l</span>, <span class="nm">mid</span>, <span class="nm">h</span>)</pre>
+        <p style="margin-top:8px">Началното извикване: <strong>Mergesort(A, 1, n)</strong></p>
+      </div>
+
+      <div class="thm">
+        <div class="thm-label">Теорема 72: Коректността на Mergesort</div>
+        <p>Mergesort е коректен сортиращ алгоритъм.</p>
+        <p style="margin-top:8px"><strong>Доказателство по индукция по h-l:</strong></p>
+        <ul class="bullet">
+          <li><strong>База (h-l=0, т.е. h=l):</strong> Едноелементният масив A[l..l] е тривиално сортиран. Mergesort не прави нищо.</li>
+          <li><strong>Поддръжка:</strong> Допускаме коректност за всички h-l &lt; текущото. Тогава рекурсивните викания на редове 3 и 4 сортират A[l..mid] и A[mid+1..h] (по ИП). Следователно Merge (Теорема 71) слива ги в сортиран A[l..h].</li>
+          <li><strong>Терминация:</strong> Началното извикване Mergesort(A,1,n) след приключване: A[1..n] е сортиран.</li>
+        </ul>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Сложност на Mergesort</div>
+        <p>Рекурентното уравнение: \(T(n) = 2T(n/2) + n\)</p>
+        <p>По <strong>втори случай на Мастър теоремата</strong> (\(a=2, b=2, f(n)=n, n^{\log_b a} = n^1 = n\)):</p>
+        <p style="text-align:center; margin-top:6px">\[T(n) = \Theta(n \log n)\]</p>
+        <ul class="bullet" style="margin-top:8px">
+          <li>Сложност по памет: \(\Theta(n)\) ако се имплементира грамотно; \(\Theta(n \log n)\) ако всяко Merge алокира нова памет.</li>
+          <li>Mergesort е <strong>стабилен</strong> сортиращ алгоритъм.</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Ключови точки за запомняне</div>
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Mergesort е <strong>рекурсивен</strong> алгоритъм — доказателство за коректност е по <strong>индукция по h-l</strong>, не инвариант.</li>
+          <li>Сложност \(\Theta(n \log n)\) — Мастър теорема, втори случай.</li>
+          <li>Mergesort е <strong>стабилен</strong>, Heapsort и Quicksort не са.</li>
+          <li>Откривател: <strong>John von Neumann, 1945 г.</strong></li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="conn-label">Връзки</div>
+        <ul class="bullet">
+          <li>Mergesort е основа за алгоритъма <strong>Count-Inversions</strong> (брой инверсии в \(\Theta(n \log n)\)).</li>
+          <li>В сравнение с Heapsort: и двата са \(\Theta(n \log n)\), но Mergesort е стабилен, Heapsort е in-place.</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Докажете коректността на Mergesort (Теорема 72). Какво е рекурентното уравнение и какво е решението му?</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c6" onchange="updateProgress()">
+        <label for="c6">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 7 -->
+  <div class="topic" id="t7">
+    <div class="topic-header">
+      <h2>Partition-Lomuto и Теорема 74 — Quicksort</h2>
+      <div class="topic-num">7</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="sec-h">Точна дефиниция</div>
+      <div class="card def">
+        <div class="card-label">Алгоритъм 14: Partition-Lomuto</div>
+<pre><span class="nm">Partition-Lomuto</span>(<span class="nm">A</span>[<span class="num">1</span>..<span class="nm">n</span>]: <span class="kw">int</span>; <span class="nm">l</span>, <span class="nm">h</span>: l &lt; h)
+<span class="num">1</span>  <span class="nm">pivot</span> ← <span class="nm">A</span>[<span class="nm">h</span>]   <span class="cm">(* последният елемент е pivot *)</span>
+<span class="num">2</span>  <span class="nm">pp</span> ← <span class="nm">l</span>
+<span class="num">3</span>  <span class="kw">for</span> <span class="nm">i</span> ← <span class="nm">l</span> <span class="kw">to</span> <span class="nm">h</span>-<span class="num">1</span>
+<span class="num">4</span>    <span class="kw">if</span> <span class="nm">A</span>[<span class="nm">i</span>] &lt; <span class="nm">pivot</span>
+<span class="num">5</span>      <span class="nm">swap</span>(<span class="nm">A</span>[<span class="nm">i</span>], <span class="nm">A</span>[<span class="nm">pp</span>])
+<span class="num">6</span>      <span class="nm">pp</span>++
+<span class="num">7</span>  <span class="nm">swap</span>(<span class="nm">A</span>[<span class="nm">pp</span>], <span class="nm">A</span>[<span class="nm">h</span>])  <span class="cm">(* сложи pivot на правилното му място *)</span>
+<span class="num">8</span>  <span class="kw">return</span> <span class="nm">pp</span></pre>
+      </div>
+
+      <div class="thm">
+        <div class="thm-label">Теорема 74: Коректността на Partition-Lomuto</div>
+        <p>Ефектът от работата на Partition-Lomuto е следният. Елементът A[h] е pivot. Алгоритъмът пренарежда елементите така, че pivot се оказва в A[pp] и:</p>
+        <ul class="bullet" style="margin-top:8px">
+          <li>\(\forall x \in A[l..pp-1] : x < A[pp]\)</li>
+          <li>\(\forall x \in A[pp+1..h] : x \geq A[pp]\)</li>
+        </ul>
+        <p style="margin-top:8px"><strong>Доказателство чрез инвариант 23:</strong></p>
+        <div class="card def" style="margin-top:8px">
+          <div class="card-label">Инвариант 23</div>
+          <p>При всяко достигане на ред 3:</p>
+          <ul class="bullet">
+            <li>\(\forall x \in A[l..pp-1] : x < pivot\)</li>
+            <li>\(\forall x \in A[pp..i-1] : x \geq pivot\)</li>
+          </ul>
+          <p style="margin-top:8px"><strong>База (i=l, pp=l):</strong> И двата подмасива са празни — вярно тривиално.</p>
+          <p style="margin-top:8px"><strong>Поддръжка:</strong> Два случая:</p>
+          <ul class="bullet">
+            <li><em>A[i] &lt; pivot:</em> Разменяме A[i] с A[pp], инкрементираме pp. "Малкият" A[i] отива в зелената зона, "голям" A[pp] отива в жълтата. Инвариантът се запазва.</li>
+            <li><em>A[i] ≥ pivot:</em> Не правим нищо. A[i] отива в жълтата зона автоматично при следващото i. Инвариантът се запазва.</li>
+          </ul>
+          <p style="margin-top:8px"><strong>Терминация (i=h):</strong> A[l..pp-1] са малки, A[pp..h-1] са големи. Разменяме A[pp] с A[h]=pivot. Pivot е на позиция pp. Твърдението е доказано.</p>
+        </div>
+      </div>
+
+      <div class="sec-h">Сложност на Quicksort</div>
+      <div class="card def">
+        <div class="card-label">Quicksort — псевдокод и сложност</div>
+<pre><span class="nm">Quicksort</span>(<span class="nm">A</span>[<span class="num">1</span>..<span class="nm">n</span>]: <span class="kw">int</span>; <span class="nm">l</span>, <span class="nm">h</span>)
+<span class="num">1</span>  <span class="kw">if</span> <span class="nm">l</span> &lt; <span class="nm">h</span>
+<span class="num">2</span>    <span class="nm">pp</span> ← <span class="nm">Partition-Lomuto</span>(<span class="nm">A</span>, <span class="nm">l</span>, <span class="nm">h</span>)
+<span class="num">3</span>    <span class="nm">Quicksort</span>(<span class="nm">A</span>, <span class="nm">l</span>, <span class="nm">pp</span>-<span class="num">1</span>)
+<span class="num">4</span>    <span class="nm">Quicksort</span>(<span class="nm">A</span>, <span class="nm">pp</span>+<span class="num">1</span>, <span class="nm">h</span>)</pre>
+
+        <table>
+          <tr><th>Случай</th><th>Pivot</th><th>Рекурентно уравнение</th><th>Сложност</th></tr>
+          <tr><td>Най-лош</td><td>Винаги мин/макс</td><td>\(T(n) = T(n-1) + n\)</td><td>\(\Theta(n^2)\)</td></tr>
+          <tr><td>Среден</td><td>Случаен</td><td>\(T(n) = 2T(n/2) + n\) (приблизително)</td><td>\(\Theta(n \log n)\)</td></tr>
+          <tr><td>Най-добър</td><td>Медиана</td><td>\(T(n) = 2T(n/2) + n\)</td><td>\(\Theta(n \log n)\)</td></tr>
+        </table>
+      </div>
+
+      <div class="sec-h">Визуализация — зони при Partition-Lomuto</div>
+      <div class="viz">
+A[l..h]:  [ зелена зона | жълта зона | сива зона | pivot ]
+           A[l..pp-1]   A[pp..i-1]   A[i..h-1]   A[h]
+           (< pivot)    (≥ pivot)    (необработена)
+
+След терминация на for-цикъла:
+           [ зелена зона | жълта зона | pivot ]
+             (< pivot)    (≥ pivot)    A[h]=pivot
+
+След swap(A[pp], A[h]):
+           [ < pivot | pivot | ≥ pivot ]
+             A[l..pp-1] A[pp] A[pp+1..h]</div>
+
+      <div class="sec-h">Ключови точки за запомняне</div>
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Partition-Lomuto: pivot = A[h], крайна позиция = pp. Коректно: < pivot вляво, ≥ pivot вдясно.</li>
+          <li>Quicksort: Divide=Partition (работа), Combine=<strong>празна</strong> (за разлика от Mergesort!).</li>
+          <li>Най-лош случай \(\Theta(n^2)\) — при вече сортиран вход с pivot = последен елемент.</li>
+          <li>Среден случай \(\Theta(n \log n)\), на практика по-бърз от Heapsort и Mergesort поради константата.</li>
+          <li>Quicksort <strong>не е стабилен</strong>. Открит от <strong>Hoare, 1960-те</strong>.</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="conn-label">Сравнение: Mergesort vs Quicksort vs Heapsort</div>
+        <table>
+          <tr><th>Алгоритъм</th><th>Най-лош</th><th>Среден</th><th>Памет</th><th>Стабилен</th></tr>
+          <tr><td>Mergesort</td><td>\(\Theta(n\log n)\)</td><td>\(\Theta(n\log n)\)</td><td>\(\Theta(n)\)</td><td>Да</td></tr>
+          <tr><td>Heapsort</td><td>\(\Theta(n\log n)\)</td><td>\(\Theta(n\log n)\)</td><td>\(\Theta(1)\)</td><td>Не</td></tr>
+          <tr><td>Quicksort</td><td>\(\Theta(n^2)\)</td><td>\(\Theta(n\log n)\)</td><td>\(\Theta(\log n)\)*</td><td>Не</td></tr>
+        </table>
+        <p style="font-size:0.85rem; color:var(--text2)">* стек за рекурсия</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Докажете коректността на Partition-Lomuto (Теорема 74). Запишете инварианта и разгледайте двата случая в поддръжката. Каква е сложността на Quicksort в най-лошия и в средния случай?</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c7" onchange="updateProgress()">
+        <label for="c7">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+function toggleTheme() {
+  const root = document.documentElement;
+  const isLight = root.getAttribute('data-theme') === 'light';
+  root.setAttribute('data-theme', isLight ? '' : 'light');
+  document.querySelector('#topbar .btn').textContent = isLight ? 'Светла тема' : 'Тъмна тема';
+}
+function updateProgress() {
+  const total = 7;
+  const checked = document.querySelectorAll('input[type=checkbox]:checked').length;
+  const pct = Math.round(checked / total * 100);
+  document.getElementById('progress-bar-inner').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = checked + ' от ' + total + ' теми изучени';
+}
+// Scroll-spy
+const links = document.querySelectorAll('#sidebar li a');
+const topics = document.querySelectorAll('.topic');
+window.addEventListener('scroll', () => {
+  let current = '';
+  topics.forEach(t => { if (window.scrollY >= t.offsetTop - 100) current = t.id; });
+  links.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+</script>
+</body>
+</html>

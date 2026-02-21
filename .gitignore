@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Claude internal files
+.claude/
+
+# Extracted text cache (auto-generated, can be recreated with pypdf)
+extracted_text/
+
+# Large binary lecture files (stored locally, not needed in repo)
+Секции/
+Лекционни записки - 27 01 2026.pdf

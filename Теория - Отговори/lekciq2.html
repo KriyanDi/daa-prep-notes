@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лекция 2 - Анализ на алгоритми | ДАА 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --bg:#0f1117;--bg2:#1a1d27;--bg3:#242838;--accent:#4f8ef7;--accent2:#7c5cbf;
+    --green:#2ecc71;--yellow:#f39c12;--red:#e74c3c;--text:#e8eaf0;--text2:#9ca3af;
+    --border:#2d3148;--def-bg:#0d2137;--def-border:#1e5799;--ex-bg:#0d2d1a;
+    --ex-border:#1e7d3e;--key-bg:#2d2100;--key-border:#7d5c00;--code-bg:#141822;
+  }
+  [data-theme="light"] {
+    --bg:#f0f2f8;--bg2:#fff;--bg3:#e8ecf5;--accent:#2563eb;--accent2:#7c3aed;
+    --green:#16a34a;--yellow:#d97706;--red:#dc2626;--text:#1e293b;--text2:#64748b;
+    --border:#cbd5e1;--def-bg:#eff6ff;--def-border:#3b82f6;--ex-bg:#f0fdf4;
+    --ex-border:#22c55e;--key-bg:#fffbeb;--key-border:#f59e0b;--code-bg:#1e293b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;}
+  #layout{display:flex;min-height:100vh;}
+  #sidebar{width:280px;background:var(--bg2);border-right:1px solid var(--border);
+    position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;padding:20px 0;}
+  #sidebar h2{color:var(--accent);font-size:0.82rem;text-transform:uppercase;letter-spacing:1px;
+    padding:0 20px 10px;border-bottom:1px solid var(--border);}
+  #sidebar ul{list-style:none;padding:10px 0;}
+  #sidebar li a{display:block;padding:7px 20px;color:var(--text2);text-decoration:none;
+    font-size:0.85rem;border-left:3px solid transparent;transition:all 0.2s;}
+  #sidebar li a:hover,#sidebar li a.active{color:var(--accent);border-left-color:var(--accent);
+    background:rgba(79,142,247,0.08);}
+  #main{margin-left:280px;flex:1;padding:40px;max-width:1000px;}
+  #topbar{position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border);
+    z-index:50;display:flex;align-items:center;justify-content:space-between;
+    padding:12px 40px;margin:-40px -40px 40px;}
+  #topbar h1{font-size:1.05rem;color:var(--accent);}
+  .btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border);
+    background:var(--bg3);color:var(--text);cursor:pointer;font-size:0.85rem;}
+  .btn:hover{background:var(--accent);color:white;border-color:var(--accent);}
+  #progress-wrap{background:var(--bg3);border-radius:8px;padding:16px 20px;
+    margin-bottom:32px;border:1px solid var(--border);}
+  #progress-wrap h3{font-size:0.9rem;color:var(--text2);margin-bottom:10px;}
+  #progress-bar-outer{background:var(--bg);border-radius:99px;height:8px;overflow:hidden;}
+  #progress-bar-inner{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));
+    border-radius:99px;transition:width 0.5s;}
+  #progress-label{font-size:0.85rem;color:var(--text2);margin-top:6px;}
+  .topic{background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+    margin-bottom:40px;overflow:hidden;scroll-margin-top:80px;}
+  .topic-header{padding:20px 24px;background:linear-gradient(135deg,#1e3a5f,#2d3da8);
+    display:flex;align-items:center;justify-content:space-between;}
+  .topic-header h2{color:white;font-size:1.1rem;}
+  .topic-num{background:rgba(255,255,255,0.2);color:white;border-radius:50%;
+    width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:bold;}
+  .topic-body{padding:24px;}
+  .card{border-radius:8px;padding:16px 20px;margin:16px 0;}
+  .card.def{background:var(--def-bg);border-left:4px solid var(--def-border);}
+  .card.def .card-label{color:var(--accent);font-weight:700;font-size:0.8rem;
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+  .card.ex{background:var(--ex-bg);border-left:4px solid var(--ex-border);}
+  .card.ex .card-label{color:var(--green);font-weight:700;font-size:0.8rem;
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+  .card.key{background:var(--key-bg);border-left:4px solid var(--key-border);}
+  .card.key .card-label{color:var(--yellow);font-weight:700;font-size:0.8rem;
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+  .sec-h{font-size:0.95rem;font-weight:700;color:var(--accent);margin:20px 0 8px;
+    display:flex;align-items:center;gap:8px;}
+  .sec-h::before{content:'';display:inline-block;width:3px;height:16px;
+    background:var(--accent);border-radius:2px;}
+  pre{background:var(--code-bg);color:#cdd6f4;border-radius:8px;padding:16px 20px;
+    overflow-x:auto;font-family:'Cascadia Code','Fira Code',monospace;font-size:0.87rem;
+    line-height:1.6;margin:12px 0;border:1px solid var(--border);}
+  .kw{color:#cba6f7;}.cm{color:#6c7086;font-style:italic;}.nm{color:#89dceb;}
+  .op{color:#89b4fa;}.str{color:#a6e3a1;}.num{color:#fab387;}
+  .viz{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;
+    padding:16px 20px;font-family:monospace;font-size:0.84rem;color:#cdd6f4;
+    white-space:pre;overflow-x:auto;margin:12px 0;}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.9rem;}
+  th{background:var(--bg3);color:var(--accent);padding:10px 12px;text-align:left;
+    border-bottom:2px solid var(--accent);}
+  td{padding:9px 12px;border-bottom:1px solid var(--border);}
+  tr:hover td{background:rgba(79,142,247,0.05);}
+  ul.bullet{list-style:none;padding:0;}
+  ul.bullet li{padding:6px 0 6px 24px;position:relative;}
+  ul.bullet li::before{content:'▸';position:absolute;left:0;color:var(--accent);}
+  .exam-box{background:linear-gradient(135deg,rgba(231,76,60,0.1),rgba(231,76,60,0.05));
+    border:1px solid var(--red);border-radius:8px;padding:16px 20px;margin:16px 0;}
+  .exam-box .card-label{color:var(--red);font-weight:700;font-size:0.8rem;
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+  .conn-box{background:rgba(124,92,191,0.1);border:1px solid var(--accent2);
+    border-radius:8px;padding:16px 20px;margin:16px 0;}
+  .conn-box .card-label{color:var(--accent2);font-weight:700;font-size:0.8rem;
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+  .proof-box{background:rgba(79,142,247,0.06);border:1px solid var(--accent);
+    border-radius:8px;padding:16px 20px;margin:12px 0;}
+  .proof-title{color:var(--accent);font-weight:700;margin-bottom:10px;font-size:0.9rem;}
+  p{margin:10px 0;}b,strong{color:var(--accent);}hr{border:none;border-top:1px solid var(--border);margin:20px 0;}
+  @media(max-width:768px){#sidebar{transform:translateX(-100%);}#main{margin-left:0;padding:20px;}
+    #topbar{padding:12px 20px;margin:-20px -20px 20px;}}
+</style>
+</head>
+<body data-theme="dark">
+<div id="layout">
+<nav id="sidebar">
+  <h2>Лекция 2 - Навигация</h2>
+  <ul>
+    <li><a href="#t1">Анализ на коректността</a></li>
+    <li><a href="#t2">Коректност на рекурсивни алг. (MAX BITONIC)</a></li>
+    <li><a href="#t3">Коректност на итеративни алг. (инварианти)</a></li>
+    <li><a href="#t4">Алгоритъм ALG 2SUM</a></li>
+    <li><a href="#t5">Алгоритъм ALG MAX SUM PLUS DIST</a></li>
+    <li><a href="#t6">Анализ на сложността. Големина на входа</a></li>
+    <li><a href="#t7">Сложност по време</a></li>
+    <li><a href="#t8">Асимптотични нотации</a></li>
+    <li><a href="#t9">Нотация Тита-голямо</a></li>
+  </ul>
+</nav>
+<main id="main">
+  <div id="topbar">
+    <h1>ДАА 2026 - Лекция 2: Анализ на алгоритми</h1>
+    <button class="btn" onclick="toggleTheme()">Тема</button>
+  </div>
+
+  <div id="progress-wrap">
+    <h3>Готовност за изпит</h3>
+    <div id="progress-bar-outer"><div id="progress-bar-inner" style="width:0%"></div></div>
+    <div id="progress-label">Отметнете темите, които сте научили</div>
+    <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
+      <label style="font-size:0.85rem;color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Анализ на коректността</label>
+      <label style="font-size:0.85rem;color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> MAX BITONIC</label>
+      <label style="font-size:0.85rem;color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Инварианти</label>
+      <label style="font-size:0.85rem;color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> ALG 2SUM</label>
+      <label style="font-size:0.85rem;color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> ALG MAX SUM PLUS DIST</label>
+      <label style="font-size:0.85rem;color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Сложност</label>
+      <label style="font-size:0.85rem;color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Видове сложност по време</label>
+      <label style="font-size:0.85rem;color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Асимп. нотации</label>
+      <label style="font-size:0.85rem;color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Тита-голямо</label>
+    </div>
+  </div>
+
+  <!-- TOPIC 1 -->
+  <section class="topic" id="t1">
+    <div class="topic-header"><h2>Анализ на коректността на алгоритми</h2><div class="topic-num">1</div></div>
+    <div class="topic-body">
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — по лекции на преподавателя</div>
+        <p><strong>Определение 7: Верификация</strong></p>
+        <p>Верификация (verification) означава <em>формално доказване на коректност</em>. "Ще верифицираме алгоритъма A" = "ще докажем формално коректността на алгоритъма A".</p>
+        <br>
+        <p>Анализът на коректността е доказателство, че алгоритъмът A реализира именно релацията Π (изчислителната задача), а не някаква друга.</p>
+        <br>
+        <p><strong>Две главни техники:</strong></p>
+        <ul class="bullet">
+          <li><strong>По индукция</strong> — за рекурсивни алгоритми</li>
+          <li><strong>С инвариант на цикъл</strong> — за итеративни алгоритми</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Анализът на коректността е като <em>математическо доказателство</em> — трябва да покажем, че за <em>всеки</em> вход (не само за примери!) алгоритъмът дава правилния отговор. Примерите са само за илюстрация, не за доказване.</p>
+      <p>Важно: Коректността е <em>по-важна</em> от скоростта! Ако алгоритъмът е некоректен — не ни интересува колко бързо работи.</p>
+
+      <div class="sec-h">Структура на доказателство за коректност</div>
+      <div class="viz">
+Анализ на алгоритъм A:
+
+1. КОРЕКТНОСТ (ефективност):
+   "Дали A решава точно задача Π?"
+   ┌── Доказателство за финитност (завършва ли винаги?)
+   └── Доказателство за резултата (дали е правилен?)
+        ├── Рекурсивен A → по индукция
+        └── Итеративен A → с инвариант на цикъл
+
+2. СЛОЖНОСТ (ефикасност):
+   "Колко ресурси ползва A?"
+   ├── Сложност по ВРЕМЕ
+   └── Сложност по ПАМЕТ
+</div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Коректност = алгоритъмът прави точно това, което трябва за <em>всеки</em> вход</li>
+          <li>Ефективен = коректен. Ефикасен = използва малко ресурси (не е синоним!)</li>
+          <li>Верификация = формално (математическо) доказателство за коректност</li>
+          <li>Некоректен алгоритъм → анализът му спира тук</li>
+          <li>Доказателството включва финитност + правилност на резултата</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 2 -->
+  <section class="topic" id="t2">
+    <div class="topic-header"><h2>Коректност на рекурсивни алгоритми — MAX BITONIC</h2><div class="topic-num">2</div></div>
+    <div class="topic-body">
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — по лекции на преподавателя</div>
+        <p><strong>Метод: Доказателство по индукция (за рекурсивни алгоритми)</strong></p>
+        <p>Формално и прецизно доказателство за коректност на рекурсивен алгоритъм A се прави по <strong>индукция по големината на входа</strong>. Схемата е:</p>
+        <ul class="bullet">
+          <li><strong>База:</strong> За входовете, задействащи "спирачката" — проверяваме, че A(x) връща точно очакваното.</li>
+          <li><strong>Индуктивно предположение:</strong> Приемаме, че A работи коректно за всички входове с по-малка "управляваща" стойност.</li>
+          <li><strong>Индуктивна стъпка:</strong> Показваме, че при тези допускания A(w) връща правилното за входа w.</li>
+        </ul>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Дефиниция: Битоничен масив</div>
+        <p>Масивът A[1..n] е <strong>битоничен</strong>, ако съществува индекс k ∈ {1,...,n}, такъв че:</p>
+        <p>A[1] &lt; A[2] &lt; ... &lt; A[k] &gt; A[k+1] &gt; A[k+2] &gt; ... &gt; A[n]</p>
+        <p>(строго нараства до максимума, след което строго намалява; нарастващата или намаляващата може да е празна)</p>
+      </div>
+
+      <div class="viz">
+Примери за битонични масиви:
+[1, 2, 3, 4, 9]   — нараства до 9, намаляваща е празна (k=5)
+[9, 4, 3, 2, 1]   — нарастващата е празна (k=1), намалява
+[1, 2, 3, 9, 1]   — нараства до 9, след това намалява
+[1, 2, 3, 9, 9, 1]— специален случай: двоен максимум (A[k]=A[k+1])
+
+Ключово: битоничен масив има 1 или 2 максимални елемента (само ако са съседни)!
+</div>
+
+      <div class="sec-h">Псевдокодът на алгоритъма</div>
+<pre><code><span class="cm">-- Алгоритъм 1: Max Bitonic (по лекция 2)</span>
+<span class="kw">Max Bitonic</span> (A[1..n]: битоничен масив; ℓ, h: 1 ≤ ℓ ≤ h ≤ n)
+<span class="num">1</span>  <span class="kw">if</span> ℓ = h
+<span class="num">2</span>      <span class="kw">return</span> A[ℓ]
+<span class="num">3</span>  mid ← ⌊(ℓ+h)/2⌋
+<span class="num">4</span>  <span class="kw">if</span> A[mid] < A[mid+1]
+<span class="num">5</span>      <span class="kw">return</span> Max Bitonic(A, mid+1, h)
+<span class="num">6</span>  <span class="kw">else if</span> A[mid] > A[mid+1]
+<span class="num">7</span>      <span class="kw">return</span> Max Bitonic(A, ℓ, mid)
+<span class="num">8</span>  <span class="kw">else</span>  <span class="cm">-- A[mid] = A[mid+1]: двоен максимум</span>
+<span class="num">9</span>      <span class="kw">return</span> A[mid]
+
+<span class="cm">-- Началното викане: Max Bitonic(A, 1, n)</span></code></pre>
+
+      <div class="sec-h">Доказателство за коректност — Теорема 5</div>
+      <div class="card def">
+        <div class="card-label">Теорема 5 (по лекцията)</div>
+        <p>Ако A[1..n] е битоничен и 1 ≤ ℓ ≤ h ≤ n, то <strong>Max Bitonic(A, ℓ, h) връща максималния елемент на подмасива A[ℓ..h]</strong>.</p>
+      </div>
+      <div class="proof-box">
+        <div class="proof-title">Доказателство (по индукция по разликата h - ℓ)</div>
+        <p><strong>Управляващ параметър:</strong> разликата h - ℓ (не две отделни индексни стойности!)</p>
+
+        <p><strong>База: h - ℓ = 0, тоест h = ℓ.</strong><br>
+        Подмасивът A[ℓ..ℓ] съдържа само A[ℓ]. Максимумът е A[ℓ]. Алгоритъмът изпълнява ред 2 и връща A[ℓ]. ✓</p>
+
+        <p><strong>Индуктивно предположение:</strong> За всички ℓ', h', такива че ℓ ≤ ℓ' ≤ h' ≤ h и h' - ℓ' &lt; h - ℓ, Max Bitonic(A, ℓ', h') връща максимума на A[ℓ'..h'].</p>
+
+        <p><strong>Индуктивна стъпка:</strong> Нека ℓ &lt; h. Изпълнява се ред 3: mid = ⌊(ℓ+h)/2⌋. Лема 1 гарантира: 0 ≤ h-(mid+1) &lt; h-ℓ и 0 ≤ mid-ℓ &lt; h-ℓ (рекурсивните викания имат по-малка разлика).</p>
+
+        <p><strong>Случай 1: A[mid] &lt; A[mid+1].</strong><br>
+        Тъй като масивът е битоничен, нито един от A[ℓ], ..., A[mid] не е максимален. Максимумът е в A[mid+1..h]. Алгоритъмът вика Max Bitonic(A, mid+1, h). По индуктивното предположение, то връща максимума на A[mid+1..h], = максимума на A[ℓ..h]. ✓</p>
+
+        <p><strong>Случай 2: A[mid] &gt; A[mid+1].</strong><br>
+        Нито един от A[mid+1], ..., A[h] не е максимален. Максимумът е в A[ℓ..mid]. Алгоритъмът вика Max Bitonic(A, ℓ, mid). По индуктивното предположение, то връща максимума. ✓</p>
+
+        <p><strong>Случай 3: A[mid] = A[mid+1].</strong><br>
+        Двоен максимум — A[mid] = A[mid+1] е максималният елемент. Алгоритъмът връща A[mid]. ✓</p>
+
+        <p>Всичките три случая са взаимно изключващи се и изчерпателни. □</p>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">Стъпка по стъпка: A = [1, 3, 5, 9, 7, 4, 2], ℓ=1, h=7</div>
+        <div class="viz">
+Max Bitonic(A, 1, 7)
+├── mid = ⌊(1+7)/2⌋ = 4
+├── A[4]=9, A[5]=7: 9 > 7  → A[mid] > A[mid+1]
+└── → Max Bitonic(A, 1, 4)  ← рекурсия в лявата половина
+    ├── mid = ⌊(1+4)/2⌋ = 2
+    ├── A[2]=3, A[3]=5: 3 < 5 → A[mid] < A[mid+1]
+    └── → Max Bitonic(A, 3, 4)  ← рекурсия в дясната половина
+        ├── mid = ⌊(3+4)/2⌋ = 3
+        ├── A[3]=5, A[4]=9: 5 < 9 → A[mid] < A[mid+1]
+        └── → Max Bitonic(A, 4, 4)
+            └── ℓ=h=4 → return A[4] = 9 ✓</div>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Индукцията е по <em>разликата h - ℓ</em> (управляващ параметър), не по отделни индекси</li>
+          <li>Доказателство: база + ИП + ИС (3 случая: &lt;, &gt;, =)</li>
+          <li>Лема 1 гарантира, че рекурсивните викания намаляват разликата (рекурсията е добре дефинирана)</li>
+          <li>Битоничен масив: строго нараства до k, строго намалява след k</li>
+          <li>Алгоритъмът е тип "двоично търсене" — O(log n) сложност</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Опишете алгоритъма MAX BITONIC и докажете коректността му чрез индукция."</p>
+        <p><em>Трябва:</em> Дефиниция на битоничен масив, псевдокод, Теорема 5 (формулировка), доказателство с трите случая.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 3 -->
+  <section class="topic" id="t3">
+    <div class="topic-header"><h2>Доказателства с инвариант — итеративни алгоритми</h2><div class="topic-num">3</div></div>
+    <div class="topic-body">
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — по лекции на преподавателя</div>
+        <p><strong>Инвариант на цикъл</strong> е едноместен предикат P(t), свързан с реда на условието на цикъла (ред ℓ). Броячът t е броят на достиганията на ред ℓ от началото на изпълнението (включително текущото).</p>
+        <br>
+        <p>Предикатът трябва да има следните свойства:</p>
+        <ul class="bullet">
+          <li>P(1) е истина при <em>първото</em> достигане на ред ℓ (База)</li>
+          <li>P(t) влече P(t+1) — запазва се при всяко завъртане на цикъла (Поддръжка)</li>
+          <li>P(m) при <em>последното</em> достигане ни дава точно желаното заключение (Терминация)</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Схема на доказателство с инвариант (по CLR/CLRS)</div>
+      <div class="viz">
+Доказателство за коректност с инвариант:
+
+┌──────────────────────────────────────────────────────────┐
+│ 1. ИНВАРИАНТ:                                            │
+│    Формулировка: "При t-тото достигане на ред ℓ е        │
+│    изпълнено [твърдение, включващо t и/или стойностите   │
+│    на промен.]"                                           │
+│                                                          │
+│ 2. БАЗА: P(1) — инвариантът е верен при 1-во достигане   │
+│                                                          │
+│ 3. ПОДДРЪЖКА: P(t) ⟹ P(t+1) при следващото завъртане    │
+│    (разглеждаме всеки клон на if-else в тялото)          │
+│                                                          │
+│ 4. ТЕРМИНАЦИЯ: При последното достигане (t=m),           │
+│    P(m) ни дава коректността на алгоритъма               │
+└──────────────────────────────────────────────────────────┘
+</div>
+
+      <div class="card ex">
+        <div class="card-label">Пример: Алгоритъм Max Unsorted, iter — доказателство с инвариант</div>
+<pre><code><span class="kw">Max Unsorted, iter</span> (A[1..n]: масив от числа)
+<span class="num">1</span>  max ← -∞
+<span class="num">2</span>  i ← 1
+<span class="num">3</span>  <span class="kw">while</span> i ≤ n <span class="kw">do</span>
+<span class="num">4</span>      <span class="kw">if</span> A[i] > max
+<span class="num">5</span>          max ← A[i]
+<span class="num">6</span>      i ← i + 1
+<span class="num">7</span>  <span class="kw">return</span> max</code></pre>
+        <p><strong>Инвариант:</strong> Всеки път, когато изпълнението е на ред 3, max съдържа максималния елемент на подмасива A[1..i-1].</p>
+        <p><strong>База:</strong> При 1-во достигане на ред 3: i=1, max=-∞. A[1..0] е празен, максимумът е -∞. ✓</p>
+        <p><strong>Поддръжка:</strong> Допускаме инварианта при достигане, което не е последно. Два случая:<br>
+        (1) A[i] &gt; max: max ← A[i], след i← i+1, max = макс. на A[1..i-1] ✓<br>
+        (2) A[i] ≤ max: max не се мени; max = макс. на A[1..i-1] ✓</p>
+        <p><strong>Терминация:</strong> При последно достигане i = n+1. Инвариантът: max = макс. на A[1..n]. Ред 7 връща max. ✓</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Инвариантът е предикат P(t), свързан с реда на условието на цикъла</li>
+          <li>Три фази: База, Поддръжка, Терминация</li>
+          <li>Инвариантът трябва да е <em>верен И полезен</em> — не всеки верен инвариант работи!</li>
+          <li>При for-цикъл: управляващата промен. i заменя t — проверяваме P(a), P(i)→P(i+1), P(b+1)</li>
+          <li>Терминация: при последно достигане P(m) трябва директно да докаже коректността</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 4 -->
+  <section class="topic" id="t4">
+    <div class="topic-header"><h2>Алгоритъм ALG 2SUM — с доказателство за коректност</h2><div class="topic-num">4</div></div>
+    <div class="topic-body">
+      <div class="card def">
+        <div class="card-label">Задача 2SUM</div>
+        <p>Дадени са сортиран масив A[1..n] от различни числа и число target. Да се намерят два индекса i &lt; j, такива че A[i] + A[j] = target, или да се индикира, че такива не съществуват.</p>
+      </div>
+
+<pre><code><span class="cm">-- Алгоритъм ALG 2SUM (двоен указател / two-pointer)</span>
+<span class="kw">ALG 2SUM</span>(A[1..n]: сортиран масив; target: число)
+<span class="num">1</span>  lo ← 1
+<span class="num">2</span>  hi ← n
+<span class="num">3</span>  <span class="kw">while</span> lo &lt; hi <span class="kw">do</span>
+<span class="num">4</span>      sum ← A[lo] + A[hi]
+<span class="num">5</span>      <span class="kw">if</span> sum = target
+<span class="num">6</span>          <span class="kw">return</span> (lo, hi)
+<span class="num">7</span>      <span class="kw">else if</span> sum &lt; target
+<span class="num">8</span>          lo ← lo + 1
+<span class="num">9</span>      <span class="kw">else</span>
+<span class="num">10</span>         hi ← hi - 1
+<span class="num">11</span> <span class="kw">return</span> ★   <span class="cm">-- няма решение</span></code></pre>
+
+      <div class="card ex">
+        <div class="card-label">Визуализация стъпка по стъпка: A = [1, 3, 5, 7, 9], target = 10</div>
+        <div class="viz">
+lo=1, hi=5:  A[1]+A[5] = 1+9 = 10 = target! → return (1, 5) ✓
+
+Друг пример: A = [2, 4, 6, 8], target = 10
+lo=1, hi=4:  A[1]+A[4] = 2+8 = 10 = target! → return (1, 4) ✓
+
+A = [1, 3, 5, 7], target = 6
+lo=1, hi=4:  1+7 = 8 > 6 → hi ← 3
+lo=1, hi=3:  1+5 = 6 = target → return (1, 3) ✓
+
+A = [1, 3, 5, 7], target = 100
+lo=1, hi=4:  8 < 100 → lo ← 2
+lo=2, hi=4:  10 < 100 → lo ← 3
+lo=3, hi=4:  12 < 100 → lo ← 4
+lo=4, hi=4:  lo = hi → цикълът спира
+→ return ★ (няма решение)</div>
+      </div>
+
+      <div class="proof-box">
+        <div class="proof-title">Доказателство за коректност — с инвариант</div>
+        <p><strong>Инвариант:</strong> Всеки път, когато изпълнението е на ред 3, ако съществуват индекси i*, j* такива че 1 ≤ i* &lt; j* ≤ n и A[i*] + A[j*] = target, то i* ≥ lo И j* ≤ hi (т.е. решението, ако съществува, е в "прозореца" [lo..hi]).</p>
+
+        <p><strong>База:</strong> lo=1, hi=n. Прозорецът е целият масив — очевидно всяко решение е в него. ✓</p>
+
+        <p><strong>Поддръжка:</strong> Допускаме инварианта при достигане, което не е последно (lo &lt; hi).</p>
+        <p>sum = A[lo] + A[hi].</p>
+        <p>Случай 1: sum &lt; target. Тогава hi не може да е j* (тъй като A[lo] + A[hi] &lt; target, а target = A[i*]+A[j*] и масивът е сортиран — ако j* ≤ hi, трябваше да е j* = hi). Следователно j* ≤ hi - 1. lo ← lo+1 запазва i* ≥ lo. ✓</p>
+        <p>Случай 2: sum &gt; target. Аналогично, lo не може да е i*, следователно i* ≥ lo+1. hi ← hi-1 запазва j* ≤ hi. ✓</p>
+
+        <p><strong>Терминация:</strong> Цикълът спира когато lo = hi. В момента (ако не е върнат резултат) в прозореца [lo..lo] има само 1 елемент — не могат да се намерят два различни индекса. По инварианта, решение (ако е съществувало) беше в прозореца, но прозорецът е изпразнен → няма решение → return ★. ✓</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>2SUM с two-pointer: O(n) сложност (масивът трябва да е сортиран!)</li>
+          <li>Инвариант: "решението е в прозореца [lo..hi]"</li>
+          <li>При sum &lt; target → lo++; при sum &gt; target → hi--</li>
+          <li>Цикълът спира когато lo ≥ hi (прозорецът е съдържал само 1 елемент)</li>
+          <li>Алгоритъмът е итеративен → доказателство с инвариант</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 5 -->
+  <section class="topic" id="t5">
+    <div class="topic-header"><h2>Алгоритъм ALG MAX SUM PLUS DIST — с доказателство</h2><div class="topic-num">5</div></div>
+    <div class="topic-body">
+      <div class="card def">
+        <div class="card-label">Задача MAX SUM PLUS DIST</div>
+        <p>Даден е масив A[1..n] от числа. Намери индекс k такъв, че A[k] + k е максимален (при максимизация на стойността на елемента плюс неговата позиция).</p>
+        <p>По-общо: намери max{ A[i] + i : i ∈ {1,...,n} }.</p>
+      </div>
+
+<pre><code><span class="cm">-- Алгоритъм ALG MAX SUM PLUS DIST</span>
+<span class="kw">ALG MAX SUM PLUS DIST</span>(A[1..n]: масив от числа)
+<span class="num">1</span>  best ← A[1] + 1       <span class="cm">-- A[1] + 1 (позиция 1)</span>
+<span class="num">2</span>  bestIdx ← 1
+<span class="num">3</span>  <span class="kw">for</span> i ← 2 <span class="kw">to</span> n
+<span class="num">4</span>      <span class="kw">if</span> A[i] + i > best
+<span class="num">5</span>          best ← A[i] + i
+<span class="num">6</span>          bestIdx ← i
+<span class="num">7</span>  <span class="kw">return</span> (bestIdx, best)</code></pre>
+
+      <div class="card ex">
+        <div class="card-label">Пример: A = [3, 1, 5, 2, 8]</div>
+        <div class="viz">
+i=1: A[1]+1 = 3+1 = 4   → best=4,  bestIdx=1
+i=2: A[2]+2 = 1+2 = 3   → 3 < 4,  не обновяваме
+i=3: A[3]+3 = 5+3 = 8   → 8 > 4,  best=8,  bestIdx=3
+i=4: A[4]+4 = 2+4 = 6   → 6 < 8,  не обновяваме
+i=5: A[5]+5 = 8+5 = 13  → 13 > 8, best=13, bestIdx=5
+Резултат: (5, 13) — индекс 5, стойност 8+5=13</div>
+      </div>
+
+      <div class="proof-box">
+        <div class="proof-title">Доказателство за коректност — с инвариант за for-цикъл</div>
+        <p><strong>Инвариант (свързан с ред 3):</strong> При всяко достигане на ред 3 с управляваща промен. i, best = max{ A[j] + j : j ∈ {1,...,i-1} } и bestIdx е индекс, постигащ този максимум.</p>
+
+        <p><strong>База: i=2</strong> (първо достигане на ред 3).<br>
+        От ред 1-2: best=A[1]+1, bestIdx=1. За j∈{1}: max{A[1]+1} = A[1]+1 = best. ✓</p>
+
+        <p><strong>Поддръжка:</strong> Допускаме инварианта при i ≤ n (не е последно достигане).<br>
+        Случай 1: A[i]+i &gt; best → обновяваме best=A[i]+i, bestIdx=i. При следващото достигане (i+1), best = max{A[j]+j : j∈{1,...,i}} ✓<br>
+        Случай 2: A[i]+i ≤ best → best не се мени. max{A[j]+j : j∈{1,...,i}} = best (предишният максимум остава максимален) ✓</p>
+
+        <p><strong>Терминация: i=n+1</strong> (последно достигане след for-цикъла).<br>
+        best = max{ A[j]+j : j∈{1,...,n} }. Алгоритъмът връща (bestIdx, best). ✓</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Инвариантът при for-цикъл: при достигане с управляваща промен. i, best=макс. за {1,...,i-1}</li>
+          <li>При терминация i=n+1, получаваме пълния максимум</li>
+          <li>Алгоритъмът е O(n) — линеен</li>
+          <li>Структурата на доказателство: База (i=2), Поддръжка, Терминация (i=n+1)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 6 -->
+  <section class="topic" id="t6">
+    <div class="topic-header"><h2>Анализ на сложността. Големина на входа. Съществено еднакви входове</h2><div class="topic-num">6</div></div>
+    <div class="topic-body">
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — по лекции на преподавателя</div>
+        <p><strong>Сложност на алгоритъма</strong> е функция от <em>големината на входа</em>, измерваща ресурсите (основно <em>времето</em> и <em>паметта</em>), изразходвани за изпълнението.</p>
+        <br>
+        <p><strong>Големина на входа (input size)</strong> е число n, което описва колко голям е входния обект. Тя зависи от конкретния алгоритъм/задача:</p>
+        <ul class="bullet">
+          <li>За сортиране: n = дължината на масива</li>
+          <li>За граф: n = брой върхове, m = брой ребра</li>
+          <li>За умножение на матрици: n × n (размерът на матриците)</li>
+          <li>За алгоритми върху числа: n = стойността на числото ИЛИ броят на цифрите</li>
+        </ul>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Съществено еднакви входове (за сортиращ алгоритъм)</div>
+        <p>Два входа са <strong>съществено еднакви</strong> за сортиращ алгоритъм, ако единият се получава от другия чрез замяна на конкретните числа с наредба-изоморфни числа (тоест с числа, имащи същите относителни наредбени отношения).</p>
+        <p><strong>Пример:</strong> [3, 1, 2] и [300, 1, 200] са съществено еднакви — броят на сравненията е един и същи, защото структурата на наредбата е идентична (средното &lt; малкото &lt; голямото).</p>
+        <p>За n елемента има n! съществено различни пермутации — само толкова различни "структури" при сортирането.</p>
+      </div>
+
+      <div class="viz">
+Същественото еднаквство при сортиране:
+
+A = [3, 1, 4, 1, 5] ──── наредбено-изоморфно с ────▶ B = [30, 10, 40, 10, 50]
+Броят на сравненията при Insertion Sort е един и същ!
+
+За n=3 елемента:
+Пермутации: [1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], [3,2,1]
+Общо: 3! = 6 съществено различни входа
+(заменяме числата с 1,2,3 без да губим наредбата)
+</div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Сложността е функция от <em>n</em> (големината на входа)</li>
+          <li>Определянето на "n" зависи от задачата — няма универсална дефиниция</li>
+          <li>Съществено еднакви входове → еднакво поведение на сортиращия алгоритъм</li>
+          <li>За сортиране: n! пермутации → n! съществено различни входа</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 7 -->
+  <section class="topic" id="t7">
+    <div class="topic-header"><h2>Сложност по време — най-лош, най-добър случай, средна сложност</h2><div class="topic-num">7</div></div>
+    <div class="topic-body">
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — по лекции на преподавателя</div>
+        <p>Нека T(x) е броят на стъпките на алгоритъма при вход x. Нека Iₙ е множеството от всички входове с големина n.</p>
+        <br>
+        <p><strong>Сложност в най-лошия случай (worst-case):</strong></p>
+        <p>\[ W(n) = \max_{x \in I_n} T(x) \]</p>
+        <p>Гаранция: алгоритъмът никога няма да отнеме повече от W(n) стъпки.</p>
+        <br>
+        <p><strong>Сложност в най-добрия случай (best-case):</strong></p>
+        <p>\[ B(n) = \min_{x \in I_n} T(x) \]</p>
+        <p>Долна граница — алгоритъмът не може да работи по-бързо от B(n).</p>
+        <br>
+        <p><strong>Средна сложност по време (average-case):</strong></p>
+        <p>\[ A(n) = \frac{1}{|I_n|} \sum_{x \in I_n} T(x) \]</p>
+        <p>(при равномерно разпределение на входовете; в общия случай с тегла/вероятности)</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Представете си 100 въпроса на тест. В най-лошия случай намирате отговора чак на последния. В най-добрия — на първия. Средно — около 50-ия.</p>
+
+      <div class="viz">
+Пример: Линейно търсене в масив A[1..n] за елемент x
+
+T(A) = (позицията на x в A), или n ако x ∉ A
+
+B(n) = 1            (x е на първа позиция — "повезло")
+W(n) = n            (x е на последна позиция или го няма)
+A(n) = (n+1)/2      (при равномерно разпределение, x е в масива)
+
+Защо W(n) е най-важното?
+→ Гарантира горна граница: знаем, колкото и лош да е входът,
+  алгоритъмът ще завърши в W(n) стъпки.
+</div>
+
+      <div class="card def">
+        <div class="card-label">Защо най-лошият случай е най-важен</div>
+        <p>В практиката обикновено се използва <em>сложността в най-лошия случай</em>, защото:</p>
+        <ul class="bullet">
+          <li>Дава <em>гаранция</em> за максималното време</li>
+          <li>Средната сложност изисква предположения за разпределението на входовете (трудни за проверка)</li>
+          <li>Най-добрата сложност не е полезна на практика</li>
+        </ul>
+      </div>
+
+      <table>
+        <tr><th>Вид</th><th>Формула</th><th>Семантика</th><th>Приложение</th></tr>
+        <tr><td>Най-лош</td><td>W(n) = max T(x)</td><td>Гаранция за горна граница</td><td>Най-важен в практиката</td></tr>
+        <tr><td>Най-добър</td><td>B(n) = min T(x)</td><td>Долна граница</td><td>Рядко полезен сам по себе си</td></tr>
+        <tr><td>Средна</td><td>A(n) = средно T(x)</td><td>Очаквано поведение</td><td>Нужни предположения за входове</td></tr>
+      </table>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>W(n) = max по входове с размер n на T(x)</li>
+          <li>B(n) = min по входове с размер n на T(x)</li>
+          <li>A(n) = средно аритметично на T(x) (при равномерно разпределение)</li>
+          <li>В практиката: W(n) е стандартът (гарантира горна граница)</li>
+          <li>Asimptoticamente: W(n) ≥ A(n) ≥ B(n)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 8 -->
+  <section class="topic" id="t8">
+    <div class="topic-header"><h2>Асимптотични нотации — защо ги ползваме</h2><div class="topic-num">8</div></div>
+    <div class="topic-body">
+      <div class="card def">
+        <div class="card-label">Защо ползваме асимптотичните нотации (по лекцията)</div>
+        <p>Точните изрази за сложността на алгоритми са:</p>
+        <ul class="bullet">
+          <li>Трудни за получаване (зависят от множество детайли)</li>
+          <li>Зависими от модела на изчисление (различни констати при различни процесори)</li>
+          <li>Ненужно прецизни за целите на сравнението на алгоритми</li>
+        </ul>
+        <p>Асимптотичните нотации описват поведението на функциите при <em>достатъчно голямо n</em> и позволяват:</p>
+        <ul class="bullet">
+          <li>Игнориране на константни фактори</li>
+          <li>Игнориране на нисшестепенни членове</li>
+          <li>Ясно сравнение на алгоритми по скалируемост</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Визуализация: Защо константите нямат значение</div>
+      <div class="viz">
+Алгоритъм A: T_A(n) = 100n        (линеен, голяма константа)
+Алгоритъм B: T_B(n) = n²          (квадратичен)
+
+n=10:    T_A=1000,    T_B=100      → B изглежда по-бърз
+n=100:   T_A=10000,  T_B=10000    → изравнени
+n=1000:  T_A=100000, T_B=1000000  → A е 10 пъти по-бърз!
+n=10⁶:  T_A=10⁸,   T_B=10¹²     → A е 10⁴ пъти по-бърз!
+
+При достатъчно голямо n, алгоритъмът с по-ниска степен ВИНАГИ побеждава!
+Константите са без значение в дългосрочен план.
+</div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Асимп. нотациите описват поведението при n → ∞</li>
+          <li>Игнорират константи и нисшестепенни членове</li>
+          <li>Позволяват ясно, машинно-независимо сравнение на алгоритми</li>
+          <li>5 нотации: Θ (тита-голямо), O (о-голямо), Ω (омега-голямо), o (о-малко), ω (омега-малко)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 9 -->
+  <section class="topic" id="t9">
+    <div class="topic-header"><h2>Асимптотична нотация Тита-голямо (Θ)</h2><div class="topic-num">9</div></div>
+    <div class="topic-body">
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — по лекции на преподавателя</div>
+        <p><strong>Определение: Нотация Θ (Тита-голямо)</strong></p>
+        <p>За дадена функция \(g: \mathbb{N} \to \mathbb{R}^+\), дефинираме:</p>
+        <p>\[\Theta(g(n)) = \{ f(n) \;:\; \exists c_1, c_2 > 0, \; n_0 \in \mathbb{N}, \; \forall n \geq n_0: \; c_1 \cdot g(n) \leq f(n) \leq c_2 \cdot g(n) \}\]</p>
+        <p>Казваме "<em>f(n) е в Θ(g(n))</em>" или "<em>f(n) = Θ(g(n))</em>", когато f(n) ∈ Θ(g(n)).</p>
+        <p>Θ(g(n)) е <em>множество</em> от функции! Пишем "f(n) = Θ(g(n))" като злоупотреба с нотацията (f(n) ∈ Θ(g(n))).</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>f(n) = Θ(g(n)) означава, че f расте <em>приблизително толкова бързо</em>, колкото g — нито прекалено по-бързо, нито прекалено по-бавно. g е "стегнат асимптотичен двустранен ограничител" на f.</p>
+
+      <div class="viz">
+                      f(n) = Θ(g(n))
+
+         c₂·g(n) ────────────────────────────── горна граница
+        f(n)  ←────────────────────────────────── f(n) е "стисната" между
+         c₁·g(n) ────────────────────────────── долна граница
+
+         |
+         |              c₂·g(n)
+         |           ╱
+         |       f(n)
+         |    ╱
+         | c₁·g(n)
+         |
+         └────────────────────────────── n
+                   n₀
+
+За всяко n ≥ n₀: c₁·g(n) ≤ f(n) ≤ c₂·g(n)
+</div>
+
+      <div class="card ex">
+        <div class="card-label">Конкретен пример: Доказване на f(n) = Θ(g(n))</div>
+        <p><strong>Твърдение:</strong> f(n) = 3n² + 5n + 10 = Θ(n²)</p>
+        <p><strong>Доказателство:</strong> Трябва да намерим c₁, c₂ &gt; 0 и n₀, такива че c₁·n² ≤ 3n² + 5n + 10 ≤ c₂·n² за всяко n ≥ n₀.</p>
+        <p><strong>Горна граница:</strong> 3n² + 5n + 10 ≤ 3n² + 5n² + 10n² = 18n² за n ≥ 1. Избираме c₂ = 18.</p>
+        <p><strong>Долна граница:</strong> 3n² + 5n + 10 ≥ 3n² за всяко n ≥ 0. Избираме c₁ = 3.</p>
+        <p>Избираме n₀ = 1. За всяко n ≥ 1: 3n² ≤ 3n² + 5n + 10 ≤ 18n². ✓</p>
+        <p>Следователно 3n² + 5n + 10 ∈ Θ(n²).</p>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">Пример за НЕ-членство: f(n) = n³ ∉ Θ(n²)</div>
+        <p>За c₂·n² ≥ n³ трябва c₂ ≥ n — но c₂ е константа, не може да зависи от n. Следователно не съществуват такива c₁, c₂, n₀.</p>
+      </div>
+
+      <div class="sec-h">Важна нотация: f(n) ≍ g(n) (тилда)</div>
+      <div class="card def">
+        <div class="card-label">Асимптотична еквивалентност (≍ / ~)</div>
+        <p>f(n) ≍ g(n) означава, че f(n)/g(n) → 1 при n → ∞. По-силно от Θ!</p>
+        <p>Например: n² + n ≍ n² (тъй като (n²+n)/n² = 1 + 1/n → 1)</p>
+        <p>Но n² + n = Θ(n²) — по-слабо твърдение.</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Θ(g(n)) = { f(n) : ∃c₁,c₂&gt;0, n₀: ∀n≥n₀, c₁·g(n) ≤ f(n) ≤ c₂·g(n) }</li>
+          <li>Θ е "двустранно ограничение" — и отгоре (O), и отдолу (Ω)</li>
+          <li>"f(n) = Θ(g(n))" е злоупотреба с нотацията (трябва: f(n) ∈ Θ(g(n)))</li>
+          <li>Θ игнорира константи и по-нисши степени</li>
+          <li>За доказване: намерете конкретни c₁, c₂ и n₀</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="card-label">Връзка с другите теми</div>
+        <p>Θ-нотацията е основата за всички асимптотични сравнения в Лекция 3. Теорема 16 (свойства на Θ), Теорема 17 (O ∩ Ω = Θ) и всички класификации на алгоритми (линеен, квадратичен и др.) използват Θ.</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дайте формалната дефиниция на Θ(g(n)). Докажете, че 3n² + 5n + 10 = Θ(n²)."</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+<script>
+function toggleTheme(){const b=document.body;b.dataset.theme=b.dataset.theme==='dark'?'light':'dark';}
+function updateProgress(){const boxes=document.querySelectorAll('input[type="checkbox"]');const checked=Array.from(boxes).filter(b=>b.checked).length;const pct=Math.round(checked/boxes.length*100);document.getElementById('progress-bar-inner').style.width=pct+'%';document.getElementById('progress-label').textContent=`${pct}% готовност (${checked}/${boxes.length} теми)`;}
+const sections=document.querySelectorAll('.topic');const links=document.querySelectorAll('#sidebar a');
+window.addEventListener('scroll',()=>{let current='';sections.forEach(s=>{if(window.scrollY>=s.offsetTop-120)current=s.id;});links.forEach(a=>{a.classList.remove('active');if(a.getAttribute('href')==='#'+current)a.classList.add('active');});});
+</script>
+</body>
+</html>

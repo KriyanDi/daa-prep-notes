@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лекция 2&3 - Асимптотични нотации и Рекурентни уравнения | ДАА 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #1a1d27; --bg3: #242838;
+    --accent: #4f8ef7; --accent2: #7c5cbf; --green: #2ecc71;
+    --yellow: #f39c12; --red: #e74c3c; --text: #e8eaf0;
+    --text2: #9ca3af; --border: #2d3148;
+    --def-bg: #0d2137; --def-border: #1e5799;
+    --ex-bg: #0d2d1a; --ex-border: #1e7d3e;
+    --key-bg: #2d2100; --key-border: #7d5c00;
+    --code-bg: #141822;
+  }
+  [data-theme="light"] {
+    --bg: #f0f2f8; --bg2: #ffffff; --bg3: #e8ecf5;
+    --accent: #2563eb; --accent2: #7c3aed; --green: #16a34a;
+    --yellow: #d97706; --red: #dc2626; --text: #1e293b;
+    --text2: #64748b; --border: #cbd5e1;
+    --def-bg: #eff6ff; --def-border: #3b82f6;
+    --ex-bg: #f0fdf4; --ex-border: #22c55e;
+    --key-bg: #fffbeb; --key-border: #f59e0b;
+    --code-bg: #1e293b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  #layout { display: flex; min-height: 100vh; }
+  #sidebar {
+    width: 280px; background: var(--bg2); border-right: 1px solid var(--border);
+    position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto;
+    transition: transform 0.3s; z-index: 100; padding: 20px 0;
+  }
+  #sidebar h2 { color: var(--accent); font-size: 0.85rem; text-transform: uppercase;
+    letter-spacing: 1px; padding: 0 20px 10px; border-bottom: 1px solid var(--border); }
+  #sidebar ul { list-style: none; padding: 10px 0; }
+  #sidebar li a { display: block; padding: 8px 20px; color: var(--text2); text-decoration: none;
+    font-size: 0.88rem; border-left: 3px solid transparent; transition: all 0.2s; }
+  #sidebar li a:hover, #sidebar li a.active { color: var(--accent); border-left-color: var(--accent);
+    background: rgba(79,142,247,0.08); }
+  #main { margin-left: 280px; flex: 1; padding: 40px; max-width: 1000px; }
+  #topbar { position: sticky; top: 0; background: var(--bg2); border-bottom: 1px solid var(--border);
+    z-index: 50; display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 40px; margin: -40px -40px 40px; }
+  #topbar h1 { font-size: 1.1rem; color: var(--accent); }
+  .btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text); cursor: pointer; font-size: 0.85rem; }
+  .btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  #progress-wrap { background: var(--bg3); border-radius: 8px; padding: 16px 20px;
+    margin-bottom: 32px; border: 1px solid var(--border); }
+  #progress-wrap h3 { font-size: 0.9rem; color: var(--text2); margin-bottom: 10px; }
+  #progress-bar-outer { background: var(--bg); border-radius: 99px; height: 8px; overflow: hidden; }
+  #progress-bar-inner { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 99px; transition: width 0.5s; }
+  #progress-label { font-size: 0.85rem; color: var(--text2); margin-top: 6px; }
+  .topic { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 40px; overflow: hidden; scroll-margin-top: 80px; }
+  .topic-header { padding: 20px 24px; background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: space-between; }
+  .topic-header h2 { color: white; font-size: 1.15rem; }
+  .topic-num { background: rgba(255,255,255,0.2); color: white; border-radius: 50%;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .topic-body { padding: 24px; }
+  .card { border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .card.def { background: var(--def-bg); border-left: 4px solid var(--def-border); }
+  .card.def .card-label { color: var(--accent); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.ex { background: var(--ex-bg); border-left: 4px solid var(--ex-border); }
+  .card.ex .card-label { color: var(--green); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.key { background: var(--key-bg); border-left: 4px solid var(--key-border); }
+  .card.key .card-label { color: var(--yellow); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.warn { background: rgba(231,76,60,0.07); border-left: 4px solid var(--red); }
+  .sec-h { font-size: 0.95rem; font-weight: 700; color: var(--accent); margin: 20px 0 8px;
+    display: flex; align-items: center; gap: 8px; }
+  .sec-h::before { content: ''; display: inline-block; width: 3px; height: 16px;
+    background: var(--accent); border-radius: 2px; }
+  pre { background: var(--code-bg); color: #cdd6f4; border-radius: 8px; padding: 16px 20px;
+    overflow-x: auto; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem;
+    line-height: 1.6; margin: 12px 0; border: 1px solid var(--border); }
+  .viz { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 20px; font-family: monospace; font-size: 0.85rem; color: #cdd6f4;
+    white-space: pre; overflow-x: auto; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+  th { background: var(--bg3); color: var(--accent); padding: 10px 12px; text-align: left;
+    border-bottom: 2px solid var(--accent); }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: rgba(79,142,247,0.05); }
+  ul.bullet { list-style: none; padding: 0; }
+  ul.bullet li { padding: 6px 0 6px 24px; position: relative; }
+  ul.bullet li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+  .thm { background: rgba(79,142,247,0.08); border: 1px solid rgba(79,142,247,0.3);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .thm-label { color: var(--accent); font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; }
+  .exam-box { background: rgba(231,76,60,0.07); border: 1px solid rgba(231,76,60,0.4);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .exam-label { color: var(--red); font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; }
+  .conn-box { background: rgba(46,204,113,0.07); border: 1px solid rgba(46,204,113,0.3);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .conn-label { color: var(--green); font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; }
+  .check-wrap { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+  .check-wrap input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
+  .check-wrap label { font-size: 0.9rem; color: var(--text2); cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="layout">
+<nav id="sidebar">
+  <h2>Лекции 2&3 — Навигация</h2>
+  <ul>
+    <li><a href="#t1">1. Θ-нотация (Теорема 16)</a></li>
+    <li><a href="#t2">2. O-нотация (Теорема 17)</a></li>
+    <li><a href="#t3">3. Ω-нотация (Теорема 18)</a></li>
+    <li><a href="#t4">4. o и ω нотации (Теореми 19, 20)</a></li>
+    <li><a href="#t5">5. Свойства на нотациите (Теореми 21-30)</a></li>
+    <li><a href="#t6">6. Наредба на функциите</a></li>
+    <li><a href="#t7">7. Рекурентни уравнения — дефиниция и класификации</a></li>
+    <li><a href="#t8">8. Метод на развиването</a></li>
+    <li><a href="#t9">9. Дърво на рекурсията</a></li>
+    <li><a href="#t10">10. Мастър теорема</a></li>
+    <li><a href="#t11">11. Теореми 38 и 39 (по индукция)</a></li>
+  </ul>
+</nav>
+<div id="main">
+  <div id="topbar">
+    <h1>Лекции 2&3 — Асимптотични нотации и Рекурентни уравнения</h1>
+    <button class="btn" onclick="toggleTheme()">Светла тема</button>
+  </div>
+
+  <div id="progress-wrap">
+    <h3>Напредък</h3>
+    <div id="progress-bar-outer"><div id="progress-bar-inner" style="width:0%"></div></div>
+    <div id="progress-label">0 от 11 теми изучени</div>
+  </div>
+
+  <!-- TOPIC 1 -->
+  <div class="topic" id="t1">
+    <div class="topic-header">
+      <h2>Θ-нотация — Точна асимптотика</h2>
+      <div class="topic-num">1</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Точна дефиниция</div>
+      <div class="card def">
+        <div class="card-label">Определение — Θ-нотация</div>
+        <p>Нека \(g: \mathbb{N} \to \mathbb{R}^+\). Дефинираме:</p>
+        <p style="text-align:center; margin:12px 0">\[\Theta(g(n)) = \{ f \mid \exists c_1 > 0,\, c_2 > 0,\, n_0 \in \mathbb{N} : \forall n \geq n_0 : c_1 g(n) \leq f(n) \leq c_2 g(n) \}\]</p>
+        <p>Казваме \(f(n) = \Theta(g(n))\) (по злоупотреба с нотацията, вместо \(f \in \Theta(g(n))\)) и четем "f е тета на g".</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Θ описва <strong>точната асимптотична наредба</strong>. Ако \(f(n) = \Theta(g(n))\), то \(f\) и \(g\) растат с <em>еднаква скорост</em> — само константни фактори ги различават. Θ е едновременно горна И долна граница.</p>
+      <p style="margin-top:8px">Аналогия: \(\Theta\) е като знак "=" за функции, \(O\) е като "≤", \(\Omega\) е като "≥".</p>
+
+      <div class="sec-h">Визуализация</div>
+      <div class="viz">
+              ↑ f(n)
+  c₂·g(n) ___/‾‾‾‾‾‾‾‾  ← горна граница
+            /
+    f(n)  /~~~~~~~~~~~~~~  ← между двете граници
+            \___
+  c₁·g(n)     ‾‾‾‾‾‾‾‾  ← долна граница
+              → n
+         n₀</div>
+
+      <div class="thm">
+        <div class="thm-label">Теорема 16: Еквивалентна характеризация</div>
+        <p>\(f(n) = \Theta(g(n))\) тогава и само тогава когато \(f(n) = O(g(n))\) и \(f(n) = \Omega(g(n))\).</p>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">Примери</div>
+        <ul class="bullet">
+          <li>\(3n^2 + 5n + 7 = \Theta(n^2)\) — с \(c_1=3, c_2=15, n_0=2\)</li>
+          <li>\(n \log n + n = \Theta(n \log n)\)</li>
+          <li>\(2^n \neq \Theta(n^{100})\) — различни скорости на нарастване</li>
+        </ul>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Три константи: \(c_1, c_2, n_0\). Съществуват. За всяко \(n \geq n_0\).</li>
+          <li>\(f = \Theta(g)\) ⟺ \(f = O(g)\) AND \(f = \Omega(g)\).</li>
+          <li>Θ е <strong>рефлексивна</strong> и <strong>симетрична</strong> и <strong>транзитивна</strong> (релация на еквивалентност).</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Дефинирайте Θ-нотацията. Докажете, че \(f(n) = \Theta(g(n)) \Leftrightarrow f(n) = O(g(n))\) и \(f(n) = \Omega(g(n))\).</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c1" onchange="updateProgress()">
+        <label for="c1">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 2 -->
+  <div class="topic" id="t2">
+    <div class="topic-header">
+      <h2>O-нотация — Горна асимптотична граница</h2>
+      <div class="topic-num">2</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Точна дефиниция</div>
+      <div class="card def">
+        <div class="card-label">Определение — O-нотация (Big-O)</div>
+        <p>Нека \(g: \mathbb{N} \to \mathbb{R}^+\). Дефинираме:</p>
+        <p style="text-align:center; margin:12px 0">\[O(g(n)) = \{ f \mid \exists c > 0,\, n_0 \in \mathbb{N} : \forall n \geq n_0 : f(n) \leq c \cdot g(n) \}\]</p>
+        <p>Казваме \(f(n) = O(g(n))\) и четем "f е big-O на g". \(g\) е <strong>асимптотична горна граница</strong> на \(f\).</p>
+      </div>
+
+      <div class="thm">
+        <div class="thm-label">Теорема 17: Свойства на O</div>
+        <ul class="bullet">
+          <li>Ако \(f(n) = \Theta(g(n))\), то \(f(n) = O(g(n))\).</li>
+          <li>\(O(g(n))\) е транзитивна: \(f=O(g)\) и \(g=O(h)\) ⟹ \(f=O(h)\).</li>
+          <li>Ако \(\lim_{n\to\infty} f(n)/g(n)\) съществува и е крайно, то \(f(n) = O(g(n))\).</li>
+        </ul>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">Примери</div>
+        <ul class="bullet">
+          <li>\(n^2 = O(n^3)\) — с \(c=1, n_0=1\)</li>
+          <li>\(n \log n = O(n^2)\)</li>
+          <li>\(5n + 3 = O(n)\) — с \(c=8, n_0=1\)</li>
+          <li>\(2^n \neq O(n^{100})\) — защото \(2^n/n^{100} \to \infty\)</li>
+        </ul>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>O е <strong>горна граница</strong> — може да е много по-голяма от f!</li>
+          <li>Само две константи: \(c, n_0\). Съществуват.</li>
+          <li>O е транзитивна, рефлексивна, но НЕ симетрична.</li>
+          <li>Аналог на ≤ за нарастване на функции.</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Дефинирайте O-нотацията. Докажете, че \(n^2 + 5n = O(n^2)\).</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c2" onchange="updateProgress()">
+        <label for="c2">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 3 -->
+  <div class="topic" id="t3">
+    <div class="topic-header">
+      <h2>Ω-нотация — Долна асимптотична граница</h2>
+      <div class="topic-num">3</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Точна дефиниция</div>
+      <div class="card def">
+        <div class="card-label">Определение — Ω-нотация (Big-Omega)</div>
+        <p>Нека \(g: \mathbb{N} \to \mathbb{R}^+\). Дефинираме:</p>
+        <p style="text-align:center; margin:12px 0">\[\Omega(g(n)) = \{ f \mid \exists c > 0,\, n_0 \in \mathbb{N} : \forall n \geq n_0 : f(n) \geq c \cdot g(n) \}\]</p>
+        <p>Казваме \(f(n) = \Omega(g(n))\). \(g\) е <strong>асимптотична долна граница</strong> на \(f\).</p>
+      </div>
+
+      <div class="thm">
+        <div class="thm-label">Теорема 18: Транспониране (дуалност)</div>
+        <p>\(f(n) = O(g(n))\) тогава и само тогава когато \(g(n) = \Omega(f(n))\).</p>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">Примери</div>
+        <ul class="bullet">
+          <li>\(n^2 = \Omega(n)\) — с \(c=1, n_0=1\)</li>
+          <li>\(n \log n = \Omega(n)\)</li>
+          <li>Heapsort: \(T(n) = \Omega(n \log n)\) — никой сортиращ алгоритъм, базиран на сравнения, не може да работи по-бързо.</li>
+        </ul>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Ω е <strong>долна граница</strong> — аналог на ≥.</li>
+          <li>Дуалност: \(f = O(g) \Leftrightarrow g = \Omega(f)\).</li>
+          <li>Ω се използва за <strong>долни граници на задачи</strong>, не само на алгоритми.</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Дефинирайте Ω-нотацията. Докажете дуалността: \(f = O(g) \Leftrightarrow g = \Omega(f)\).</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c3" onchange="updateProgress()">
+        <label for="c3">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 4 -->
+  <div class="topic" id="t4">
+    <div class="topic-header">
+      <h2>o и ω нотации — Строги граници</h2>
+      <div class="topic-num">4</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Точни дефиниции</div>
+      <div class="card def">
+        <div class="card-label">Определение — o-нотация (Little-o)</div>
+        <p>Нека \(g: \mathbb{N} \to \mathbb{R}^+\). Дефинираме:</p>
+        <p style="text-align:center; margin:12px 0">\[o(g(n)) = \{ f \mid \forall c > 0,\, \exists n_0 \in \mathbb{N} : \forall n \geq n_0 : f(n) < c \cdot g(n) \}\]</p>
+        <p>Еквивалентно: \(f(n) = o(g(n)) \Leftrightarrow \lim_{n\to\infty} \dfrac{f(n)}{g(n)} = 0\).</p>
+      </div>
+      <div class="card def">
+        <div class="card-label">Определение — ω-нотация (Little-omega)</div>
+        <p style="text-align:center; margin:12px 0">\[\omega(g(n)) = \{ f \mid \forall c > 0,\, \exists n_0 \in \mathbb{N} : \forall n \geq n_0 : f(n) > c \cdot g(n) \}\]</p>
+        <p>Еквивалентно: \(f(n) = \omega(g(n)) \Leftrightarrow \lim_{n\to\infty} \dfrac{f(n)}{g(n)} = +\infty\).</p>
+      </div>
+
+      <div class="sec-h">Разлика между O и o, Ω и ω</div>
+      <table>
+        <tr><th>Нотация</th><th>Квантор за c</th><th>Интуиция</th><th>Аналог</th></tr>
+        <tr><td>\(O(g)\)</td><td>\(\exists c > 0\)</td><td>f расте не по-бързо от g</td><td>\(\leq\)</td></tr>
+        <tr><td>\(o(g)\)</td><td>\(\forall c > 0\)</td><td>f расте <em>строго</em> по-бавно от g</td><td>\(<\)</td></tr>
+        <tr><td>\(\Omega(g)\)</td><td>\(\exists c > 0\)</td><td>f расте не по-бавно от g</td><td>\(\geq\)</td></tr>
+        <tr><td>\(\omega(g)\)</td><td>\(\forall c > 0\)</td><td>f расте <em>строго</em> по-бързо от g</td><td>\(>\)</td></tr>
+        <tr><td>\(\Theta(g)\)</td><td>\(\exists c_1, c_2 > 0\)</td><td>f расте точно като g</td><td>\(=\)</td></tr>
+      </table>
+
+      <div class="thm">
+        <div class="thm-label">Теореми 19, 20: Свойства</div>
+        <ul class="bullet">
+          <li>Дуалност: \(f = o(g) \Leftrightarrow g = \omega(f)\)</li>
+          <li>Ако \(f = o(g)\), то \(f = O(g)\), но не обратното.</li>
+          <li>Ако \(f = o(g)\), то НЕ е вярно, че \(f = \Theta(g)\).</li>
+        </ul>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">Примери</div>
+        <ul class="bullet">
+          <li>\(n = o(n^2)\): \(\lim n/n^2 = 0\) ✓</li>
+          <li>\(n^2 = \omega(n)\): \(\lim n^2/n = \infty\) ✓</li>
+          <li>\(n \log n \neq o(n^2)\): но \(n \log n = o(n^2)\) ✓ (понеже \(n \log n / n^2 = \log n / n \to 0\))</li>
+        </ul>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>o: квантор за c е <strong>∀</strong> (за всяко c, от достатъчно голямо n). O: <strong>∃</strong> c.</li>
+          <li>\(f = o(g) \Rightarrow \lim f/g = 0\). \(f = \omega(g) \Rightarrow \lim f/g = \infty\).</li>
+          <li>o и ω са асиметрични (нерефлексивни) — \(f \neq o(f)\) и \(f \neq \omega(f)\).</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Дефинирайте o и ω нотациите. Каква е разликата между O и o? Докажете чрез граница на редица.</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c4" onchange="updateProgress()">
+        <label for="c4">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 5 -->
+  <div class="topic" id="t5">
+    <div class="topic-header">
+      <h2>Свойства на нотациите — Теореми 21-30</h2>
+      <div class="topic-num">5</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Основни свойства</div>
+      <div class="thm">
+        <div class="thm-label">Теорема 21: Транзитивност</div>
+        <p>За всяко \(* \in \{O, \Omega, \Theta, o, \omega\}\): Ако \(f = *(g)\) и \(g = *(h)\), то \(f = *(h)\).</p>
+      </div>
+      <div class="thm">
+        <div class="thm-label">Теорема 22: Рефлексивност (за O, Ω, Θ)</div>
+        <p>\(f = O(f)\), \(f = \Omega(f)\), \(f = \Theta(f)\). (Но \(f \neq o(f)\) и \(f \neq \omega(f)\).)</p>
+      </div>
+      <div class="thm">
+        <div class="thm-label">Теорема 23: Симетричност на Θ</div>
+        <p>\(f = \Theta(g) \Leftrightarrow g = \Theta(f)\).</p>
+      </div>
+      <div class="thm">
+        <div class="thm-label">Теорема 24: Сума</div>
+        <p>Ако \(f_1 = O(g_1)\) и \(f_2 = O(g_2)\), то \(f_1 + f_2 = O(\max(g_1, g_2))\).</p>
+        <p>По-специфично: \(f_1 + f_2 = O(g_1 + g_2)\).</p>
+        <p style="margin-top:8px">Следствие: В полинома \(a_k n^k + a_{k-1} n^{k-1} + \ldots + a_0\), доминира само най-старшият член: \(= \Theta(n^k)\).</p>
+      </div>
+      <div class="thm">
+        <div class="thm-label">Теорема 25: Произведение</div>
+        <p>Ако \(f_1 = O(g_1)\) и \(f_2 = O(g_2)\), то \(f_1 \cdot f_2 = O(g_1 \cdot g_2)\).</p>
+      </div>
+      <div class="thm">
+        <div class="thm-label">Теорема 26: Константен множител</div>
+        <p>За всяка константа \(c > 0\): \(c \cdot f(n) = \Theta(f(n))\). С други думи, константните множители се пренебрегват в асимптотичния анализ.</p>
+      </div>
+      <div class="thm">
+        <div class="thm-label">Теорема 27: Полиноми и логаритми</div>
+        <p>За всяко \(a > 1\) и \(b > 0\): \((\log n)^b = o(n^a)\).</p>
+        <p>Следователно: полиномите <strong>надрастват</strong> логаритмите.</p>
+      </div>
+      <div class="thm">
+        <div class="thm-label">Теорема 28: Полиноми и експоненти</div>
+        <p>За всяко \(a > 1\) и \(b > 0\): \(n^b = o(a^n)\).</p>
+        <p>Следователно: експонентите <strong>надрастват</strong> полиномите.</p>
+      </div>
+      <div class="thm">
+        <div class="thm-label">Теорема 29: Приближение на Stirling</div>
+        <p>\(n! = \sqrt{2\pi n} \left(\dfrac{n}{e}\right)^n \left(1 + \Theta\!\left(\dfrac{1}{n}\right)\right)\)</p>
+        <p style="margin-top:8px">Следствие: \(\log(n!) = \Theta(n \log n)\).</p>
+      </div>
+      <div class="thm">
+        <div class="thm-label">Теорема 30: Хармоничен ред</div>
+        <p>\(H_n = \sum_{k=1}^{n} \dfrac{1}{k} = \Theta(\log n)\).</p>
+        <p>По-прецизно: \(H_n = \ln n + \gamma + O(1/n)\), където \(\gamma \approx 0.5772\) е константата на Euler-Mascheroni.</p>
+      </div>
+
+      <div class="sec-h">Наредба на стандартните функции</div>
+      <div class="viz">
+По-бавно нарастване → по-бързо нарастване:
+
+1  ≺  log log n  ≺  log n  ≺  (log n)²  ≺  √n  ≺  n  ≺
+≺  n log n  ≺  n²  ≺  n³  ≺  ...  ≺  nᵏ  ≺  ...  ≺
+≺  2^(√n)  ≺  2ⁿ  ≺  n·2ⁿ  ≺  n!  ≺  nⁿ
+
+(≺ означава o, т.е. строго по-бавно нарастване)</div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Наизуст: Теореми 24 (сума), 26 (константа), 27 (log vs poly), 28 (poly vs exp), 29 (Stirling).</li>
+          <li>В сума — само най-бързо растящият член има значение.</li>
+          <li>Логаритмите винаги отстъпват на полиномите, полиномите — на експонентите.</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Докажете Теорема 24 (сума) или Теорема 26 (константа). Наредете функциите: \(n!, 2^n, n^2, n\log n, \log n, \sqrt{n}\).</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c5" onchange="updateProgress()">
+        <label for="c5">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 6 -->
+  <div class="topic" id="t6">
+    <div class="topic-header">
+      <h2>Наредба на функциите и сложност по памет</h2>
+      <div class="topic-num">6</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Класове на сложност</div>
+      <table>
+        <tr><th>Нотация</th><th>Клас</th><th>Пример алгоритъм</th></tr>
+        <tr><td>\(O(1)\)</td><td>Константна</td><td>Достъп до масив</td></tr>
+        <tr><td>\(O(\log n)\)</td><td>Логаритмична</td><td>Двоично търсене</td></tr>
+        <tr><td>\(O(\sqrt{n})\)</td><td>Коренна</td><td>Прости числа наивно</td></tr>
+        <tr><td>\(O(n)\)</td><td>Линейна</td><td>BUILD-HEAP, SELECT</td></tr>
+        <tr><td>\(O(n \log n)\)</td><td>Линеаритмична</td><td>Mergesort, Heapsort</td></tr>
+        <tr><td>\(O(n^2)\)</td><td>Квадратна</td><td>Insertion Sort, Quicksort (н.л.)</td></tr>
+        <tr><td>\(O(n^3)\)</td><td>Кубична</td><td>Умножение на матрици (наивно)</td></tr>
+        <tr><td>\(O(2^n)\)</td><td>Експоненциална</td><td>Пълно изчерпване</td></tr>
+        <tr><td>\(O(n!)\)</td><td>Факториелна</td><td>Permutation brute-force</td></tr>
+      </table>
+
+      <div class="sec-h">Практическо значение</div>
+      <p>При вход с размер \(n = 10^8\) (сто милиона), сравнение между алгоритми:</p>
+      <table>
+        <tr><th>Сложност</th><th>Брой операции</th><th>При 10⁹ оп/сек</th></tr>
+        <tr><td>\(\Theta(n)\)</td><td>\(10^8\)</td><td>0.1 секунди</td></tr>
+        <tr><td>\(\Theta(n \log n)\)</td><td>\(\approx 2.7 \times 10^9\)</td><td>~2.7 секунди</td></tr>
+        <tr><td>\(\Theta(n^2)\)</td><td>\(10^{16}\)</td><td>317 ГОДИНИ</td></tr>
+        <tr><td>\(\Theta(2^n)\)</td><td>\(10^{30103019}\)</td><td>НЕВЪЗМОЖНО</td></tr>
+      </table>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Разликата между O(n log n) и O(n²) е огромна за реални входове.</li>
+          <li>Разликата между O(n) и O(2^n) е физически непреодолима (принцип на Landauer).</li>
+          <li>Асимптотичните оценки се появяват в <strong>двата</strong> контекста: за конкретни алгоритми И за долни граници на задачи.</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Наредете следните класове по нарастване: \(\Theta(1), \Theta(\log n), \Theta(n), \Theta(n\log n), \Theta(n^2), \Theta(2^n), \Theta(n!)\).</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c6" onchange="updateProgress()">
+        <label for="c6">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 7 -->
+  <div class="topic" id="t7">
+    <div class="topic-header">
+      <h2>Рекурентни уравнения — дефиниция и класификации</h2>
+      <div class="topic-num">7</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Точна дефиниция</div>
+      <div class="card def">
+        <div class="card-label">Рекурентно уравнение</div>
+        <p>Рекурентно уравнение е уравнение, в което вляво от "=" стои \(T(n)\) (или \(a_k\)), а вдясно е валиден израз, съдържащ поне едно появяване на \(T\) с по-малки аргументи: например \(T(n/2)\) или \(T(n-1)\). Допълнено с начални условия, то определя еднозначно числова редица.</p>
+      </div>
+
+      <div class="sec-h">Класификации</div>
+      <div class="card def">
+        <div class="card-label">По функцията на намаляване</div>
+        <ul class="bullet">
+          <li><strong>Изваждане на константа:</strong> \(T(n) = 2T(n-1) + 1\) — типично за Пълно Изчерпване.</li>
+          <li><strong>Деление на константа:</strong> \(T(n) = 2T(n/2) + n\) — типично за Разделяй-и-Владей.</li>
+        </ul>
+      </div>
+      <div class="card def">
+        <div class="card-label">Линейни vs нелинейни</div>
+        <ul class="bullet">
+          <li><strong>Линейно:</strong> \(T(n) = c_1 T(n-1) + c_2 T(n-2) + f(n)\)</li>
+          <li><strong>Нелинейно:</strong> \(T(n) = T(n-1) \cdot T(n-2) + 1\) — не се покрива от стандартни методи.</li>
+        </ul>
+      </div>
+      <div class="card def">
+        <div class="card-label">Хомогенни vs нехомогенни</div>
+        <ul class="bullet">
+          <li><strong>Хомогенно:</strong> \(T(n) = c_1 T(n-1) + c_2 T(n-2)\) — само от T-а вдясно.</li>
+          <li><strong>Нехомогенно:</strong> \(T(n) = c_1 T(n-1) + c_2 T(n-2) + f(n)\) — има допълнителен член \(f(n)\).</li>
+        </ul>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">Примери</div>
+        <ul class="bullet">
+          <li>Fibonacci: \(F_n = F_{n-1} + F_{n-2}\) — линейно, хомогенно, константни коефициенти, 2-ри ред.</li>
+          <li>Mergesort: \(T(n) = 2T(n/2) + n\) — линейно, нехомогенно, деление.</li>
+          <li>SELECT: \(T(n) = T(n/5) + T(7n/10) + n\) — нехомогенно, деление.</li>
+        </ul>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Рекурентното уравнение е <strong>различен обект</strong> от алгоритъма, чиято сложност описва!</li>
+          <li>Ред на уравнение = най-голямото число, което се изважда вдясно.</li>
+          <li>За Разделяй-и-Владей: функцията на намаляване е деление.</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Дефинирайте рекурентно уравнение. Класифицирайте \(T(n) = 3T(n-1) + 4T(n-2) + n\) по ред, линейност, хомогенност и вид на намаляването.</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c7" onchange="updateProgress()">
+        <label for="c7">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 8 -->
+  <div class="topic" id="t8">
+    <div class="topic-header">
+      <h2>Метод на развиването (Unfolding)</h2>
+      <div class="topic-num">8</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Описание на метода</div>
+      <p>Методът на развиването (на английски "unfolding" или "iteration") е директен начин за решаване на рекурентно уравнение: заместваме рекурентно докато достигнем базовия случай, след което сумираме.</p>
+
+      <div class="card ex">
+        <div class="card-label">Задача 26: Решение на T(n) = T(n-1) + n</div>
+        <div class="viz">
+T(n) = T(n-1) + n
+     = T(n-2) + (n-1) + n
+     = T(n-3) + (n-2) + (n-1) + n
+     = ...
+     = T(1) + 2 + 3 + ... + n
+     = 1 + n(n+1)/2 - 1
+     = n(n+1)/2
+     = Θ(n²)</div>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">Задача 27: Решение на T(n) = 2T(n/2) + n</div>
+        <div class="viz">
+T(n) = 2T(n/2) + n
+     = 2[2T(n/4) + n/2] + n = 4T(n/4) + n + n
+     = 4[2T(n/8) + n/4] + 2n = 8T(n/8) + n + n + n
+     = ...
+     = 2^k · T(n/2^k) + k·n
+
+При k = log₂n: n/2^k = 1, T(1) = 1
+     = n · T(1) + n·log₂n = n + n·log₂n = Θ(n log n)</div>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Развиваме k пъти, изразяваме T(n) чрез T(n/b^k) или T(n-k).</li>
+          <li>При деление: избираме k = log_b(n), при което T(1) или T(константа) е базовия случай.</li>
+          <li>Резултатът е точна формула, не само асимптотика!</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Решете чрез развиване: \(T(n) = T(n/3) + n\), \(T(1) = 1\).</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c8" onchange="updateProgress()">
+        <label for="c8">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 9 -->
+  <div class="topic" id="t9">
+    <div class="topic-header">
+      <h2>Дърво на рекурсията (Recursion Tree)</h2>
+      <div class="topic-num">9</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Описание на метода</div>
+      <p>Дървото на рекурсията е визуален метод: разгръщаме рекурентното уравнение като дърво, изчисляваме работата на всяко ниво и сумираме по всички нива.</p>
+
+      <div class="card ex">
+        <div class="card-label">Дърво на рекурсията за T(n) = 2T(n/2) + n</div>
+        <div class="viz">
+Ниво 0:          n                  = n
+Ниво 1:      n/2 + n/2             = n
+Ниво 2:   n/4+n/4+n/4+n/4         = n
+Ниво 3:  n/8+n/8+...              = n
+...
+Ниво log₂n:  1+1+1+...+1 (n листа) = n
+
+Брой нива: log₂n + 1
+Работа на всяко ниво: n
+Общо: n · (log₂n + 1) = Θ(n log n)</div>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">Дърво на рекурсията за T(n) = T(n/3) + T(2n/3) + n</div>
+        <div class="viz">
+Ниво 0:           n                  = n
+Ниво 1:      n/3 + 2n/3             = n
+Ниво 2:  n/9+2n/9+2n/9+4n/9        = n
+...
+Левият клон стига до листо след log₃n нива.
+Десният клон стига до листо след log_{3/2}n нива.
+Т.е. дървото има между log₃n и log_{3/2}n нива.
+Общо ≈ cn·log n → Θ(n log n) [по Мастър теорема: a=2,b неизвестно,f(n)=n]</div>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Изчислете работата на всяко ниво (сума на всички викания на това ниво).</li>
+          <li>Изчислете броя нива (дълбочина на дървото).</li>
+          <li>Сумирайте.</li>
+          <li>Методът дава добра интуиция, но резултатът трябва да се <strong>провери по индукция</strong>!</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Начертайте дърво на рекурсията за \(T(n) = 3T(n/4) + n\). Кое е решението?</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c9" onchange="updateProgress()">
+        <label for="c9">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 10 -->
+  <div class="topic" id="t10">
+    <div class="topic-header">
+      <h2>Мастър теорема</h2>
+      <div class="topic-num">10</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Точна формулировка</div>
+      <div class="thm">
+        <div class="thm-label">Мастър теорема (Master Theorem)</div>
+        <p>Нека \(T(n) = aT(n/b) + f(n)\), където \(a \geq 1\), \(b > 1\) са константи и \(f(n) \geq 0\). Нека \(p = \log_b a\). Тогава:</p>
+        <ul class="bullet" style="margin-top:12px">
+          <li><strong>Случай 1:</strong> Ако \(f(n) = O(n^{p-\varepsilon})\) за някакво \(\varepsilon > 0\), то \(T(n) = \Theta(n^p)\).</li>
+          <li><strong>Случай 2:</strong> Ако \(f(n) = \Theta(n^p)\), то \(T(n) = \Theta(n^p \log n)\).</li>
+          <li><strong>Случай 3:</strong> Ако \(f(n) = \Omega(n^{p+\varepsilon})\) за някакво \(\varepsilon > 0\) и ако \(af(n/b) \leq cf(n)\) за константа \(c < 1\) и достатъчно голямо \(n\), то \(T(n) = \Theta(f(n))\).</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Интуиция за трите случая</div>
+      <div class="viz">
+Сравняваме f(n) с "работата на листата" = n^p = n^{log_b(a)}
+
+Случай 1: Листата доминират (f(n) расте по-бавно) → T(n) = Θ(n^p)
+Случай 2: Всяко ниво работи еднакво → T(n) = Θ(n^p · log n)
+Случай 3: Коренът (f(n)) доминира → T(n) = Θ(f(n))</div>
+
+      <div class="card ex">
+        <div class="card-label">Примери за прилагане</div>
+        <table>
+          <tr><th>Уравнение</th><th>a, b, p</th><th>f(n)</th><th>Случай</th><th>Решение</th></tr>
+          <tr><td>\(T=2T(n/2)+n\)</td><td>a=2,b=2,p=1</td><td>\(n=\Theta(n^1)\)</td><td>2</td><td>\(\Theta(n\log n)\)</td></tr>
+          <tr><td>\(T=4T(n/2)+n\)</td><td>a=4,b=2,p=2</td><td>\(n=O(n^{2-1})\)</td><td>1</td><td>\(\Theta(n^2)\)</td></tr>
+          <tr><td>\(T=4T(n/2)+n^3\)</td><td>a=4,b=2,p=2</td><td>\(n^3=\Omega(n^{2+1})\)</td><td>3</td><td>\(\Theta(n^3)\)</td></tr>
+          <tr><td>\(T=2T(n/2)+n\log n\)</td><td>a=2,b=2,p=1</td><td>\(n\log n\) — не покрива</td><td>2 (разширен)</td><td>\(\Theta(n\log^2 n)\)</td></tr>
+        </table>
+      </div>
+
+      <div class="card warn">
+        <p><strong>Внимание:</strong> Мастър теоремата не покрива всички случаи! Например \(T(n) = T(n/2) + n/\log n\) е между случай 1 и случай 2 и теоремата не е директно приложима.</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Изчисли \(p = \log_b a\). Сравни \(f(n)\) с \(n^p\).</li>
+          <li>Трите случая: f расте по-бавно (Сл.1), равно (Сл.2), по-бързо (Сл.3) от \(n^p\).</li>
+          <li>В Случай 3 трябва регулярността: \(af(n/b) \leq cf(n)\).</li>
+          <li>Ако случаят не е ясен — опитай развиване или дърво на рекурсията.</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Приложете Мастър теоремата за \(T(n) = 3T(n/4) + n \log n\). Кой случай е? Какво е решението?</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c10" onchange="updateProgress()">
+        <label for="c10">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 11 -->
+  <div class="topic" id="t11">
+    <div class="topic-header">
+      <h2>Теореми 38 и 39 — Решение по индукция</h2>
+      <div class="topic-num">11</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Точни формулировки</div>
+      <div class="thm">
+        <div class="thm-label">Теорема 38: Метод на индукцията за T(n) = T(n-1) + f(n)</div>
+        <p>Нека \(T(1) = c\) и \(T(n) = T(n-1) + f(n)\) за \(n > 1\). Тогава:</p>
+        <p style="text-align:center; margin:10px 0">\[T(n) = c + \sum_{k=2}^{n} f(k)\]</p>
+        <p>Доказателство: По индукция по n. База: T(1)=c. Стъпка: T(n) = T(n-1) + f(n) = c + \sum_{k=2}^{n-1} f(k) + f(n) = c + \sum_{k=2}^{n} f(k).</p>
+      </div>
+
+      <div class="thm">
+        <div class="thm-label">Теорема 39: Метод за T(n) = T(αn) + T(βn) + cn с α+β &lt; 1</div>
+        <p>Нека \(T(n) = T(\alpha n) + T(\beta n) + cn\), където \(\alpha, \beta > 0\) и \(\alpha + \beta < 1\). Тогава:</p>
+        <p style="text-align:center; margin:10px 0">\[T(n) = \Theta(n)\]</p>
+        <p><strong>Доказателство по индукция:</strong> Предполагаме \(T(n) \leq dn\) за константа \(d > c/(1-\alpha-\beta)\). Тогава:</p>
+        <p style="text-align:center; margin:10px 0">\[T(n) = T(\alpha n) + T(\beta n) + cn \leq d\alpha n + d\beta n + cn = dn(\alpha + \beta) + cn\]</p>
+        <p>Ако \(d(\alpha+\beta) + c \leq d\), тоест \(d \geq c/(1-\alpha-\beta)\), получаваме \(T(n) \leq dn\). Dolna граница се доказва аналогично.</p>
+      </div>
+
+      <div class="sec-h">Приложение на Теорема 39</div>
+      <div class="card ex">
+        <div class="card-label">SELECT: T(n) = T(n/5) + T(7n/10) + n</div>
+        <p>Имаме \(\alpha = 1/5\), \(\beta = 7/10\), \(\alpha + \beta = 9/10 < 1\).</p>
+        <p>По Теорема 39: \(T(n) = \Theta(n)\).</p>
+        <p>Константата: \(d \geq c/(1-9/10) = 10c\). Ако \(c=1\) (единица работа на ниво), то \(d = 10\).</p>
+      </div>
+
+      <div class="sec-h">Решение по индукция — обща схема</div>
+      <div class="card def">
+        <div class="card-label">Стъпки при доказателство по индукция</div>
+        <ol style="padding-left:20px; line-height:2">
+          <li>Предположи вида на решението (например \(T(n) \leq cn\)).</li>
+          <li>База: Провери за малки n.</li>
+          <li>Стъпка: Замести \(T\) вдясно с предположението и провери дали получаваш \(\leq cn\) вляво.</li>
+          <li>Избери константите така, че да работи.</li>
+        </ol>
+      </div>
+
+      <div class="conn-box">
+        <div class="conn-label">Кога кой метод да се използва</div>
+        <table>
+          <tr><th>Метод</th><th>Подходящ за</th><th>Труден за</th></tr>
+          <tr><td>Развиване</td><td>T(n)=T(n-1)+f(n), T(n)=aT(n/b)+f(n)</td><td>Смесени</td></tr>
+          <tr><td>Дърво на рекурсията</td><td>Нееднакви поддървета</td><td>Много викания</td></tr>
+          <tr><td>Мастър теорема</td><td>T=aT(n/b)+f(n)</td><td>Не всички случаи</td></tr>
+          <tr><td>Теорема 39</td><td>T=T(αn)+T(βn)+f(n), α+β&lt;1</td><td>Не е общ</td></tr>
+          <tr><td>Индукция</td><td>Верификация на догадка</td><td>Намиране на догадка</td></tr>
+          <tr><td>Хар. уравнение</td><td>Линейни с конст. коефициенти</td><td>С деление</td></tr>
+        </table>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Теорема 38: Телескопиране. \(T(n) = c + \sum_{k=2}^n f(k)\).</li>
+          <li>Теорема 39: При \(\alpha + \beta < 1\), \(T(n) = \Theta(n)\). Критерий е сумата \(\alpha+\beta\)!</li>
+          <li>При индукция: предположи вида, избери константата, провери.</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Формулирайте и докажете Теорема 39. Приложете я за SELECT: \(T(n) = T(n/5) + T(7n/10) + n\).</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c11" onchange="updateProgress()">
+        <label for="c11">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+function toggleTheme() {
+  const root = document.documentElement;
+  const isLight = root.getAttribute('data-theme') === 'light';
+  root.setAttribute('data-theme', isLight ? '' : 'light');
+  document.querySelector('#topbar .btn').textContent = isLight ? 'Светла тема' : 'Тъмна тема';
+}
+function updateProgress() {
+  const total = 11;
+  const checked = document.querySelectorAll('input[type=checkbox]:checked').length;
+  const pct = Math.round(checked / total * 100);
+  document.getElementById('progress-bar-inner').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = checked + ' от ' + total + ' теми изучени';
+}
+const links = document.querySelectorAll('#sidebar li a');
+const topics = document.querySelectorAll('.topic');
+window.addEventListener('scroll', () => {
+  let current = '';
+  topics.forEach(t => { if (window.scrollY >= t.offsetTop - 100) current = t.id; });
+  links.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+</script>
+</body>
+</html>

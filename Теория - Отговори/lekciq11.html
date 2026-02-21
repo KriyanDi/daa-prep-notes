@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лекция 11 - Динамично Програмиране | ДАА 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #1a1d27; --bg3: #242838;
+    --accent: #4f8ef7; --accent2: #7c5cbf; --green: #2ecc71;
+    --yellow: #f39c12; --red: #e74c3c; --text: #e8eaf0;
+    --text2: #9ca3af; --border: #2d3148;
+    --def-bg: #0d2137; --def-border: #1e5799;
+    --ex-bg: #0d2d1a; --ex-border: #1e7d3e;
+    --key-bg: #2d2100; --key-border: #7d5c00;
+    --code-bg: #141822;
+  }
+  [data-theme="light"] {
+    --bg: #f0f2f8; --bg2: #ffffff; --bg3: #e8ecf5;
+    --accent: #2563eb; --accent2: #7c3aed; --green: #16a34a;
+    --yellow: #d97706; --red: #dc2626; --text: #1e293b;
+    --text2: #64748b; --border: #cbd5e1;
+    --def-bg: #eff6ff; --def-border: #3b82f6;
+    --ex-bg: #f0fdf4; --ex-border: #22c55e;
+    --key-bg: #fffbeb; --key-border: #f59e0b;
+    --code-bg: #1e293b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  #layout { display: flex; min-height: 100vh; }
+  #sidebar { width: 280px; background: var(--bg2); border-right: 1px solid var(--border);
+    position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto;
+    transition: transform 0.3s; z-index: 100; padding: 20px 0; }
+  #sidebar h2 { color: var(--accent); font-size: 0.85rem; text-transform: uppercase;
+    letter-spacing: 1px; padding: 0 20px 10px; border-bottom: 1px solid var(--border); }
+  #sidebar ul { list-style: none; padding: 10px 0; }
+  #sidebar li a { display: block; padding: 8px 20px; color: var(--text2); text-decoration: none;
+    font-size: 0.88rem; border-left: 3px solid transparent; transition: all 0.2s; }
+  #sidebar li a:hover, #sidebar li a.active { color: var(--accent); border-left-color: var(--accent);
+    background: rgba(79,142,247,0.08); }
+  #main { margin-left: 280px; flex: 1; padding: 40px; max-width: 1000px; }
+  #topbar { position: sticky; top: 0; background: var(--bg2); border-bottom: 1px solid var(--border);
+    z-index: 50; display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 40px; margin: -40px -40px 40px; }
+  #topbar h1 { font-size: 1.1rem; color: var(--accent); }
+  .btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text); cursor: pointer; font-size: 0.85rem; }
+  .btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  #progress-wrap { background: var(--bg3); border-radius: 8px; padding: 16px 20px;
+    margin-bottom: 32px; border: 1px solid var(--border); }
+  #progress-wrap h3 { font-size: 0.9rem; color: var(--text2); margin-bottom: 10px; }
+  #progress-bar-outer { background: var(--bg); border-radius: 99px; height: 8px; overflow: hidden; }
+  #progress-bar-inner { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 99px; transition: width 0.5s; }
+  #progress-label { font-size: 0.85rem; color: var(--text2); margin-top: 6px; }
+  .topic { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 40px; overflow: hidden; scroll-margin-top: 80px; }
+  .topic-header { padding: 20px 24px; background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: space-between; }
+  .topic-header h2 { color: white; font-size: 1.15rem; }
+  .topic-num { background: rgba(255,255,255,0.2); color: white; border-radius: 50%;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .topic-body { padding: 24px; }
+  .card { border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .card.def { background: var(--def-bg); border-left: 4px solid var(--def-border); }
+  .card.def .card-label { color: var(--accent); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.ex { background: var(--ex-bg); border-left: 4px solid var(--ex-border); }
+  .card.ex .card-label { color: var(--green); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.key { background: var(--key-bg); border-left: 4px solid var(--key-border); }
+  .card.key .card-label { color: var(--yellow); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.warn { background: rgba(231,76,60,0.07); border-left: 4px solid var(--red); }
+  .sec-h { font-size: 0.95rem; font-weight: 700; color: var(--accent); margin: 20px 0 8px;
+    display: flex; align-items: center; gap: 8px; }
+  .sec-h::before { content: ''; display: inline-block; width: 3px; height: 16px;
+    background: var(--accent); border-radius: 2px; }
+  pre { background: var(--code-bg); color: #cdd6f4; border-radius: 8px; padding: 16px 20px;
+    overflow-x: auto; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem;
+    line-height: 1.6; margin: 12px 0; border: 1px solid var(--border); }
+  code { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem; }
+  .kw { color: #cba6f7; } .cm { color: #6c7086; font-style: italic; }
+  .nm { color: #89dceb; } .op { color: #89b4fa; } .str { color: #a6e3a1; }
+  .num { color: #fab387; }
+  .viz { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 20px; font-family: monospace; font-size: 0.85rem; color: #cdd6f4;
+    white-space: pre; overflow-x: auto; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.88rem; }
+  th { background: var(--bg3); color: var(--accent); padding: 10px 12px; text-align: left;
+    border-bottom: 2px solid var(--accent); }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: rgba(79,142,247,0.05); }
+  ul.bullet { list-style: none; padding: 0; }
+  ul.bullet li { padding: 6px 0 6px 24px; position: relative; }
+  ul.bullet li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+  .exam-box { background: linear-gradient(135deg, rgba(231,76,60,0.1), rgba(231,76,60,0.05));
+    border: 1px solid var(--red); border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .exam-box .card-label { color: var(--red); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .conn-box { background: rgba(124,92,191,0.1); border: 1px solid var(--accent2);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .conn-box .card-label { color: var(--accent2); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .thm { background: rgba(79,142,247,0.07); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+  .thm-title { color: var(--accent); font-weight: 700; margin-bottom: 8px; }
+  p { margin: 10px 0; }
+  b, strong { color: var(--accent); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  @media (max-width: 768px) {
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; padding: 20px; }
+    #topbar { padding: 12px 20px; margin: -20px -20px 20px; }
+  }
+</style>
+</head>
+<body data-theme="dark">
+<div id="layout">
+<nav id="sidebar">
+  <h2>Лекция 11 - Навигация</h2>
+  <ul>
+    <li><a href="#t1">All-Pairs Shortest Paths</a></li>
+    <li><a href="#t2">Floyd-Warshall</a></li>
+    <li><a href="#t3">Matrix-Chain, Неасоц. операция</a></li>
+    <li><a href="#t4">2-Partition и Knapsack</a></li>
+    <li><a href="#t5">Interval Scheduling</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+  <div id="topbar">
+    <h1>ДАА 2026 - Лекция 11: Динамично Програмиране</h1>
+    <button class="btn" onclick="toggleTheme()">Тема</button>
+  </div>
+
+  <div id="progress-wrap">
+    <h3>Готовност за изпит</h3>
+    <div id="progress-bar-outer"><div id="progress-bar-inner" style="width:0%"></div></div>
+    <div id="progress-label">Отметнете темите, които сте научили</div>
+    <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;">
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> APShP + Repeated Squaring</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Floyd-Warshall</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Matrix-Chain и Неасоц. операция</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> 2-Partition и Knapsack</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Interval Scheduling</label>
+    </div>
+  </div>
+
+  <!-- TOPIC 1: APShP + Repeated Squaring -->
+  <section class="topic" id="t1">
+    <div class="topic-header">
+      <h2>All-Pairs Shortest Paths: Shortest Path MM и Repeated Squaring</h2>
+      <div class="topic-num">1</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — по лекции на проф. Марков</div>
+        <p><strong>APShP (All-Pairs Shortest Paths, Изч. Задача 30):</strong> Дадени са ориентиран граф G = (V, E) и тегловна функция w. Намери δ(u, v) за всички двойки u, v ∈ V.</p>
+        <p><strong>Характеризация (рекурсивна декомпозиция):</strong> Нека L<sup>(m)</sup>[i][j] = теглото на най-лек път от i до j, използващ най-много m ребра. Тогава:</p>
+        <ul class="bullet">
+          <li>L<sup>(1)</sup>[i][j] = w(i,j) ако (i,j) ∈ E, иначе ∞ (за i ≠ j); L<sup>(1)</sup>[i][i] = 0</li>
+          <li>L<sup>(m)</sup>[i][j] = min<sub>k</sub>{ L<sup>(m-1)</sup>[i][k] + w(k,j) } — разширяване с едно ребро</li>
+          <li>При липса на отрицателни цикли: L<sup>(n-1)</sup>[i][j] = δ(i,j)</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Алгоритъм 37: Shortest-Path-MM</div>
+<pre><code><span class="cm">-- Алгоритъм 37: Shortest-Path-MM (матрично умножение)</span>
+<span class="kw">Shortest-Path-MM</span>(W: матрица на теглата, n: брой върхове)
+<span class="num">1</span>  L ← W              <span class="cm">-- L = L^(1): един ред на матрицата на теглата</span>
+<span class="num">2</span>  <span class="kw">for</span> m ← 2 <span class="kw">to</span> n-1
+<span class="num">3</span>      L' ← нова матрица n×n
+<span class="num">4</span>      <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">5</span>          <span class="kw">for</span> j ← 1 <span class="kw">to</span> n
+<span class="num">6</span>              L'[i][j] ← ∞
+<span class="num">7</span>              <span class="kw">for</span> k ← 1 <span class="kw">to</span> n
+<span class="num">8</span>                  L'[i][j] ← min(L'[i][j], L[i][k] + W[k][j])
+<span class="num">9</span>      L ← L'
+<span class="num">10</span> <span class="kw">return</span> L           <span class="cm">-- L = L^(n-1) = матрицата на δ(i,j)</span></code></pre>
+
+      <p><strong>Сложност по време:</strong> Θ(n³ · n) = Θ(n⁴) — n-2 итерации × Θ(n³) за едно "умножение".</p>
+
+      <div class="sec-h">Алгоритъм 38: Repeated Squaring (Повторно повдигане на квадрат)</div>
+<pre><code><span class="cm">-- Алгоритъм 38: Repeated Squaring — ускоряване до Θ(n³·lg n)</span>
+<span class="kw">Repeated-Squaring</span>(W: матрица на теглата, n: брой върхове)
+<span class="num">1</span>  L ← W              <span class="cm">-- L = L^(1)</span>
+<span class="num">2</span>  m ← 1
+<span class="num">3</span>  <span class="kw">while</span> m &lt; n-1 <span class="kw">do</span>
+<span class="num">4</span>      L ← Extend(L, L)   <span class="cm">-- L^(2m) = L^(m) "умножено" по себе си</span>
+<span class="num">5</span>      m ← 2m
+<span class="num">6</span>  <span class="kw">return</span> L
+
+<span class="cm">-- Обосновка: вместо n-2 умножения правим само ⌈lg(n-1)⌉ умножения</span>
+<span class="cm">-- след ⌈lg(n-1)⌉ стъпки m ≥ n-1 → L = L^(m) = L^(n-1) = δ матрица</span></code></pre>
+
+      <div class="card ex">
+        <div class="card-label">Пример — Repeated Squaring за n=5</div>
+        <div class="viz">
+n=5, трябва L^(4):
+
+Стъпка 1: m=1, L=L^(1) → L = L^(1)⊗L^(1) = L^(2), m=2
+Стъпка 2: m=2, L=L^(2) → L = L^(2)⊗L^(2) = L^(4), m=4
+
+m=4 ≥ n-1=4 → СПИРАМЕ
+
+Само 2 умножения вместо 3 (за m=2,3,4)!
+За n=100: ⌈lg(99)⌉ = 7 умножения вместо 98!
+        </div>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Аналогия с матрично умножение: "+" → "min", "×" → "+"</li>
+          <li>Shortest-Path-MM: Θ(n⁴); Repeated Squaring: Θ(n³·lg n)</li>
+          <li>И двата са по-бавни от Floyd-Warshall Θ(n³) — само теоретичен интерес</li>
+          <li>Обосновка на горната граница: след ⌈lg(n-1)⌉ удвоявания, m ≥ n-1</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Опишете алгоритъма Shortest-Path-MM (псевдокод, рекурсивна декомпозиция, сложност). Как Repeated Squaring подобрява сложността? Обосновайте горната граница."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 2: Floyd-Warshall -->
+  <section class="topic" id="t2">
+    <div class="topic-header">
+      <h2>Floyd-Warshall (Алгоритъм 39)</h2>
+      <div class="topic-num">2</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — Характеризация</div>
+        <p><strong>Характеризация на най-кратък път (Floyd-Warshall):</strong> Нека D<sup>(k)</sup>[i][j] = теглото на най-лек път от i до j, чиито <em>вътрешни върхове</em> принадлежат на подмножеството {1, 2, ..., k}.</p>
+        <p><strong>Рекурсивна декомпозиция:</strong></p>
+        <ul class="bullet">
+          <li>D<sup>(0)</sup>[i][j] = w(i,j) ако (i,j) ∈ E; 0 ако i=j; ∞ иначе</li>
+          <li>D<sup>(k)</sup>[i][j] = min( D<sup>(k-1)</sup>[i][j], D<sup>(k-1)</sup>[i][k] + D<sup>(k-1)</sup>[k][j] )</li>
+          <li>D<sup>(n)</sup>[i][j] = δ(i,j) — финалният отговор</li>
+        </ul>
+        <p>Интуиция: или най-лекият път от i до j <em>не минава</em> през k (първи член), или <em>минава</em> — и тогава се разбива на i→k и k→j (втори член).</p>
+      </div>
+
+      <div class="sec-h">Алгоритъм 39: Floyd-Warshall</div>
+<pre><code><span class="cm">-- Алгоритъм 39: Floyd-Warshall</span>
+<span class="kw">Floyd-Warshall</span>(W: матрица на теглата n×n)
+<span class="num">1</span>  D ← W              <span class="cm">-- D = D^(0)</span>
+<span class="num">2</span>  <span class="kw">for</span> k ← 1 <span class="kw">to</span> n     <span class="cm">-- за всеки междинен връх k</span>
+<span class="num">3</span>      <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">4</span>          <span class="kw">for</span> j ← 1 <span class="kw">to</span> n
+<span class="num">5</span>              D[i][j] ← min(D[i][j], D[i][k] + D[k][j])
+<span class="num">6</span>  <span class="kw">return</span> D           <span class="cm">-- D = D^(n) = матрицата на δ(i,j)</span></code></pre>
+
+      <p><strong>Сложност по време:</strong> Θ(n³) — три вложени цикъла, всеки до n</p>
+      <p><strong>Сложност по памет:</strong> Θ(n²) — само текущата матрица D (in-place)</p>
+
+      <div class="sec-h">Конкретен пример — Попълване на DP матрицата</div>
+      <div class="card ex">
+        <div class="card-label">Floyd-Warshall на граф с 4 върха</div>
+        <div class="viz">
+Граф (тегла): 1→2: 3, 1→3: 8, 2→3: 1, 2→4: 2, 3→4: -4, 4→2: -1
+
+D^(0) начална матрица:
+     1    2    3    4
+1  [ 0    3    8   ∞ ]
+2  [ ∞    0    1    2 ]
+3  [ ∞    ∞    0   -4 ]
+4  [ ∞   -1    ∞    0 ]
+
+k=1 (разглеждаме върха 1 като междинен):
+D[i][j] = min(D[i][j], D[i][1]+D[1][j])
+Няма промени (D[i][1]=∞ за i≠1)
+
+D^(1) = D^(0) (без промени)
+
+k=2 (разглеждаме върха 2 като междинен):
+D[1][3] = min(8, D[1][2]+D[2][3]) = min(8, 3+1) = 4  ← ПРОМЯНА
+D[1][4] = min(∞, D[1][2]+D[2][4]) = min(∞, 3+2) = 5  ← ПРОМЯНА
+D[4][3] = min(∞, D[4][2]+D[2][3]) = min(∞, -1+1) = 0 ← ПРОМЯНА
+
+D^(2):
+     1    2    3    4
+1  [ 0    3    4    5 ]
+2  [ ∞    0    1    2 ]
+3  [ ∞    ∞    0   -4 ]
+4  [ ∞   -1    0    0 ]  ← забележете D[4][3]=0
+
+k=3 (включваме 3):
+D[1][4] = min(5, D[1][3]+D[3][4]) = min(5, 4+(-4)) = 0 ← ПРОМЯНА
+D[2][4] = min(2, D[2][3]+D[3][4]) = min(2, 1+(-4)) = -3 ← ПРОМЯНА
+D[4][4] = min(0, D[4][3]+D[3][4]) = min(0, 0+(-4)) = -4 ← ОТРИЦАТЕЛЕН ЦИКЪЛ!
+
+k=4 (включваме 4):
+D[1][2] = min(3, D[1][4]+D[4][2]) = min(3, 0+(-1)) = -1 ← ПРОМЯНА
+...
+
+Финално D^(4): δ(i,j) за всички двойки
+        </div>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Floyd-Warshall: Θ(n³) — оптимален за APShP върху гъсти графи</li>
+          <li>Разлика от Shortest-Path-MM: тук броим по <em>вътрешни върхове</em>, там по <em>ребра</em></li>
+          <li>Проверка за отрицателен цикъл: D[i][i] &lt; 0 за някое i след алгоритъма</li>
+          <li>In-place: не се нуждаем от нова матрица на всяка итерация</li>
+          <li>Може да се разшири за намиране на самите пътища (не само дължините) с матрица на предшествия</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Опишете Floyd-Warshall: характеризация, рекурсивна декомпозиция, псевдокод, сложност. Попълнете DP матрицата за конкретен пример."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 3: Matrix-Chain + Non-Associative -->
+  <section class="topic" id="t3">
+    <div class="topic-header">
+      <h2>Matrix-Chain Multiplication и Неасоциативна операция</h2>
+      <div class="topic-num">3</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Изч. Задача 32: Matrix-Chain Multiplication</div>
+        <p>Дадена е верига от матрици A₁, A₂, ..., Aₙ с размери p₀×p₁, p₁×p₂, ..., pₙ₋₁×pₙ. Намери скобуването, минимизиращо броя скаларни умножения.</p>
+        <p><strong>Характеризация:</strong> Нека m[i][j] = минималният брой умножения за пресмятане на AᵢAᵢ₊₁...Aⱼ.</p>
+        <p><strong>Рекурсивна декомпозиция:</strong></p>
+        <ul class="bullet">
+          <li>m[i][i] = 0 (базов случай)</li>
+          <li>m[i][j] = min<sub>i≤k&lt;j</sub>{ m[i][k] + m[k+1][j] + pᵢ₋₁·pₖ·pⱼ }</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Алгоритъм 40: Matrix-Chain-Order</div>
+<pre><code><span class="cm">-- Алгоритъм 40: Matrix-Chain-Order</span>
+<span class="kw">Matrix-Chain-Order</span>(p[0..n]: размерите на матриците)
+<span class="num">1</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">2</span>      m[i][i] ← 0        <span class="cm">-- базов случай</span>
+<span class="num">3</span>  <span class="kw">for</span> len ← 2 <span class="kw">to</span> n      <span class="cm">-- дължина на подвериги</span>
+<span class="num">4</span>      <span class="kw">for</span> i ← 1 <span class="kw">to</span> n-len+1
+<span class="num">5</span>          j ← i + len - 1
+<span class="num">6</span>          m[i][j] ← ∞
+<span class="num">7</span>          <span class="kw">for</span> k ← i <span class="kw">to</span> j-1    <span class="cm">-- изпробваме всички точки на разрязване</span>
+<span class="num">8</span>              q ← m[i][k] + m[k+1][j] + p[i-1]*p[k]*p[j]
+<span class="num">9</span>              <span class="kw">if</span> q &lt; m[i][j]
+<span class="num">10</span>                 m[i][j] ← q
+<span class="num">11</span>                 s[i][j] ← k      <span class="cm">-- запомняме оптималното k</span>
+<span class="num">12</span> <span class="kw">return</span> m, s</code></pre>
+
+      <p><strong>Сложност по време:</strong> Θ(n³) — три вложени цикъла</p>
+      <p><strong>Сложност по памет:</strong> Θ(n²) — матриците m и s</p>
+
+      <div class="card ex">
+        <div class="card-label">Пример — 4 матрици с размери 30×35, 35×15, 15×5, 5×10</div>
+        <div class="viz">
+p = [30, 35, 15, 5, 10]  (n=4 матрици)
+
+len=1 (базов): m[1][1]=m[2][2]=m[3][3]=m[4][4]=0
+
+len=2 (двойки):
+  m[1][2] = p[0]*p[1]*p[2] = 30*35*15 = 15750
+  m[2][3] = p[1]*p[2]*p[3] = 35*15*5  = 2625
+  m[3][4] = p[2]*p[3]*p[4] = 15*5*10  = 750
+
+len=3 (тройки):
+  m[1][3]: k=1: m[1][1]+m[2][3]+p[0]*p[1]*p[3] = 0+2625+30*35*5 = 7875
+           k=2: m[1][2]+m[3][3]+p[0]*p[2]*p[3] = 15750+0+30*15*5 = 18000
+           → m[1][3] = 7875, s[1][3] = 1
+
+  m[2][4]: k=2: m[2][2]+m[3][4]+p[1]*p[2]*p[4] = 0+750+35*15*10 = 6000
+           k=3: m[2][3]+m[4][4]+p[1]*p[3]*p[4] = 2625+0+35*5*10 = 4375
+           → m[2][4] = 4375, s[2][4] = 3
+
+len=4 (четворка):
+  m[1][4]: k=1: m[1][1]+m[2][4]+p[0]*p[1]*p[4] = 0+4375+30*35*10 = 15875
+           k=2: m[1][2]+m[3][4]+p[0]*p[2]*p[4] = 15750+750+30*15*10 = 21000
+           k=3: m[1][3]+m[4][4]+p[0]*p[3]*p[4] = 7875+0+30*5*10 = 9375
+           → m[1][4] = 9375, s[1][4] = 3
+
+Оптимално скобуване: s[1][4]=3 → (A₁A₂A₃)(A₄) → s[1][3]=1 → (A₁)(A₂A₃)
+= ((A₁(A₂A₃))A₄) с 9375 умножения
+        </div>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Изч. Задача 34: Неасоциативна операция върху стринг</div>
+        <p>Дадени са символи x₁, x₂, ..., xₙ и неасоциативна двоична операция ⊕. Намери броя на начините да скобуваме израза x₁ ⊕ x₂ ⊕ ... ⊕ xₙ, за да получим даден резултат.</p>
+        <p><strong>Рекурсивна декомпозиция:</strong> Нека ways[i][j][v] = брой скобувания на xᵢ...xⱼ, дали стойност v.</p>
+        <p>ways[i][j][v] = Σ<sub>i≤k&lt;j, a⊕b=v</sub>{ ways[i][k][a] · ways[k+1][j][b] }</p>
+      </div>
+
+      <div class="sec-h">Алгоритъм 41: Non-Associative-Op</div>
+<pre><code><span class="cm">-- Алгоритъм 41: Non-Associative-Op</span>
+<span class="kw">Non-Assoc-Op</span>(x[1..n]: стринг, ⊕: операция, target: цел)
+<span class="num">1</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">2</span>      ways[i][i][x[i]] ← 1     <span class="cm">-- базов: един символ, точно една стойност</span>
+<span class="num">3</span>  <span class="kw">for</span> len ← 2 <span class="kw">to</span> n
+<span class="num">4</span>      <span class="kw">for</span> i ← 1 <span class="kw">to</span> n-len+1
+<span class="num">5</span>          j ← i + len - 1
+<span class="num">6</span>          <span class="kw">for</span> k ← i <span class="kw">to</span> j-1
+<span class="num">7</span>              <span class="kw">for</span> всяка стойност a в ways[i][k]
+<span class="num">8</span>                  <span class="kw">for</span> всяка стойност b в ways[k+1][j]
+<span class="num">9</span>                      ways[i][j][a⊕b] += ways[i][k][a] * ways[k+1][j][b]
+<span class="num">10</span> <span class="kw">return</span> ways[1][n][target]</code></pre>
+
+      <p><strong>Сложност:</strong> Θ(n³ · |V|²), където |V| е размерът на областта на стойностите</p>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Matrix-Chain: разрязваме в k → две подзадачи + цената на комбинацията</li>
+          <li>Итерираме по дължина len (1, 2, ..., n) — така подзадачите са решени преди нужда</li>
+          <li>s[i][j] = оптималното k → чрез обратно проследяване намираме скобуването</li>
+          <li>Неасоциативна задача: структурно идентична с Matrix-Chain</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Опишете задачата Matrix-Chain и алгоритъма за нейното решение (рекурсивна декомпозиция, псевдокод, сложност). Попълнете DP таблицата за 4 матрици."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 4: 2-Partition, Knapsack -->
+  <section class="topic" id="t4">
+    <div class="topic-header">
+      <h2>2-Partition, Псевдополиномиална сложност и Knapsack</h2>
+      <div class="topic-num">4</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Изч. Задача 36: 2-Partition</div>
+        <p>Дадено е мултимножество от цели числа S = {a₁, ..., aₙ}. Съществува ли разбиване на S на два дяла P и Q с еднакви суми (сумата на P = сумата на Q)?</p>
+        <p><strong>Рекурсивна декомпозиция:</strong> Нека part[i][s] = True, ако съществува подмножество на {a₁,...,aᵢ} с сума s.</p>
+        <ul class="bullet">
+          <li>part[0][0] = True; part[0][s] = False за s > 0</li>
+          <li>part[i][s] = part[i-1][s] OR (s ≥ aᵢ AND part[i-1][s-aᵢ])</li>
+          <li>Отговор: part[n][Sum/2], ако Sum е четно</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Алгоритъм 42: 2-Partition DP</div>
+<pre><code><span class="cm">-- Алгоритъм 42: 2-Partition</span>
+<span class="kw">Two-Partition</span>(a[1..n]: цели числа)
+<span class="num">1</span>  Sum ← Σa[i]
+<span class="num">2</span>  <span class="kw">if</span> Sum <span class="kw">mod</span> 2 ≠ 0: <span class="kw">return</span> False   <span class="cm">-- нечетна сума → невъзможно</span>
+<span class="num">3</span>  T ← Sum/2
+<span class="num">4</span>  part[0..n][0..T] ← False
+<span class="num">5</span>  part[0][0] ← True
+<span class="num">6</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">7</span>      <span class="kw">for</span> s ← 0 <span class="kw">to</span> T
+<span class="num">8</span>          part[i][s] ← part[i-1][s]
+<span class="num">9</span>          <span class="kw">if</span> s ≥ a[i]
+<span class="num">10</span>             part[i][s] ← part[i][s] <span class="kw">OR</span> part[i-1][s-a[i]]
+<span class="num">11</span> <span class="kw">return</span> part[n][T]</code></pre>
+
+      <p><strong>Сложност:</strong> Θ(n·Sum) = Θ(n·T)</p>
+
+      <div class="card def">
+        <div class="card-label">Псевдополиномиална сложност по време</div>
+        <p>Алгоритъмът за 2-Partition работи в Θ(n·Sum). Sum е числова стойност от входа, а не размерът на входа. Размерът на входа (в битове) е Θ(n·lg(max aᵢ)).</p>
+        <p>Алгоритъм е <strong>псевдополиномиален</strong>, ако сложността му е полином в числовите стойности на входа, но експоненциален в размера на кодирането им. Такива задачи са NP-трудни, но "лесни" при малки числа.</p>
+        <p><strong>Значение:</strong> 2-Partition е NP-пълна, но има псевдополиномиален алгоритъм → "weakly NP-complete".</p>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Изч. Задача 40: Unbounded Knapsack (Неограничена раница)</div>
+        <p>Дадени са предмети с тегла w₁,...,wₙ и стойности v₁,...,vₙ, и капацитет W. Може да се вземат произволен брой копия от всеки предмет. Максимизирай стойността.</p>
+        <p><strong>Рекурсивна декомпозиция:</strong> Нека uk[c] = максималната стойност за капацитет c.</p>
+        <ul class="bullet">
+          <li>uk[0] = 0</li>
+          <li>uk[c] = max<sub>i: wᵢ≤c</sub>{ vᵢ + uk[c - wᵢ] }</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Алгоритъм 43: Unbounded-Knapsack</div>
+<pre><code><span class="cm">-- Алгоритъм 43: Unbounded Knapsack</span>
+<span class="kw">Unbounded-Knapsack</span>(w[1..n], v[1..n], W: капацитет)
+<span class="num">1</span>  uk[0..W] ← 0
+<span class="num">2</span>  <span class="kw">for</span> c ← 1 <span class="kw">to</span> W
+<span class="num">3</span>      <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">4</span>          <span class="kw">if</span> w[i] ≤ c
+<span class="num">5</span>              uk[c] ← max(uk[c], v[i] + uk[c - w[i]])
+<span class="num">6</span>  <span class="kw">return</span> uk[W]</code></pre>
+
+      <p><strong>Сложност по време:</strong> Θ(n·W) — псевдополиномиална</p>
+      <p><strong>Сложност по памет:</strong> Θ(W)</p>
+
+      <div class="card def">
+        <div class="card-label">Изч. Задача 41: 0-1 Knapsack (Ограничена раница)</div>
+        <p>Всеки предмет може да се вземе <em>най-много веднъж</em>. Нека k[i][c] = максималната стойност, използвайки само предмети от {1,...,i} и капацитет c.</p>
+        <ul class="bullet">
+          <li>k[0][c] = 0; k[i][0] = 0</li>
+          <li>k[i][c] = k[i-1][c], ако wᵢ &gt; c</li>
+          <li>k[i][c] = max(k[i-1][c], vᵢ + k[i-1][c-wᵢ]), ако wᵢ ≤ c</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Алгоритъм 44: 0-1-Knapsack</div>
+<pre><code><span class="cm">-- Алгоритъм 44: 0-1 Knapsack</span>
+<span class="kw">01-Knapsack</span>(w[1..n], v[1..n], W: капацитет)
+<span class="num">1</span>  k[0..n][0..W] ← 0
+<span class="num">2</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">3</span>      <span class="kw">for</span> c ← 0 <span class="kw">to</span> W
+<span class="num">4</span>          k[i][c] ← k[i-1][c]      <span class="cm">-- не вземаме предмет i</span>
+<span class="num">5</span>          <span class="kw">if</span> w[i] ≤ c
+<span class="num">6</span>              k[i][c] ← max(k[i][c], v[i] + k[i-1][c-w[i]])</code></pre>
+
+      <p><strong>Сложност по време:</strong> Θ(n·W) — псевдополиномиална</p>
+      <p><strong>Сложност по памет:</strong> Θ(n·W)</p>
+
+      <div class="card ex">
+        <div class="card-label">Пример — 0-1 Knapsack (4 предмета, W=5)</div>
+        <div class="viz">
+Предмети: w=[2,3,4,5], v=[3,4,5,8]
+
+DP таблица k[i][c]:
+    c:  0   1   2   3   4   5
+i=0:  [ 0   0   0   0   0   0 ]
+i=1 (w=2,v=3):
+      [ 0   0   3   3   3   3 ]
+        ↑   ↑   ↑3  ↑3  ↑3  ↑3
+              (вземаме предмет 1)
+i=2 (w=3,v=4):
+      [ 0   0   3   4   4   7 ]
+                    ↑4  ↑4  ↑7
+                    (вземаме предмет 2)
+                            (7=3+4, предмети 1+2)
+i=3 (w=4,v=5):
+      [ 0   0   3   4   5   7 ]
+                        ↑5  (7≥5, не се подобрява)
+i=4 (w=5,v=8):
+      [ 0   0   3   4   5   8 ]
+                            ↑8 (8>7)
+
+Отговор: k[4][5] = 8 → вземаме само предмет 4 (w=5, v=8)
+        </div>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>0-1 Knapsack: k[i-1][c-wᵢ] (използва предишния ред = предмет i не се повтаря)</li>
+          <li>Unbounded Knapsack: uk[c-wᵢ] (текущия ред = предмет i може да се повтаря)</li>
+          <li>Псевдополиномиална = полином в числовите стойности, но NP-трудна задача</li>
+          <li>И 2-Partition, и Knapsack са NP-трудни → псевдополиномиален алгоритъм = "weakly NP-complete"</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дефинирайте псевдополиномиална сложност. Опишете 0-1 Knapsack (рекурсивна декомпозиция, псевдокод, сложност). Как се различава от Unbounded Knapsack?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 5: Interval Scheduling -->
+  <section class="topic" id="t5">
+    <div class="topic-header">
+      <h2>Interval Scheduling и Weighted Interval Scheduling</h2>
+      <div class="topic-num">5</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Изч. Задача 43: Interval Scheduling (Планиране на интервали)</div>
+        <p>Дадени са интервали [sᵢ, fᵢ) за i = 1,...,n (начало и край). Намери максимален брой съвместими (непресичащи се) интервали.</p>
+        <p><strong>Евристика "Най-ранно приключване":</strong> Сортираме по f (край) и винаги избираме интервала, приключващ най-рано, стига да е съвместим с вече избраните.</p>
+      </div>
+
+      <div class="thm">
+        <div class="thm-title">Теорема 107 — Коректност на евристиката за Interval Scheduling</div>
+        <p>Алгоритъмът "Най-ранно приключване" (earliest finish time) дава оптимален брой съвместими интервали. Доказателство: с "exchange argument" — всяко оптимално решение може да бъде трансформирано в решението на алгоритъма без намаляване на броя.</p>
+      </div>
+
+      <div class="sec-h">Алгоритъм 45: Earliest-Finish-Time</div>
+<pre><code><span class="cm">-- Алгоритъм 45: Interval Scheduling (алчен алгоритъм)</span>
+<span class="kw">Earliest-Finish-Time</span>(intervals: списък от (s[i], f[i]))
+<span class="num">1</span>  сортирай intervals по f[i] нарастващо   <span class="cm">-- Θ(n·lg n)</span>
+<span class="num">2</span>  result ← ∅
+<span class="num">3</span>  last_finish ← -∞
+<span class="num">4</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">5</span>      <span class="kw">if</span> s[i] ≥ last_finish    <span class="cm">-- интервалът е съвместим</span>
+<span class="num">6</span>          result ← result ∪ {i}
+<span class="num">7</span>          last_finish ← f[i]
+<span class="num">8</span>  <span class="kw">return</span> result</code></pre>
+
+      <p><strong>Сложност:</strong> Θ(n·lg n) — доминира сортирането</p>
+
+      <div class="card def">
+        <div class="card-label">Изч. Задача 44: Weighted Interval Scheduling</div>
+        <p>Всеки интервал има тегло vᵢ. Намери подмножество от съвместими интервали с максимална обща стойност.</p>
+        <p><strong>Рекурсивна декомпозиция:</strong> Нека p(i) = индексът на последния интервал, приключващ преди началото на интервал i. Нека OPT[i] = оптималната стойност за интервали {1,...,i}.</p>
+        <ul class="bullet">
+          <li>OPT[0] = 0</li>
+          <li>OPT[i] = max(OPT[i-1], vᵢ + OPT[p(i)])</li>
+          <li>или вземаме интервал i (и добавяме OPT[p(i)]), или не го вземаме (OPT[i-1])</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Алгоритъм 46: Weighted-Interval-Scheduling</div>
+<pre><code><span class="cm">-- Алгоритъм 46: Weighted Interval Scheduling (DP)</span>
+<span class="kw">Weighted-IS</span>(s[1..n], f[1..n], v[1..n]: интервали и стойности)
+<span class="num">1</span>  сортирай по f[i] нарастващо                    <span class="cm">-- Θ(n·lg n)</span>
+<span class="num">2</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">3</span>      p[i] ← бинарно търсене за последния j: f[j] ≤ s[i]  <span class="cm">-- Θ(lg n)</span>
+<span class="num">4</span>  OPT[0] ← 0
+<span class="num">5</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">6</span>      OPT[i] ← max(OPT[i-1], v[i] + OPT[p[i]])
+<span class="num">7</span>  <span class="kw">return</span> OPT[n]</code></pre>
+
+      <p><strong>Сложност по време:</strong> Θ(n·lg n) — сортирането и бинарното търсене за p[i]</p>
+      <p><strong>Сложност по памет:</strong> Θ(n)</p>
+
+      <div class="sec-h">Конкретен пример — Weighted Interval Scheduling</div>
+      <div class="card ex">
+        <div class="card-label">Пример с 5 интервала</div>
+        <div class="viz">
+Интервали (сортирани по край):
+     i    s    f   v   p[i]
+     1    1    3   2    0
+     2    2    5   4    0
+     3    4    6   4    1
+     4    6    7   3    2
+     5    5    9   5    1
+
+OPT[0] = 0
+OPT[1] = max(OPT[0], v[1]+OPT[p[1]]) = max(0, 2+OPT[0]) = max(0,2) = 2
+OPT[2] = max(OPT[1], v[2]+OPT[p[2]]) = max(2, 4+OPT[0]) = max(2,4) = 4
+OPT[3] = max(OPT[2], v[3]+OPT[p[3]]) = max(4, 4+OPT[1]) = max(4, 4+2) = 6
+OPT[4] = max(OPT[3], v[4]+OPT[p[4]]) = max(6, 3+OPT[2]) = max(6, 3+4) = 7
+OPT[5] = max(OPT[4], v[5]+OPT[p[5]]) = max(7, 5+OPT[1]) = max(7, 5+2) = 7
+
+Отговор: OPT[5] = 7
+
+Обратно проследяване: OPT[5]=7=7=OPT[4] → не вземаме интервал 5
+  OPT[4]=7≠OPT[3]=6 → вземаме интервал 4 (p[4]=2)
+  OPT[2]=4≠OPT[1]=2 → вземаме интервал 2 (p[2]=0)
+  Оптималното решение: {2, 4} с обща стойност 4+3=7
+        </div>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Interval Scheduling без тегла: АЛЧЕН алгоритъм (най-ранен край) → Θ(n·lg n)</li>
+          <li>Weighted Interval Scheduling: ДИНАМИЧНО ПРОГРАМИРАНЕ → Θ(n·lg n)</li>
+          <li>p(i) = последният съвместим интервал преди i → бинарно търсене</li>
+          <li>OPT[i] = max(без i: OPT[i-1], с i: vᵢ + OPT[p(i)])</li>
+          <li>Разликата: тегла правят проблема по-сложен → алчната евристика вече не работи</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="card-label">Връзка с другите теми</div>
+        <p>Interval Scheduling без тегла е пример за алчен алгоритъм с доказуемо оптимален резултат (Теорема 107). Weighted Interval Scheduling показва, че малка промяна в задачата (добавяне на тегла) може да изисква динамично програмиране вместо алчна схема. Сравнете с МПД: Prim и Kruskal са алчни поради Теорема 93.</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Опишете Interval Scheduling и Weighted Interval Scheduling. За всяка: алгоритъм, коректност, сложност. Защо за претеглената версия е нужно ДП, а не алчна схема?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary Table -->
+  <section class="topic" id="summary">
+    <div class="topic-header">
+      <h2>Обобщителна таблица — Всички алгоритми от Лекция 11</h2>
+      <div class="topic-num">*</div>
+    </div>
+    <div class="topic-body">
+      <table>
+        <tr><th>Алгоритъм</th><th>Задача</th><th>Рекурентност</th><th>Сложност</th><th>Памет</th></tr>
+        <tr><td>Alg 37: ShortestPath-MM</td><td>APShP</td><td>L<sup>m</sup>[i][j] = min<sub>k</sub>{L<sup>m-1</sup>[i][k]+w[k][j]}</td><td>Θ(n⁴)</td><td>Θ(n²)</td></tr>
+        <tr><td>Alg 38: Repeated Squaring</td><td>APShP</td><td>Удвояваме m</td><td>Θ(n³·lg n)</td><td>Θ(n²)</td></tr>
+        <tr><td>Alg 39: Floyd-Warshall</td><td>APShP</td><td>D<sup>k</sup>[i][j]=min(D<sup>k-1</sup>[i][j], D<sup>k-1</sup>[i][k]+D<sup>k-1</sup>[k][j])</td><td>Θ(n³)</td><td>Θ(n²)</td></tr>
+        <tr><td>Alg 40: Matrix-Chain</td><td>Matrix-Chain Mult.</td><td>m[i][j]=min<sub>k</sub>{m[i][k]+m[k+1][j]+pᵢ₋₁pₖpⱼ}</td><td>Θ(n³)</td><td>Θ(n²)</td></tr>
+        <tr><td>Alg 41: Non-Assoc-Op</td><td>Неасоц. операция</td><td>ways[i][j][v] = Σ ways[i][k][a]·ways[k+1][j][b]</td><td>Θ(n³|V|²)</td><td>Θ(n²|V|)</td></tr>
+        <tr><td>Alg 42: 2-Partition</td><td>2-Partition</td><td>part[i][s]=part[i-1][s] OR part[i-1][s-aᵢ]</td><td>Θ(n·Sum)</td><td>Θ(n·Sum)</td></tr>
+        <tr><td>Alg 43: Unbounded KS</td><td>Unbounded Knapsack</td><td>uk[c]=max{vᵢ+uk[c-wᵢ]}</td><td>Θ(n·W)</td><td>Θ(W)</td></tr>
+        <tr><td>Alg 44: 0-1 KS</td><td>0-1 Knapsack</td><td>k[i][c]=max(k[i-1][c], vᵢ+k[i-1][c-wᵢ])</td><td>Θ(n·W)</td><td>Θ(n·W)</td></tr>
+        <tr><td>Alg 45: Earliest Finish</td><td>Interval Scheduling</td><td>Алчна: избираме най-ранен край</td><td>Θ(n·lg n)</td><td>Θ(n)</td></tr>
+        <tr><td>Alg 46: Weighted IS</td><td>Weighted IS</td><td>OPT[i]=max(OPT[i-1], vᵢ+OPT[p(i)])</td><td>Θ(n·lg n)</td><td>Θ(n)</td></tr>
+      </table>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const body = document.body;
+  body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+function updateProgress() {
+  const boxes = document.querySelectorAll('input[type="checkbox"]');
+  const checked = Array.from(boxes).filter(b => b.checked).length;
+  const pct = Math.round(checked / boxes.length * 100);
+  document.getElementById('progress-bar-inner').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${pct}% готовност (${checked}/${boxes.length} теми)`;
+}
+const sections = document.querySelectorAll('.topic');
+const links = document.querySelectorAll('#sidebar a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+  links.forEach(a => { a.classList.remove('active'); if (a.getAttribute('href') === '#' + current) a.classList.add('active'); });
+});
+</script>
+</body>
+</html>

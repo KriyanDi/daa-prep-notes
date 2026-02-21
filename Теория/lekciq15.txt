@@ -1,0 +1,19 @@
+Определение 146: Стойността на булева формула под валюация. Удовлетворимост
+и фалшифицируемост.
+
+Изч. Задача 65: Satisfiability (SAT)
+
+Теорема 135: Теорема на Cook (SAT е NP-пълна)
+
+Теорема 136: Ако Π е в NP  и  Π' е NP-пълна  и  Π' <=p Π,  то Π е NP-пълна
+
+
+Редукция 10: SAT <=p 3SAT
+
+Редукция 14: 3SAT <=p Vertex Cover
+
+Редукция 15: Vertex Cover <=p Independent Set
+
+Редукция 16: Independent Set <=p Clique
+
+Редукция 17: Vertex Cover <=p Dominating Set

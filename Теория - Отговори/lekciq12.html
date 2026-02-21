@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лекция 12 - Динамично Програмиране (Част 2) | ДАА 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #1a1d27; --bg3: #242838;
+    --accent: #4f8ef7; --accent2: #7c5cbf; --green: #2ecc71;
+    --yellow: #f39c12; --red: #e74c3c; --text: #e8eaf0;
+    --text2: #9ca3af; --border: #2d3148;
+    --def-bg: #0d2137; --def-border: #1e5799;
+    --ex-bg: #0d2d1a; --ex-border: #1e7d3e;
+    --key-bg: #2d2100; --key-border: #7d5c00;
+    --code-bg: #141822;
+  }
+  [data-theme="light"] {
+    --bg: #f0f2f8; --bg2: #ffffff; --bg3: #e8ecf5;
+    --accent: #2563eb; --accent2: #7c3aed; --green: #16a34a;
+    --yellow: #d97706; --red: #dc2626; --text: #1e293b;
+    --text2: #64748b; --border: #cbd5e1;
+    --def-bg: #eff6ff; --def-border: #3b82f6;
+    --ex-bg: #f0fdf4; --ex-border: #22c55e;
+    --key-bg: #fffbeb; --key-border: #f59e0b;
+    --code-bg: #1e293b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  #layout { display: flex; min-height: 100vh; }
+  #sidebar {
+    width: 280px; background: var(--bg2); border-right: 1px solid var(--border);
+    position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto;
+    transition: transform 0.3s; z-index: 100; padding: 20px 0;
+  }
+  #sidebar h2 { color: var(--accent); font-size: 0.85rem; text-transform: uppercase;
+    letter-spacing: 1px; padding: 0 20px 10px; border-bottom: 1px solid var(--border); }
+  #sidebar ul { list-style: none; padding: 10px 0; }
+  #sidebar li a { display: block; padding: 8px 20px; color: var(--text2); text-decoration: none;
+    font-size: 0.88rem; border-left: 3px solid transparent; transition: all 0.2s; }
+  #sidebar li a:hover, #sidebar li a.active { color: var(--accent); border-left-color: var(--accent);
+    background: rgba(79,142,247,0.08); }
+  #main { margin-left: 280px; flex: 1; padding: 40px; max-width: 1000px; }
+  #topbar { position: sticky; top: 0; background: var(--bg2); border-bottom: 1px solid var(--border);
+    z-index: 50; display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 40px; margin: -40px -40px 40px; }
+  #topbar h1 { font-size: 1.1rem; color: var(--accent); }
+  .btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text); cursor: pointer; font-size: 0.85rem; }
+  .btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  #progress-wrap { background: var(--bg3); border-radius: 8px; padding: 16px 20px;
+    margin-bottom: 32px; border: 1px solid var(--border); }
+  #progress-wrap h3 { font-size: 0.9rem; color: var(--text2); margin-bottom: 10px; }
+  #progress-bar-outer { background: var(--bg); border-radius: 99px; height: 8px; overflow: hidden; }
+  #progress-bar-inner { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 99px; transition: width 0.5s; }
+  #progress-label { font-size: 0.85rem; color: var(--text2); margin-top: 6px; }
+  .topic { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 40px; overflow: hidden; scroll-margin-top: 80px; }
+  .topic-header { padding: 20px 24px; background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: space-between; }
+  .topic-header h2 { color: white; font-size: 1.15rem; }
+  .topic-num { background: rgba(255,255,255,0.2); color: white; border-radius: 50%;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .topic-body { padding: 24px; }
+  .card { border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .card.def { background: var(--def-bg); border-left: 4px solid var(--def-border); }
+  .card.def .card-label { color: var(--accent); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.ex { background: var(--ex-bg); border-left: 4px solid var(--ex-border); }
+  .card.ex .card-label { color: var(--green); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.key { background: var(--key-bg); border-left: 4px solid var(--key-border); }
+  .card.key .card-label { color: var(--yellow); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.warn { background: rgba(231,76,60,0.07); border-left: 4px solid var(--red); }
+  .sec-h { font-size: 0.95rem; font-weight: 700; color: var(--accent); margin: 20px 0 8px;
+    display: flex; align-items: center; gap: 8px; }
+  .sec-h::before { content: ''; display: inline-block; width: 3px; height: 16px;
+    background: var(--accent); border-radius: 2px; }
+  pre { background: var(--code-bg); color: #cdd6f4; border-radius: 8px; padding: 16px 20px;
+    overflow-x: auto; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem;
+    line-height: 1.6; margin: 12px 0; border: 1px solid var(--border); }
+  code { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem; }
+  .kw { color: #cba6f7; } .cm { color: #6c7086; font-style: italic; }
+  .nm { color: #89dceb; } .op { color: #89b4fa; } .str { color: #a6e3a1; }
+  .num { color: #fab387; }
+  .viz { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 20px; font-family: monospace; font-size: 0.85rem; color: #cdd6f4;
+    white-space: pre; overflow-x: auto; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+  th { background: var(--bg3); color: var(--accent); padding: 10px 12px; text-align: left;
+    border-bottom: 2px solid var(--accent); }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: rgba(79,142,247,0.05); }
+  ul.bullet { list-style: none; padding: 0; }
+  ul.bullet li { padding: 6px 0 6px 24px; position: relative; }
+  ul.bullet li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+  .exam-box { background: linear-gradient(135deg, rgba(231,76,60,0.1), rgba(231,76,60,0.05));
+    border: 1px solid var(--red); border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .exam-box .card-label { color: var(--red); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .conn-box { background: rgba(124,92,191,0.1); border: 1px solid var(--accent2);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .conn-box .card-label { color: var(--accent2); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .thm { background: rgba(79,142,247,0.07); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+  .thm-title { color: var(--accent); font-weight: 700; margin-bottom: 8px; }
+  p { margin: 10px 0; }
+  b, strong { color: var(--accent); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  .hl-green { color: #2ecc71; font-weight: 700; }
+  .hl-yellow { color: #f39c12; font-weight: 700; }
+  .hl-red { color: #e74c3c; font-weight: 700; }
+  @media (max-width: 768px) {
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; padding: 20px; }
+    #topbar { padding: 12px 20px; margin: -20px -20px 20px; }
+  }
+</style>
+</head>
+<body data-theme="dark">
+<div id="layout">
+<nav id="sidebar">
+  <h2>Лекция 12 — Навигация</h2>
+  <ul>
+    <li><a href="#t1">LIS — Изч. Задача 45</a></li>
+    <li><a href="#t2">LCS — Изч. Задача 46</a></li>
+    <li><a href="#t3">Sequence Alignment</a></li>
+    <li><a href="#t4">Edit Distance</a></li>
+    <li><a href="#t5">Vertex Cover & Independent Set</a></li>
+    <li><a href="#t6">Dominating Set</a></li>
+    <li><a href="#t7">Coins in a Line Game</a></li>
+    <li><a href="#t8">Мемоизация</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+  <div id="topbar">
+    <h1>ДАА 2026 — Лекция 12: Динамично Програмиране (Примери 2)</h1>
+    <button class="btn" onclick="toggleTheme()">Тема</button>
+  </div>
+
+  <div id="progress-wrap">
+    <h3>Готовност за изпит</h3>
+    <div id="progress-bar-outer"><div id="progress-bar-inner" style="width:0%"></div></div>
+    <div id="progress-label">Отметнете темите, които сте научили</div>
+    <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;">
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> LIS</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> LCS</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Sequence Alignment</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Edit Distance</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Vertex Cover</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Dominating Set</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Coins in a Line</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Мемоизация</label>
+    </div>
+  </div>
+
+  <!-- TOPIC 1: LIS -->
+  <section class="topic" id="t1">
+    <div class="topic-header">
+      <h2>Longest Increasing Subsequence (LIS) — Изч. Задача 45</h2>
+      <div class="topic-num">1</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция</div>
+        <p><strong>Изч. Задача 45: Longest Increasing Sequence (LIS)</strong></p>
+        <p><strong>Екземпляр:</strong> Редица \(A = \langle a_1, a_2, \ldots, a_n \rangle\) от цели числа.</p>
+        <p><strong>Решение (олекотен вариант):</strong> Намери дължината на най-дългата строго нарастваща подредица на \(A\).</p>
+        <p><strong>Подредица</strong> на \(A\) е всяка редица \(\langle a_{i_1}, a_{i_2}, \ldots, a_{i_k} \rangle\), такава че \(1 \le i_1 &lt; i_2 &lt; \cdots &lt; i_k \le n\). Тя е <strong>строго нарастваща</strong>, ако \(a_{i_1} &lt; a_{i_2} &lt; \cdots &lt; a_{i_k}\).</p>
+        <p><strong>Алгоритъм 47 (Изч. Задача 45):</strong> Дефинираме \(L[j]\) = дължината на най-дългата нарастваща подредица на \(\langle a_1, \ldots, a_j \rangle\), завършваща задължително с \(a_j\).</p>
+        <p>Рекурентната декомпозиция е:</p>
+        <p>\[ L[j] = 1 + \max\bigl(\{L[i] : i < j \text{ и } a_i < a_j\} \cup \{0\}\bigr) \]</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Представете си, че правите стълба с нарастващи стъпала. За всяко ново число гледаме всички предишни по-малки числа и питаме: "Ако използвам това предишно число като предпоследно, колко висок мога да го направя стълба?". Вземаме максимума и добавяме 1 (за текущото число).</p>
+      <p>Ключовото: \(L[j]\) задължително завършва с \(a_j\) — иначе не можем да изградим рекурсията правилно!</p>
+
+      <div class="sec-h">Визуализация — LIS на редица</div>
+      <div class="viz">
+Редица A: [ 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5 ]
+Индекс:     1  2  3  4  5  6  7  8  9 10 11
+
+Пресмятане на L[j]:
+  L[1] = 1   (само {3})
+  L[2] = 1   (само {1})
+  L[3] = 2   (1 < 4: {1,4})
+  L[4] = 1   (само {1})
+  L[5] = 3   (1 < 5, 4 < 5: {1,4,5})
+  L[6] = 4   (1 < 9, 4 < 9, 5 < 9: {1,4,5,9})
+  L[7] = 2   (1 < 2: {1,2})
+  L[8] = 4   ({1,4,5,6} или {1,2,5,6}...)
+  ...
+
+Отговор: max(L[j]) = 4
+Пример за LIS: 1 → 4 → 5 → 9  или  1 → 2 → 5 → 6
+</div>
+
+      <div class="sec-h">Псевдокод — Алгоритъм 47</div>
+<pre><code><span class="cm">-- LIS с квадратична сложност</span>
+<span class="kw">Alg LIS</span>(A[1..n]: редица от цели числа)
+<span class="num">1</span>  <span class="kw">create</span> array L[1..n]
+<span class="num">2</span>  <span class="kw">for</span> j <span class="op">←</span> 1 <span class="kw">to</span> n
+<span class="num">3</span>      L[j] <span class="op">←</span> 1
+<span class="num">4</span>      <span class="kw">for</span> i <span class="op">←</span> 1 <span class="kw">to</span> j-1
+<span class="num">5</span>          <span class="kw">if</span> A[i] &lt; A[j]
+<span class="num">6</span>              L[j] <span class="op">←</span> max(L[j], L[i] + 1)
+<span class="num">7</span>  <span class="kw">return</span> max(L[1..n])
+<span class="cm">-- Сложност по ВРЕМЕ:  Θ(n²)
+-- Сложност по ПАМЕТ:  Θ(n)</span></code></pre>
+
+      <div class="card ex">
+        <div class="card-label">Конкретен пример стъпка по стъпка</div>
+        <p>A = [2, 5, 1, 3, 4]</p>
+        <table>
+          <tr><th>j</th><th>A[j]</th><th>Разглеждаме i &lt; j с A[i] &lt; A[j]</th><th>L[j]</th></tr>
+          <tr><td>1</td><td>2</td><td>— (няма предишни)</td><td>1</td></tr>
+          <tr><td>2</td><td>5</td><td>i=1: A[1]=2 &lt; 5, L[1]+1=2</td><td>2</td></tr>
+          <tr><td>3</td><td>1</td><td>никой A[i] &lt; 1</td><td>1</td></tr>
+          <tr><td>4</td><td>3</td><td>i=1: A[1]=2&lt;3, L[1]+1=2; i=3: A[3]=1&lt;3, L[3]+1=2</td><td>2</td></tr>
+          <tr><td>5</td><td>4</td><td>i=1,2,3,4 дават L=3 (2→3→4)</td><td>3</td></tr>
+        </table>
+        <p>Отговор: max(L) = 3. LIS = {2, 3, 4} или {1, 3, 4}.</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>\(L[j]\) задължително завършва с \(a_j\) — КЛЮЧОВО за коректната рекурсия</li>
+          <li>Сложност по ВРЕМЕ: \(\Theta(n^2)\) (два вложени цикъла)</li>
+          <li>Сложност по ПАМЕТ: \(\Theta(n)\) (масив L)</li>
+          <li>Отговорът е \(\max_{j} L[j]\), а не L[n]!</li>
+          <li>Тежкият вариант: допълнително пазим масив за обратно проследяване</li>
+          <li>Съществува и O(n log n) алгоритъм (не в програмата)</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="card-label">Връзка с другите теми</div>
+        <p>LIS е класически ДП пример, показващ принципа "запомни оптималните подзадачи". Свързва се с LCS (двете имат сходна матрична структура). Може да се намали до LCS (LIS на A = LCS на A и sorted(A)).</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p><strong>Типична формулировка:</strong> "Дефинирайте задачата LIS. Запишете рекурентната декомпозиция. Дайте псевдокод на Алгоритъм 47 и анализирайте сложността му."</p>
+        <p><strong>Трябва да знаете:</strong> Дефиницията на L[j] (задължително завършва с a[j]), рекурентното уравнение, и сложността Θ(n²) по време, Θ(n) по памет.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 2: LCS -->
+  <section class="topic" id="t2">
+    <div class="topic-header">
+      <h2>Longest Common Subsequence (LCS) — Изч. Задача 46</h2>
+      <div class="topic-num">2</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция</div>
+        <p><strong>Изч. Задача 46: Longest Common Subsequence (LCS)</strong></p>
+        <p><strong>Екземпляр:</strong> Два стринга \(X = \langle x_1, \ldots, x_m \rangle\) и \(Y = \langle y_1, \ldots, y_n \rangle\).</p>
+        <p><strong>Решение (олекотен):</strong> Дължината на най-дългата им обща подредица (не задължително последователна).</p>
+        <p><strong>Рекурентна декомпозиция:</strong> Дефинираме \(C[i][j]\) = дължина на LCS на \(X_i = \langle x_1,\ldots,x_i \rangle\) и \(Y_j = \langle y_1,\ldots,y_j \rangle\).</p>
+        <p>\[ C[i][j] = \begin{cases} 0 & \text{ако } i=0 \text{ или } j=0 \\ C[i-1][j-1] + 1 & \text{ако } x_i = y_j \\ \max(C[i-1][j],\; C[i][j-1]) & \text{ако } x_i \ne y_j \end{cases} \]</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Имате два текста и искате да намерите най-дългата редица от символи, която се появява в двата текста (не задължително последователно). Идеята: ако последните символи съвпадат — използваме ги и питаме за по-краткото. Ако не — единия от последните символи не е в LCS и вземаме максимума от двата случая.</p>
+
+      <div class="sec-h">Визуализация — LCS таблица</div>
+      <div class="viz">
+X = "ABCBDAB"   Y = "BDCAB"
+
+Таблица C[i][j]:
+       ""  B  D  C  A  B
+    ""  0  0  0  0  0  0
+    A   0  0  0  0  1  1
+    B   0  1  1  1  1  2
+    C   0  1  1  2  2  2
+    B   0  1  1  2  2  3   &lt;-- x_i=B=y_j=B: диагонал+1
+    D   0  1  2  2  2  3
+    A   0  1  2  2  3  3
+    B   0  1  2  2  3  4   &lt;-- LCS дължина = 4
+
+Обратно проследяване: BCAB или BDAB
+</div>
+
+      <div class="sec-h">Псевдокод — Алгоритъм 48</div>
+<pre><code><span class="kw">Alg LCS</span>(X[1..m], Y[1..n])
+<span class="num">1</span>  <span class="kw">create</span> array C[0..m][0..n]
+<span class="num">2</span>  <span class="kw">for</span> i <span class="op">←</span> 0 <span class="kw">to</span> m: C[i][0] <span class="op">←</span> 0
+<span class="num">3</span>  <span class="kw">for</span> j <span class="op">←</span> 0 <span class="kw">to</span> n: C[0][j] <span class="op">←</span> 0
+<span class="num">4</span>  <span class="kw">for</span> i <span class="op">←</span> 1 <span class="kw">to</span> m
+<span class="num">5</span>      <span class="kw">for</span> j <span class="op">←</span> 1 <span class="kw">to</span> n
+<span class="num">6</span>          <span class="kw">if</span> X[i] = Y[j]
+<span class="num">7</span>              C[i][j] <span class="op">←</span> C[i-1][j-1] + 1
+<span class="num">8</span>          <span class="kw">else</span>
+<span class="num">9</span>              C[i][j] <span class="op">←</span> max(C[i-1][j], C[i][j-1])
+<span class="num">10</span> <span class="kw">return</span> C[m][n]
+<span class="cm">-- Сложност по ВРЕМЕ:  Θ(m·n)
+-- Сложност по ПАМЕТ:  Θ(m·n) за таблицата; може Θ(min(m,n)) за само дължината</span></code></pre>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Сложност по ВРЕМЕ: \(\Theta(m \cdot n)\)</li>
+          <li>Сложност по ПАМЕТ: \(\Theta(m \cdot n)\) (пълна таблица), или \(\Theta(\min(m,n))\) (само текущ и предишен ред)</li>
+          <li>Три случая: ако <code>X[i]=Y[j]</code> — диагонал+1; иначе — max(горе, ляво)</li>
+          <li>Тежкият вариант изисква обратно проследяване (traceback)</li>
+          <li>LCS е база за задачите Sequence Alignment и Edit Distance</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дефинирайте задачата LCS. Запишете рекурентната декомпозиция за C[i][j] с трите случая. Изпълнете алгоритъма върху малък пример. Каква е сложността?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 3: Sequence Alignment -->
+  <section class="topic" id="t3">
+    <div class="topic-header">
+      <h2>Sequence Alignment — Изч. Задача 47</h2>
+      <div class="topic-num">3</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция</div>
+        <p><strong>Изч. Задача 47: Sequence Alignment</strong></p>
+        <p><strong>Екземпляр:</strong> Два стринга \(X = \langle x_1, \ldots, x_m \rangle\) и \(Y = \langle y_1, \ldots, y_n \rangle\) над азбука \(\Sigma\), наказание за пропуск \(\delta \ge 0\) и функция \(\alpha: \Sigma \times \Sigma \to \mathbb{R}_{\ge 0}\) (цена за несъответствие).</p>
+        <p><strong>Решение:</strong> Намери наредбата (alignment) на двата стринга с минимална цена.</p>
+        <p><strong>Рекурентна декомпозиция:</strong> \(OPT[i][j]\) = минималната цена за подравняване на \(X_i\) и \(Y_j\).</p>
+        <p>\[ OPT[i][j] = \min \begin{cases} \alpha(x_i, y_j) + OPT[i-1][j-1] \\ \delta + OPT[i-1][j] \\ \delta + OPT[i][j-1] \end{cases} \]</p>
+        <p>Базови случаи: \(OPT[i][0] = i \cdot \delta\), \(OPT[0][j] = j \cdot \delta\).</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>В биоинформатиката сравняваме ДНК/протеинови секвенции. Имаме три операции: съвпадение/несъответствие (align x с y), вмъкване на пропуск в X, вмъкване на пропуск в Y. Всяка операция носи цена. Искаме минималната обща цена.</p>
+
+      <div class="viz">
+X = "AGGGCT"   Y = "AGGCA"
+δ = 2 (цена пропуск), α(x,y) = 0 ако x=y, 1 иначе
+
+Оптимално подравняване:
+  X: A G G G C T
+  Y: A G G - C A
+       ↑   ↑   ↑
+       0   δ=2 α(T,A)=1
+
+Цена = 0+0+0+2+0+1 = 3
+</div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Сложност по ВРЕМЕ: \(\Theta(m \cdot n)\)</li>
+          <li>Сложност по ПАМЕТ: \(\Theta(m \cdot n)\)</li>
+          <li>Три избора за всяка клетка: match/mismatch, gap в X, gap в Y</li>
+          <li>Когато \(\alpha(x,y) = 0\) и \(\delta = 1\), получаваме Edit Distance (без замяна)</li>
+          <li>Приложение: биоинформатика, сравнение на текстове (diff)</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дефинирайте задачата Sequence Alignment. Запишете рекурентната декомпозиция. Каква е сложността на Алгоритъм 49?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 4: Edit Distance -->
+  <section class="topic" id="t4">
+    <div class="topic-header">
+      <h2>Edit Distance (Разстояние на Levenshtein) — Изч. Задача 48</h2>
+      <div class="topic-num">4</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция</div>
+        <p><strong>Изч. Задача 48: Edit Distance</strong></p>
+        <p><strong>Екземпляр:</strong> Два стринга \(X = \langle x_1, \ldots, x_m \rangle\) и \(Y = \langle y_1, \ldots, y_n \rangle\).</p>
+        <p><strong>Решение (олекотен):</strong> Минималният брой операции (вмъкване, изтриване, замяна) за трансформация на X в Y.</p>
+        <p><strong>Рекурентна декомпозиция:</strong> \(D[i][j]\) = edit distance между \(X_i\) и \(Y_j\).</p>
+        <p>\[ D[i][j] = \begin{cases} i & \text{ако } j=0 \\ j & \text{ако } i=0 \\ D[i-1][j-1] & \text{ако } x_i = y_j \\ 1 + \min(D[i-1][j],\; D[i][j-1],\; D[i-1][j-1]) & \text{ако } x_i \ne y_j \end{cases} \]</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Колко операции (вмъкни, изтрий, замени) ни трябват да превърнем "kitten" в "sitting"? Разстоянието на Levenshtein. Три избора при несъответствие: изтрий от X (горе+1), вмъкни в X (ляво+1), замени (диагонал+1).</p>
+
+      <div class="sec-h">Визуализация — Edit Distance таблица</div>
+      <div class="viz">
+X = "kitten"   Y = "sitting"
+
+     ""  s  i  t  t  i  n  g
+ ""   0  1  2  3  4  5  6  7
+  k   1  1  2  3  4  5  6  7
+  i   2  2  1  2  3  4  5  6
+  t   3  3  2  1  2  3  4  5
+  t   4  4  3  2  1  2  3  4
+  e   5  5  4  3  2  2  3  4
+  n   6  6  5  4  3  3  2  3
+
+Edit Distance = D[6][7] = 3
+Операции: kitten → sitten (замяна k→s)
+          sitten → sittin (замяна e→i)
+          sittin → sitting (вмъкване g)
+</div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Сложност по ВРЕМЕ: \(\Theta(m \cdot n)\) (Алгоритъм 50)</li>
+          <li>Сложност по ПАМЕТ: \(\Theta(m \cdot n)\); може \(\Theta(\min(m,n))\) за само стойността</li>
+          <li>Когато x[i] = y[j]: D[i][j] = D[i-1][j-1] (нула цена)</li>
+          <li>Когато x[i] ≠ y[j]: 1 + min(изтрий, вмъкни, замени)</li>
+          <li>Приложения: spell-checker, DNA comparison, diff</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="card-label">Връзка с другите теми</div>
+        <p>Edit Distance е специален случай на Sequence Alignment с цени 1/1/1. LCS дава горна граница: Edit Distance ≤ m + n − 2·LCS(X,Y).</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дефинирайте задачата Edit Distance. Запишете рекурентното уравнение. Попълнете частично таблицата за X='abc', Y='ac'. Каква е сложността?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 5: Vertex Cover & Independent Set -->
+  <section class="topic" id="t5">
+    <div class="topic-header">
+      <h2>Върхово покриване (Vertex Cover) и Антиклика (Independent Set)</h2>
+      <div class="topic-num">5</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция</div>
+        <p><strong>Определение: Върхово покриване (Vertex Cover)</strong></p>
+        <p>Нека \(G = (V, E)\) е неориентиран граф. Подмножество \(U \subseteq V\) е <strong>върхово покриване</strong>, ако за всяко ребро \((u, v) \in E\): \(u \in U\) или \(v \in U\). С други думи — всяко ребро е "покрито" от поне един от краищата си.</p>
+        <p><strong>Изч. Задача 51:</strong> Minimum Vertex Cover — намери минимално по мощност върхово покриване на G.</p>
+        <hr>
+        <p><strong>Определение: Антиклика / Независимо множество (Independent Set)</strong></p>
+        <p>Подмножество \(U \subseteq V\) е <strong>антиклика</strong> (или независимо множество), ако няма ребро \((u, v) \in E\), такова че \(u, v \in U\). С други думи — нито два върха от U не са свързани.</p>
+        <p><strong>Изч. Задача 52:</strong> Maximum Independent Set — намери максимален по мощност independent set на G.</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p><strong>Vertex Cover:</strong> Поставяте охранители в пресечни точки на улична мрежа. Всяка улица (ребро) трябва да е видима от поне един охранител. Искате минимален брой охранители.</p>
+      <p><strong>Independent Set:</strong> Изберете максимален брой хора от социална мрежа, такива че никои двама не познават един друг (нямат общо ребро).</p>
+
+      <div class="sec-h">Теорема 110 — Двойственост</div>
+      <div class="thm">
+        <div class="thm-title">Теорема 110: Vertex Cover и Independent Set са дуални</div>
+        <p>Нека \(G = (V, E)\) е неориентиран граф и \(U \subseteq V\). Тогава:</p>
+        <p>\[ U \text{ е Vertex Cover на } G \iff V \setminus U \text{ е Independent Set на } G \]</p>
+        <p><strong>Следствие:</strong> Ако |V| = n, то размерът на минималното Vertex Cover + размерът на максималния Independent Set = n.</p>
+      </div>
+
+      <div class="viz">
+Граф G:   1 — 2 — 3
+              |
+              4
+
+Vertex Cover U = {2}:
+  Ребро (1,2): 2 ∈ U ✓
+  Ребро (2,3): 2 ∈ U ✓
+  Ребро (2,4): 2 ∈ U ✓
+  U е валидно върхово покриване!
+
+V \ U = {1, 3, 4}:
+  Няма ребро между 1,3,4 → Independent Set!
+
+Двойственост: |U| + |V\U| = 1 + 3 = 4 = |V|
+</div>
+
+      <div class="sec-h">Ефикасно решение върху дървета (ДП)</div>
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — ДП върху коренови дървета</div>
+        <p>За корен \(r\) и подрево с корен \(v\) дефинираме:</p>
+        <ul class="bullet">
+          <li>\(C_1[v]\) = размер на минималното Vertex Cover на подревото, при условие, че \(v\) <strong>е включен</strong> в покриването</li>
+          <li>\(C_0[v]\) = размер на минималното Vertex Cover на подревото, при условие, че \(v\) <strong>не е включен</strong></li>
+        </ul>
+        <p>За листо \(v\): \(C_1[v] = 1\), \(C_0[v] = 0\).</p>
+        <p>За вътрешен връх \(v\) с деца \(u_1, \ldots, u_k\):</p>
+        <p>\[ C_1[v] = 1 + \sum_{i=1}^{k} \min(C_0[u_i], C_1[u_i]) \]</p>
+        <p>\[ C_0[v] = \sum_{i=1}^{k} C_1[u_i] \quad \text{(децата задължително са включени)} \]</p>
+        <p>Отговор: \(\min(C_0[r], C_1[r])\)</p>
+      </div>
+
+      <div class="sec-h">Тегловен вариант — Изч. Задача 54</div>
+      <p>При тегловен Vertex Cover всеки връх \(v\) има тегло \(w(v)\). Искаме Vertex Cover с минимална сума от тегла.</p>
+      <p>Рекурентната декомпозиция остава същата, но сборовете ползват тегла вместо броене.</p>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>U е VC тстк V\U е IS — <strong>фундаменталната двойственост</strong> (Теорема 110)</li>
+          <li>И двете задачи са NP-трудни в общ граф (Лекция 15)</li>
+          <li>Върху дървета: линеен ДП алгоритъм — Θ(n)</li>
+          <li>Два параметъра за ДП: C₁[v] (включен), C₀[v] (изключен)</li>
+          <li>Ако v е изключен (C₀), децата задължително са включени!</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дайте дефиниция на Vertex Cover. Формулирайте Теорема 110 (двойственост с Independent Set). Опишете ДП алгоритъма за минимален Vertex Cover върху дърво — рекурентни уравнения и сложност."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 6: Dominating Set -->
+  <section class="topic" id="t6">
+    <div class="topic-header">
+      <h2>Dominating Set — Изч. Задача 55</h2>
+      <div class="topic-num">6</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция</div>
+        <p><strong>Определение: Dominating Set (Доминиращо множество)</strong></p>
+        <p>Нека \(G = (V, E)\) е неориентиран граф. Подмножество \(D \subseteq V\) е <strong>доминиращо множество</strong>, ако за всеки връх \(v \in V \setminus D\) съществува съсед \(u \in D\) на \(v\).</p>
+        <p>С други думи: всеки връх или е в D, или има съсед в D.</p>
+        <p><strong>Изч. Задача 55:</strong> Minimum Dominating Set — намери минимално по мощност доминиращо множество.</p>
+      </div>
+
+      <div class="sec-h">Сравнение с Vertex Cover</div>
+      <table>
+        <tr><th>Свойство</th><th>Vertex Cover</th><th>Dominating Set</th></tr>
+        <tr><td>Покрива</td><td>Всяко ребро</td><td>Всеки връх</td></tr>
+        <tr><td>Условие</td><td>Поне един край на всяко ребро е в U</td><td>Всеки връх извън D има съсед в D</td></tr>
+        <tr><td>Дуалност</td><td>С Independent Set (Теорема 110)</td><td>Няма проста дуалност</td></tr>
+        <tr><td>Върху дървета</td><td>ДП с 2 параметъра</td><td>ДП с 3 параметъра (Алгоритъм 51)</td></tr>
+      </table>
+
+      <div class="viz">
+Граф G:  1 — 2 — 3 — 4
+
+Vertex Cover: {2, 3} — покрива всички ребра
+Dominating Set: {2} — покрива 1 (съсед), 3 (съсед), 4 е съсед на 3 (не в D!)
+  Грешка! 4 няма съсед в {2}.
+Dominating Set: {2, 4} — 1→съсед 2✓, 3→съсед 2 и 4✓ → валидно!
+  Или: {1, 3} → 2 съсед на 1 и 3 ✓, 4 съсед на 3 ✓
+
+Забележка: VC ⊆ DS не е вярно в общия случай!
+</div>
+
+      <div class="sec-h">Алгоритъм 51 — ДП за дървета (3 параметъра)</div>
+      <div class="card def">
+        <div class="card-label">Дефиниция на трите параметъра</div>
+        <p>За всеки връх \(v\) в кореново дърво дефинираме три стойности:</p>
+        <ul class="bullet">
+          <li>\(D[v][0]\) = мин. Dominating Set за подревото, при условие, че \(v\) <strong>е в D</strong></li>
+          <li>\(D[v][1]\) = мин. Dominating Set за подревото, при условие, че \(v\) <strong>не е в D, но е покрит от родителя</strong></li>
+          <li>\(D[v][2]\) = мин. Dominating Set за подревото, при условие, че \(v\) <strong>не е в D и не е покрит от родителя</strong> (трябва да е покрит от дете)</li>
+        </ul>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Dominating Set ≠ Vertex Cover: VC покрива ребра, DS покрива върхове</li>
+          <li>Всеки VC е DS (ако всяко ребро е покрито, несвързаните върхове трябва да се обмислят отделно)</li>
+          <li>DS върху дървета: ДП с 3 параметъра — Θ(n)</li>
+          <li>DS в общ граф: NP-трудна задача</li>
+          <li>Алгоритъм 51 е по-сложен от VC алгоритъма заради третия параметър</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дайте дефиниция на Dominating Set. Сравнете с Vertex Cover — каква е фундаменталната разлика? Колко параметъра са нужни за ДП на дърво?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 7: Coins in a Line Game -->
+  <section class="topic" id="t7">
+    <div class="topic-header">
+      <h2>Coins in a Line Game — Игра с монети</h2>
+      <div class="topic-num">7</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция</div>
+        <p><strong>Задача (Игра с монети):</strong></p>
+        <p>Дадена е редица от \(n\) (четно) монети с стойности \(C[1], C[2], \ldots, C[n]\). Двама играчи се редуват. При всеки ход играчът взима монетата от ляво (\(C[i]\)) или от дясно (\(C[j]\)). Двата играча са оптимални. Играч 1 ходи пръв. Намери максималната стойност, която Играч 1 може да гарантира.</p>
+        <p><strong>Рекурентна декомпозиция:</strong> \(V[i][j]\) = максималната стойност, която текущият играч може да гарантира от монетите \(C[i..j]\).</p>
+        <p>\[ V[i][j] = \max \begin{cases} C[i] + \min(V[i+2][j],\; V[i+1][j-1]) \\ C[j] + \min(V[i+1][j-1],\; V[i][j-2]) \end{cases} \]</p>
+        <p>Базов случай: \(V[i][i] = C[i]\), \(V[i][i+1] = \max(C[i], C[i+1])\).</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Играч 1 взима монета (ляво или дясно). След това Играч 2 взима оптимално — тоест, оставя Играч 1 с <em>по-малката</em> от двете останали опции. Затова в рекурсията има min (опонентът минимизира нашата печалба) след нашия избор.</p>
+
+      <div class="sec-h">Визуализация — Попълване на таблицата</div>
+      <div class="viz">
+Монети: C = [3, 9, 1, 2]   (n=4, четно)
+
+Диагонал d=0 (i=j):
+  V[1][1]=3, V[2][2]=9, V[3][3]=1, V[4][4]=2
+
+Диагонал d=1 (подредица с 2 монети):
+  V[1][2] = max(3,9) = 9    (взимаме по-голямата)
+  V[2][3] = max(9,1) = 9
+  V[3][4] = max(1,2) = 2
+
+Диагонал d=2 (подредица с 3 монети):
+  V[1][3]: взима 3 → min(V[3][3], V[2][3]) = min(1,9) = 1, общо 3+1=4
+           взима 1 → min(V[2][3], V[1][2]) = min(9,9) = 9, общо 1+9=10
+           V[1][3] = max(4,10) = 10
+  V[2][4]: взима 9 → min(V[4][4], V[3][4]) = min(2,2) = 2, общо 9+2=11
+           взима 2 → min(V[3][4], V[2][3]) = min(2,9) = 2, общо 2+2=4
+           V[2][4] = max(11,4) = 11
+
+Диагонал d=3 (цялата редица):
+  V[1][4]: взима 3 → min(V[3][4], V[2][4]) = min(2,11) = 2, общо 3+2=5
+            взима 2 → min(V[2][4], V[1][3]) = min(11,10)=10, общо 2+10=12
+  V[1][4] = max(5, 12) = 12
+
+Играч 1 гарантира: 12
+</div>
+
+      <div class="sec-h">Псевдокод — Алгоритъм 52</div>
+<pre><code><span class="kw">Alg Coins in a line</span>(C[1..n]: цели положителни числа, n е четно)
+<span class="num">1</span>  <span class="kw">create</span> V[1..n][1..n]
+<span class="num">2</span>  <span class="kw">for</span> i <span class="op">←</span> 1 <span class="kw">to</span> n: V[i][i] <span class="op">←</span> C[i]
+<span class="num">3</span>  <span class="kw">for</span> i <span class="op">←</span> 1 <span class="kw">to</span> n-1: V[i][i+1] <span class="op">←</span> max(C[i], C[i+1])
+<span class="num">4</span>  <span class="kw">for</span> d <span class="op">←</span> 2 <span class="kw">to</span> n-1   <span class="cm">-- дължина на подредицата - 1</span>
+<span class="num">5</span>      <span class="kw">for</span> i <span class="op">←</span> 1 <span class="kw">to</span> n-d
+<span class="num">6</span>          j <span class="op">←</span> i + d
+<span class="num">7</span>          pickLeft  <span class="op">←</span> C[i] + min(V[i+2][j], V[i+1][j-1])
+<span class="num">8</span>          pickRight <span class="op">←</span> C[j] + min(V[i+1][j-1], V[i][j-2])
+<span class="num">9</span>          V[i][j] <span class="op">←</span> max(pickLeft, pickRight)
+<span class="num">10</span> <span class="kw">return</span> V[1][n]
+<span class="cm">-- Сложност по ВРЕМЕ:  Θ(n²)
+-- Сложност по ПАМЕТ:  Θ(n²)</span></code></pre>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Сложност по ВРЕМЕ: \(\Theta(n^2)\); Сложност по ПАМЕТ: \(\Theta(n^2)\)</li>
+          <li>Таблицата се попълва по диагонали (от малки подредици към цялата)</li>
+          <li>В рекурсията: max (ние избираме) + min (опонентът избира против нас)</li>
+          <li>n трябва да е четно — иначе задачата е нетривиална</li>
+          <li>Играчите са <em>оптимални</em> — не "ухажват" грешки на противника</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дефинирайте играта Coins in a Line. Запишете рекурентната декомпозиция за V[i][j]. Защо има min в рекурсията? Какви са сложностите?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 8: Мемоизация -->
+  <section class="topic" id="t8">
+    <div class="topic-header">
+      <h2>Мемоизация (Memoization)</h2>
+      <div class="topic-num">8</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция</div>
+        <p><strong>Мемоизация</strong> (от английски "memoization" — запомняне, не меморизиране) е техника за ефикасна имплементация на рекурсивни алгоритми чрез запомняне на вече изчислените резултати.</p>
+        <p>При всяко викане на рекурсивна функция с аргументи, за които вече е изчислен резултат, той се взима директно от таблицата (кеша), без повторно изчисление.</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Мемоизацията е "мързеливото" (lazy) ДП — изчисляваме само онова, което ни трябва. В стандартното ДП попълваме цялата таблица ред по ред. При мемоизацията: ако ни трябва стойност → проверяваме кеша → ако я има, я взимаме; ако не → изчисляваме и запомняме.</p>
+
+      <div class="sec-h">Сравнение: Мемоизация vs. Динамично Програмиране</div>
+      <table>
+        <tr><th>Критерий</th><th>Динамично Програмиране</th><th>Мемоизация</th></tr>
+        <tr><td>Посока на изчисление</td><td>"Отдолу нагоре" (bottom-up)</td><td>"Отгоре надолу" (top-down)</td></tr>
+        <tr><td>Итерация/Рекурсия</td><td>Итеративно (цикли)</td><td>Рекурсивно (с кеш)</td></tr>
+        <tr><td>Кои стойности се пресмятат</td><td>Всички в реда на попълване</td><td>Само нужните (потенциално по-малко)</td></tr>
+        <tr><td>Стек от извиквания</td><td>Не използва (няма рекурсия)</td><td>Използва (може stackoverflow)</td></tr>
+        <tr><td>Реализация</td><td>По-проста имплементация</td><td>По-близо до рекурентното уравнение</td></tr>
+        <tr><td>Сложност по ПАМЕТ</td><td>Обикновено по-малка (само нужното)</td><td>Потенциално по-голяма (кеш + стек)</td></tr>
+      </table>
+
+      <div class="card ex">
+        <div class="card-label">Пример: Fibonacci с мемоизация vs. ДП</div>
+<pre><code><span class="cm">-- НАИВНА рекурсия: Θ(φ^n) — ЛОША!</span>
+<span class="kw">fib</span>(n):
+  <span class="kw">if</span> n ≤ 1: <span class="kw">return</span> n
+  <span class="kw">return</span> fib(n-1) + fib(n-2)  <span class="cm">-- преизчислява всичко</span>
+
+<span class="cm">-- МЕМОИЗАЦИЯ: Θ(n) — добра!</span>
+<span class="kw">memo</span> = {}
+<span class="kw">fib_memo</span>(n):
+  <span class="kw">if</span> n <span class="kw">in</span> memo: <span class="kw">return</span> memo[n]
+  <span class="kw">if</span> n ≤ 1: <span class="kw">return</span> n
+  result = fib_memo(n-1) + fib_memo(n-2)
+  memo[n] = result
+  <span class="kw">return</span> result
+
+<span class="cm">-- ДП (bottom-up): Θ(n) — добра!</span>
+<span class="kw">fib_dp</span>(n):
+  A[0]=0, A[1]=1
+  <span class="kw">for</span> i ← 2 <span class="kw">to</span> n: A[i] = A[i-1]+A[i-2]
+  <span class="kw">return</span> A[n]</code></pre>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Същностна разлика (от лекцията)</div>
+        <p><strong>Съществена разлика:</strong> Мемоизацията е истинска рекурсия с "ход надолу" (разбиване на задача на подзадачи) и "ход нагоре" (събиране на резултатите). ДП попълва таблицата само в едната посока.</p>
+        <p><strong>Потенциално предимство на мемоизацията:</strong> Ако при даден вход само малка част от таблицата е нужна (например в LCS само около диагонала), мемоизацията запълва само тази малка част — по-ефикасна по памет.</p>
+        <p><strong>Потенциален недостатък:</strong> Ако изчислението трупа данни в таблица без реална полза (нужни са почти всички стойности), мемоизацията е по-бавна заради overhead-а на рекурсията.</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Мемоизация = top-down ДП с кеш</li>
+          <li>ДП = bottom-up итеративно попълване на таблица</li>
+          <li>При мемоизация: проверяй кеша ПРЕДИ рекурсивното извикване</li>
+          <li>Мемоизацията може да е по-ефикасна при разредени таблици</li>
+          <li>ДП е по-проста и по-предвидима по памет и стек</li>
+          <li>Maple(TM) поддържа мемоизация директно</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="card-label">Връзка с другите теми</div>
+        <p>Мемоизацията е алтернатива на ДП за всички задачи от Лекция 11 и 12. Избора между мемоизация и ДП е практически — зависи от конкретния случай. Двата подхода имат еднакви асимптотични сложности в типичните случаи.</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Какво е мемоизация? Сравнете я с динамичното програмиране по: посока на изчисление, итерация/рекурсия, кои стойности се пресмятат, сложности."</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const body = document.body;
+  body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+function updateProgress() {
+  const boxes = document.querySelectorAll('input[type="checkbox"]');
+  const checked = Array.from(boxes).filter(b => b.checked).length;
+  const pct = Math.round(checked / boxes.length * 100);
+  document.getElementById('progress-bar-inner').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${pct}% готовност (${checked}/${boxes.length} теми)`;
+}
+const sections = document.querySelectorAll('.topic');
+const links = document.querySelectorAll('#sidebar a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+  links.forEach(a => { a.classList.remove('active'); if (a.getAttribute('href') === '#' + current) a.classList.add('active'); });
+});
+</script>
+</body>
+</html>

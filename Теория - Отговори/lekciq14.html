@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лекция 14 — NP-пълнота и NP-трудност | ДАА 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #1a1d27; --bg3: #242838;
+    --accent: #4f8ef7; --accent2: #7c5cbf; --green: #2ecc71;
+    --yellow: #f39c12; --red: #e74c3c; --text: #e8eaf0;
+    --text2: #9ca3af; --border: #2d3148;
+    --def-bg: #0d2137; --def-border: #1e5799;
+    --ex-bg: #0d2d1a; --ex-border: #1e7d3e;
+    --key-bg: #2d2100; --key-border: #7d5c00;
+    --code-bg: #141822;
+  }
+  [data-theme="light"] {
+    --bg: #f0f2f8; --bg2: #ffffff; --bg3: #e8ecf5;
+    --accent: #2563eb; --accent2: #7c3aed; --green: #16a34a;
+    --yellow: #d97706; --red: #dc2626; --text: #1e293b;
+    --text2: #64748b; --border: #cbd5e1;
+    --def-bg: #eff6ff; --def-border: #3b82f6;
+    --ex-bg: #f0fdf4; --ex-border: #22c55e;
+    --key-bg: #fffbeb; --key-border: #f59e0b;
+    --code-bg: #1e293b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  #layout { display: flex; min-height: 100vh; }
+  #sidebar {
+    width: 280px; background: var(--bg2); border-right: 1px solid var(--border);
+    position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto;
+    transition: transform 0.3s; z-index: 100; padding: 20px 0;
+  }
+  #sidebar h2 { color: var(--accent); font-size: 0.85rem; text-transform: uppercase;
+    letter-spacing: 1px; padding: 0 20px 10px; border-bottom: 1px solid var(--border); }
+  #sidebar ul { list-style: none; padding: 10px 0; }
+  #sidebar li a { display: block; padding: 8px 20px; color: var(--text2); text-decoration: none;
+    font-size: 0.88rem; border-left: 3px solid transparent; transition: all 0.2s; }
+  #sidebar li a:hover, #sidebar li a.active { color: var(--accent); border-left-color: var(--accent);
+    background: rgba(79,142,247,0.08); }
+  #main { margin-left: 280px; flex: 1; padding: 40px; max-width: 1000px; }
+  #topbar { position: sticky; top: 0; background: var(--bg2); border-bottom: 1px solid var(--border);
+    z-index: 50; display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 40px; margin: -40px -40px 40px; }
+  #topbar h1 { font-size: 1.1rem; color: var(--accent); }
+  .btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text); cursor: pointer; font-size: 0.85rem; }
+  .btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  #progress-wrap { background: var(--bg3); border-radius: 8px; padding: 16px 20px;
+    margin-bottom: 32px; border: 1px solid var(--border); }
+  #progress-wrap h3 { font-size: 0.9rem; color: var(--text2); margin-bottom: 10px; }
+  #progress-bar-outer { background: var(--bg); border-radius: 99px; height: 8px; overflow: hidden; }
+  #progress-bar-inner { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 99px; transition: width 0.5s; }
+  #progress-label { font-size: 0.85rem; color: var(--text2); margin-top: 6px; }
+  .topic { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 40px; overflow: hidden; scroll-margin-top: 80px; }
+  .topic-header { padding: 20px 24px; background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: space-between; }
+  .topic-header h2 { color: white; font-size: 1.15rem; }
+  .topic-num { background: rgba(255,255,255,0.2); color: white; border-radius: 50%;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .topic-body { padding: 24px; }
+  .card { border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .card.def { background: var(--def-bg); border-left: 4px solid var(--def-border); }
+  .card.def .card-label { color: var(--accent); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.ex { background: var(--ex-bg); border-left: 4px solid var(--ex-border); }
+  .card.ex .card-label { color: var(--green); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.key { background: var(--key-bg); border-left: 4px solid var(--key-border); }
+  .card.key .card-label { color: var(--yellow); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.warn { background: rgba(231,76,60,0.07); border-left: 4px solid var(--red); }
+  .card.warn .card-label { color: var(--red); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .sec-h { font-size: 0.95rem; font-weight: 700; color: var(--accent); margin: 20px 0 8px;
+    display: flex; align-items: center; gap: 8px; }
+  .sec-h::before { content: ''; display: inline-block; width: 3px; height: 16px;
+    background: var(--accent); border-radius: 2px; }
+  pre { background: var(--code-bg); color: #cdd6f4; border-radius: 8px; padding: 16px 20px;
+    overflow-x: auto; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem;
+    line-height: 1.6; margin: 12px 0; border: 1px solid var(--border); }
+  code { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem; }
+  .kw { color: #cba6f7; } .cm { color: #6c7086; font-style: italic; }
+  .viz { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 20px; font-family: monospace; font-size: 0.85rem; color: #cdd6f4;
+    white-space: pre; overflow-x: auto; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+  th { background: var(--bg3); color: var(--accent); padding: 10px 12px; text-align: left;
+    border-bottom: 2px solid var(--accent); }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: rgba(79,142,247,0.05); }
+  ul.bullet { list-style: none; padding: 0; }
+  ul.bullet li { padding: 6px 0 6px 24px; position: relative; }
+  ul.bullet li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+  .exam-box { background: linear-gradient(135deg, rgba(231,76,60,0.1), rgba(231,76,60,0.05));
+    border: 1px solid var(--red); border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .exam-box .card-label { color: var(--red); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .conn-box { background: rgba(124,92,191,0.1); border: 1px solid var(--accent2);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .conn-box .card-label { color: var(--accent2); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .thm { background: rgba(79,142,247,0.07); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+  .thm-title { color: var(--accent); font-weight: 700; margin-bottom: 8px; }
+  /* Big diagram for P vs NP */
+  .pnp-diagram { background: var(--code-bg); border: 2px solid var(--accent); border-radius: 12px;
+    padding: 24px; margin: 16px 0; text-align: center; font-family: monospace; }
+  p { margin: 10px 0; }
+  b, strong { color: var(--accent); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  @media (max-width: 768px) {
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; padding: 20px; }
+    #topbar { padding: 12px 20px; margin: -20px -20px 20px; }
+  }
+</style>
+</head>
+<body data-theme="dark">
+<div id="layout">
+<nav id="sidebar">
+  <h2>Лекция 14 — Навигация</h2>
+  <ul>
+    <li><a href="#t1">Алгоритмична неподатливост</a></li>
+    <li><a href="#t2">Задачи като формални езици</a></li>
+    <li><a href="#t3">Детерминирани МТ</a></li>
+    <li><a href="#t4">Клас P</a></li>
+    <li><a href="#t5">Недетерминирани МТ (НМТ)</a></li>
+    <li><a href="#t6">Клас NP и P ⊆ NP</a></li>
+    <li><a href="#t7">Karp редукции (≤p)</a></li>
+    <li><a href="#t8">NP-c и NP-h</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+  <div id="topbar">
+    <h1>ДАА 2026 — Лекция 14: NP-пълнота и NP-трудност</h1>
+    <button class="btn" onclick="toggleTheme()">Тема</button>
+  </div>
+
+  <div id="progress-wrap">
+    <h3>Готовност за изпит</h3>
+    <div id="progress-bar-outer"><div id="progress-bar-inner" style="width:0%"></div></div>
+    <div id="progress-label">Отметнете темите, които сте научили</div>
+    <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;">
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Неподатливост</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Формални езици</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Машини на Тюринг</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Клас P</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> НМТ</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Клас NP</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Karp редукции</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> NP-c / NP-h</label>
+    </div>
+  </div>
+
+  <!-- TOPIC 1: Алгоритмична неподатливост -->
+  <section class="topic" id="t1">
+    <div class="topic-header">
+      <h2>Ефикасни алгоритми и алгоритмична неподатливост</h2>
+      <div class="topic-num">1</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точни дефиниции</div>
+        <p><strong>Конвенция 16: Ефикасен алгоритъм</strong></p>
+        <p>Казваме, че алгоритъм X е <strong>ефикасен</strong>, ако сложността по време на X е \(O(n^k)\), за някаква положителна константа \(k\). ("Ефикасен" = полиномиален по времева сложност.)</p>
+        <hr>
+        <p><strong>Определение 123: Неподатлива задача</strong></p>
+        <p>Казваме, че изчислителна задача \(\Pi\) е <strong>неподатлива</strong> (intractable), ако за нея не съществува ефикасен алгоритъм.</p>
+      </div>
+
+      <div class="sec-h">Двата вида неподатливост (Garey &amp; Johnson)</div>
+      <table>
+        <tr><th>Вид неподатливост</th><th>Характеристика</th><th>Примери</th><th>В курса?</th></tr>
+        <tr>
+          <td><strong>Вид 1</strong></td>
+          <td>Решението е МАЛКО (полиномиално в размера на входа). Времето за намирането му е голямо.</td>
+          <td>Vertex Cover, Hamiltonian Cycle, SAT</td>
+          <td>Да — главна тема</td>
+        </tr>
+        <tr>
+          <td><strong>Вид 2</strong></td>
+          <td>Решението е ГОЛЯМО (повече от полиномиално). Трудно е да се генерира дори при известен алгоритъм.</td>
+          <td>"Генерирай всички подмножества на {1,...,n}"</td>
+          <td>Не — извън рамките</td>
+        </tr>
+      </table>
+
+      <div class="card def">
+        <div class="card-label">Конвенция 17</div>
+        <p>В лекциите разглеждаме само неподатливи задачи, чиито решения са с размер, не по-голям от полиномиален в размера на входа.</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Ефикасен алгоритъм = работи за "разумно" (полиномиално) време. Неподатлива задача = не знаем дали има ефикасен алгоритъм (или знаем, че няма — за задачи като Halting Problem). NP-пълнотата е <em>условна</em> неподатливост: ако поне една NP-пълна задача е трудна, всички са трудни.</p>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Ефикасен = полиномиален = \(O(n^k)\) за константа \(k\)</li>
+          <li>Неподатлива = няма ефикасен алгоритъм</li>
+          <li>Алгоритмичната неизчислимост (Halting Problem) е частен случай на неподатливостта</li>
+          <li>При Вид 1: неизвестност за решението (дали Vertex Cover с размер ≤ k съществува)</li>
+          <li>При Вид 2: знаем кое е решението, но е огромно</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дефинирайте ефикасен алгоритъм (Конвенция 16) и неподатлива задача (Определение 123). Опишете двата вида неподатливост по Garey &amp; Johnson с примери."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 2: Задачи като формални езици -->
+  <section class="topic" id="t2">
+    <div class="topic-header">
+      <h2>Задачи за разпознаване като формални езици</h2>
+      <div class="topic-num">2</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция</div>
+        <p><strong>Определение 125: Език, съответен на задача за разпознаване</strong></p>
+        <p>Нека \(\Pi\) е задача за разпознаване и \(E\) е кодиране за нея с азбука \(\Sigma\). Тогава <strong>езикът, съответен на \(\Pi\) и \(E\)</strong>, е:</p>
+        <p>\[ L(\Pi, E) = \{ x \in \Sigma^* \mid x \text{ кодира Да-екземпляр на } \Pi \text{ в } E \} \]</p>
+        <p><strong>Кодиране \(E: I \to \Sigma^*\)</strong> е инекция от множеството екземпляри в стрингове над \(\Sigma\).</p>
+      </div>
+
+      <div class="sec-h">Разумни кодирания (Garey &amp; Johnson)</div>
+      <p>Дефиниция на "разумно кодиране" няма, но Garey и Johnson дават две изисквания:</p>
+      <ul class="bullet">
+        <li><strong>Полиномиално свързани:</strong> Всеки два разумни кодирания \(E_1\) и \(E_2\) дават стрингове с полиномиално свързани дължини: \(|\sigma_1| \le p_1(|\sigma_2|)\) и \(|\sigma_2| \le p_2(|\sigma_1|)\)</li>
+        <li><strong>Ефикасно декодируеми:</strong> От кодирания стринг може в полиномиално време да се реконструира екземплярът</li>
+      </ul>
+      <p><strong>Неразумно кодиране:</strong> Унарно кодиране на числа (раздува изкуствено размера на входа и прави псевдополиномиални алгоритми да изглеждат полиномиални).</p>
+
+      <div class="viz">
+Структура на Σ* за задача Π с кодиране E:
+
+Σ*
+┌─────────────────────────────────────────────────┐
+│ ┌───────────────────┐                           │
+│ │  L(Π, E)          │                           │
+│ │  (Да-екземпляри)  │                           │
+│ └───────────────────┘                           │
+│                                                 │
+│ ┌───────────────────┐  ┌──────────────────────┐ │
+│ │ Не-екземпляри     │  │ Невалидни кодирания  │ │
+│ └───────────────────┘  └──────────────────────┘ │
+└─────────────────────────────────────────────────┘
+
+Машината на Turing трябва да "разпознае" L(Π, E)
+— приема стрингове от L(Π,E), отхвърля останалите.
+</div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Задача за разпознаване + кодиране = задача за разпознаване на формален език</li>
+          <li>L(Π, E) = кодиранията на Да-екземплярите</li>
+          <li>Кодирането трябва да е ИНЕКЦИЯ (всеки екземпляр → уникален стринг)</li>
+          <li>Унарно кодиране е НЕРАЗУМНО — раздува размера</li>
+          <li>На практика не пишем кодирането — подразбираме разумно кодиране</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дефинирайте езика L(Π, E), съответен на задача за разпознаване. Кога е кодирането разумно? Защо унарното кодиране е неразумно?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 3: Детерминирани МТ -->
+  <section class="topic" id="t3">
+    <div class="topic-header">
+      <h2>Детерминирана машина на Тюринг (МТ)</h2>
+      <div class="topic-num">3</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — Определение 126</div>
+        <p><strong>Детерминирана машина на Turing (МТ)</strong> е наредена седморка \((\Sigma, \Gamma, Q, q_0, q_Y, q_N, \delta)\), където:</p>
+        <ul class="bullet">
+          <li>\(\Sigma\) — крайна непразна <strong>входна азбука</strong></li>
+          <li>\(\Gamma \supset \Sigma\) — крайна <strong>лентова азбука</strong> (съдържа шпация \(\sqcup \notin \Sigma\))</li>
+          <li>\(Q\) — крайно множество от <strong>състояния</strong></li>
+          <li>\(q_0 \in Q\) — <strong>начално</strong> състояние</li>
+          <li>\(q_Y \in Q\) — <strong>приемащо</strong> (крайно) състояние</li>
+          <li>\(q_N \in Q\) — <strong>отхвърлящо</strong> (крайно) състояние</li>
+          <li>\(\delta: (Q \setminus \{q_Y, q_N\}) \times \Gamma \to Q \times \Gamma \times \{L, R, S\}\) — <strong>функция на преходите</strong></li>
+        </ul>
+        <p>Машината работи с безкрайна в двете посоки лента. Спира тстк влезе в \(q_Y\) или \(q_N\).</p>
+      </div>
+
+      <div class="sec-h">Конфигурация — Определение 127</div>
+      <div class="card def">
+        <div class="card-label">Определение 127: Конфигурация</div>
+        <p><strong>Конфигурацията</strong> на МТ е наредената тройка \(\langle q, y, i \rangle\), където:</p>
+        <ul class="bullet">
+          <li>\(q \in Q\) — текущото <strong>състояние</strong></li>
+          <li>\(y \in \Gamma^*\) — текущото <strong>съдържание на лентата</strong></li>
+          <li>\(i \in \mathbb{Z}\) — позицията на <strong>главата</strong></li>
+        </ul>
+        <p><strong>Приемаща конфигурация:</strong> \(q = q_Y\). <strong>Отхвърляща конфигурация:</strong> \(q = q_N\).</p>
+      </div>
+
+      <div class="sec-h">Визуализация — Лента на МТ</div>
+      <div class="viz">
+Машина на Turing — визуализация:
+
+Лента:   ... □ □ | 0 | 1 | 1 | 0 | □ | □ | □ ...
+                        ↑
+                   Четяща глава (текущата клетка)
+
+Текущо състояние: q₀
+
+При δ(q₀, '1') = (q₁, '0', R):
+  - Сменяме '1' с '0'
+  - Преминаваме в q₁
+  - Местим главата надясно (R)
+
+Лента след хода: ... □ □ | 0 | 1 | 0 | 0 | □ | □ | □ ...
+                                         ↑
+                                   Глава (нова позиция)
+
+M(x) = qY → машината ПРИЕМА x
+M(x) = qN → машината ОТХВЪРЛЯ x
+M(x) ↑    → машината НЕ СПИРА (зациклило)
+</div>
+
+      <div class="sec-h">Езикът, разпознаван от МТ — Определение 128</div>
+      <div class="card def">
+        <div class="card-label">Определение 128 и 129</div>
+        <p>\[ L_M \stackrel{\text{def}}{=} \{ x \in \Sigma^* \mid M(x) = q_Y \} \]</p>
+        <p>МТ M <strong>решава задача</strong> за разпознаване \(\Pi\) (Определение 129): M спира върху всички входове и \(L_M = L(\Pi, E)\).</p>
+        <p><em>Забележка:</em> Разпознаването ≠ решаването! Ако \(x \notin L_M\), M може да <em>отхвърли</em> (достига \(q_N\)) или да <em>не спре</em>. При решаването — M задължително спира за всеки вход.</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>МТ = (Σ, Γ, Q, q₀, q_Y, q_N, δ) — 7 компонента</li>
+          <li>Конфигурация = (текущо състояние, лента, позиция на глава)</li>
+          <li>Спира САМО при достигане q_Y или q_N</li>
+          <li>Разпознаване: M приема Да-екземплярите (но може да зацикли за Не-екземплярите)</li>
+          <li>Решаване: M спира за ВСЕКИ вход и L_M = L(Π, E)</li>
+          <li>МТ изчислява стрингови функции: при вход x, ако спира в q_Y, изходът е съдържанието на лентата</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дефинирайте детерминирана машина на Turing (Определение 126). Какво е конфигурация (Определение 127)? Каква е разликата между разпознаване и решаване от МТ?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 4: Клас P -->
+  <section class="topic" id="t4">
+    <div class="topic-header">
+      <h2>Сложност по време на МТ. Клас P</h2>
+      <div class="topic-num">4</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция</div>
+        <p><strong>Сложност по ВРЕМЕ на МТ:</strong> МТ M се нарича <strong>полиномиална</strong>, ако съществува полином \(p(n)\), такъв че за всеки вход \(x\) с \(|x| = n\), M спира след най-много \(p(n)\) стъпки.</p>
+        <hr>
+        <p><strong>Клас P (Определение 130):</strong></p>
+        <p>\[ \mathbf{P} = \{ L \subseteq \Sigma^* \mid \text{съществува полиномиална МТ } M \text{ такава, че } L = L_M \} \]</p>
+        <p>Задача \(\Pi\) е в P тстк съществува полиномиална МТ M, такава че \(L(\Pi, E) = L_M\).</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>P = класът от задачи за разпознаване, решими от детерминирана МТ в полиномиално време. На практика: P = задачите, за които имаме "бързи" (ефикасни) алгоритми. Примери: сортиране, намиране на НОД, Dijkstra, проверка дали граф е двуделен.</p>
+
+      <div class="card ex">
+        <div class="card-label">Примери за задачи в P</div>
+        <table>
+          <tr><th>Задача</th><th>Сложност</th><th>Алгоритъм</th></tr>
+          <tr><td>Дали граф е свързан?</td><td>O(n+m)</td><td>BFS/DFS</td></tr>
+          <tr><td>Дали число е просто?</td><td>O(n^6)</td><td>AKS тест</td></tr>
+          <tr><td>Най-кък път (решение ≤ k)?</td><td>O((n+m) log n)</td><td>Dijkstra</td></tr>
+          <tr><td>Дали дадена КНФ е 2SAT?</td><td>O(n+m)</td><td>SCC алгоритъм</td></tr>
+          <tr><td>Vertex Cover на дърво ≤ k?</td><td>O(n)</td><td>ДП</td></tr>
+        </table>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>P = задачи, решими от детерминирана МТ в полиномиално време</li>
+          <li>"Полиномиалност" е стабилно свойство: на полиномиална МТ съответства полиномиален алгоритъм (и обратното)</li>
+          <li>Класът P не зависи от избора на разумното кодиране</li>
+          <li>Cobham: "полиномиално = ефикасно" — конвенция, не теорема</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Определете сложността по ВРЕМЕ на МТ и класа P. Дайте три примера за задачи в P."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 5: НМТ -->
+  <section class="topic" id="t5">
+    <div class="topic-header">
+      <h2>Недетерминирани МТ (НМТ) — Двете дефиниции</h2>
+      <div class="topic-num">5</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Дефиниция 1: НМТ с размножаване</div>
+        <p>НМТ е като детерминирана МТ, но функцията на преходите \(\delta\) е заменена с <strong>релация на преходите</strong> \(\Delta \subseteq (Q \setminus \{q_Y, q_N\}) \times \Gamma \times Q \times \Gamma \times \{L, R, S\}\).</p>
+        <p>При всяка стъпка: ако \(\Delta(q, a)\) съдържа \(k > 1\) наредени тройки, машината се "<strong>размножава</strong>" на \(k\) копия, всяко следващо различен преход.</p>
+        <p><strong>НМТ приема</strong> x, ако <em>поне едно</em> копие достига \(q_Y\).</p>
+        <p><strong>НМТ отхвърля</strong> x, ако <em>всички</em> копия достигат \(q_N\) или не спират.</p>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Дефиниция 2: НМТ-верификатор</div>
+        <p>НМТ е машина, която работи в две фази:</p>
+        <ul class="bullet">
+          <li><strong>Фаза 1 (Угаждане):</strong> Недетерминирано "познава" сертификат \(c\)</li>
+          <li><strong>Фаза 2 (Верификация):</strong> Детерминирано проверява дали \((x, c)\) е валидна двойка (екземпляр, сертификат)</li>
+        </ul>
+        <p><strong>НМТ приема</strong> x, ако <em>съществува</em> сертификат c, такъв че верификаторът приема \((x, c)\).</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение на двете дефиниции</div>
+      <p><strong>Дефиниция 1 (размножаване):</strong> Представете си всемогъща машина, която може да изпробва всички пътища едновременно (като паралелни вселени) и приема, ако поне един води до успех.</p>
+      <p><strong>Дефиниция 2 (верификатор):</strong> Машина, която може да "познае" правилния отговор (ключа, сертификата) и след това само го <em>проверява</em> — верификацията е детерминирана и полиномиална.</p>
+
+      <div class="viz">
+НМТ-верификатор за Hamiltonian Cycle:
+
+Вход x: граф G
+Фаза 1 (УГАЖДАНЕ): Машината "познава" пермутация на върховете π
+Фаза 2 (ВЕРИФИКАЦИЯ): Проверява дали π е Хамилтонов цикъл в G
+  → π[1]→π[2]: ребро? ✓
+  → π[2]→π[3]: ребро? ✓
+  → ...
+  → π[n]→π[1]: ребро? ✓
+  → Всички n върха различни? ✓
+Ако ВСИЧКО е ок → ПРИЕМА
+
+Сертификатът c = π (пермутацията) е с размер O(n) = ПОЛИНОМИАЛЕН!
+</div>
+
+      <div class="sec-h">Еквивалентност на двете дефиниции</div>
+      <div class="thm">
+        <div class="thm-title">Теорема 128: Еквивалентност</div>
+        <p>Двете дефиниции на НМТ са еквивалентни с полиномиална загуба на ефикасност.</p>
+        <ul class="bullet">
+          <li>НМТ с размножаване → НМТ-верификатор: сертификатът е пътят в дървото на конфигурациите</li>
+          <li>НМТ-верификатор → НМТ с размножаване: машината недетерминирано генерира всички сертификати</li>
+        </ul>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>НМТ = релация на преходите вместо функция</li>
+          <li>НМТ приема, ако ПОНЕ ЕДНО копие достига q_Y</li>
+          <li>НМТ отхвърля, ако ВСИЧКИ копия достигат q_N или зациклят</li>
+          <li>Верификаторът: угаждане (недетерминирано) + верификация (детерминирано)</li>
+          <li>Асиметрия: приемане ≠ отхвърляне при НМТ!</li>
+          <li>Дървото на конфигурациите е ключовата визуализация</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дайте двете алтернативни дефиниции на НМТ (машини с размножаване и машини-верификатори). Как НМТ приема и отхвърля вход? Формулирайте Теорема 128 за еквивалентност."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 6: Клас NP и P ⊆ NP -->
+  <section class="topic" id="t6">
+    <div class="topic-header">
+      <h2>Клас NP и P ⊆ NP</h2>
+      <div class="topic-num">6</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция</div>
+        <p><strong>Сложност по ВРЕМЕ на НМТ:</strong> НМТ M е <strong>полиномиална</strong>, ако съществува полином \(p(n)\), такъв че за всеки вход \(x\) с \(|x| = n\), всяко изчислително копие на M спира след не повече от \(p(n)\) стъпки.</p>
+        <hr>
+        <p><strong>Клас NP (Определение 131):</strong></p>
+        <p>\[ \mathbf{NP} = \{ L \subseteq \Sigma^* \mid \text{съществува полиномиална НМТ } M \text{ такава, че } L = L_M \} \]</p>
+        <p>NP идва от "Nondeterministically Polynomial time".</p>
+      </div>
+
+      <div class="sec-h">Защо P ⊆ NP</div>
+      <div class="thm">
+        <div class="thm-title">P ⊆ NP</div>
+        <p>Всяка задача в P е и в NP, защото:</p>
+        <ol style="padding-left: 20px;">
+          <li>Нека \(L \in P\). Тогава съществува полиномиална (детерминирана) МТ M, такава че \(L = L_M\).</li>
+          <li>Всяка детерминирана МТ е специален случай на НМТ (с тривиална релация на преходите: всяка двойка (q,a) има точно един преход).</li>
+          <li>Следователно M е и полиномиална НМТ. Ерго, \(L \in NP\).</li>
+        </ol>
+      </div>
+
+      <div class="sec-h">Диаграма на класовете — P, NP, NP-complete</div>
+      <div class="pnp-diagram">
+        <div style="font-size:1rem; color: var(--text2); margin-bottom: 12px;">Взаимоотношение между класовете (ако P ≠ NP)</div>
+        <div style="display:inline-block; border: 3px solid #e74c3c; border-radius: 50%; width: 360px; height: 260px; position: relative; background: rgba(231,76,60,0.03);">
+          <div style="position:absolute; top:10px; right:14px; color:#e74c3c; font-size:0.9rem; font-weight:700;">NP</div>
+          <div style="position:absolute; top:20px; right:14px; color: var(--text2); font-size:0.75rem;">Hamiltonian Cycle</div>
+          <div style="position:absolute; top:36px; right:14px; color: var(--text2); font-size:0.75rem;">3-Colorability</div>
+          <!-- NP-complete subset -->
+          <div style="position:absolute; bottom: 16px; right: 16px; border: 2px solid #f39c12; border-radius: 40%; width: 130px; height: 90px;">
+            <div style="position:absolute; top:4px; left:50%; transform:translateX(-50%); color:#f39c12; font-size:0.75rem; font-weight:700; white-space:nowrap;">NP-complete</div>
+            <div style="position:absolute; bottom:8px; left:50%; transform:translateX(-50%); color: var(--text2); font-size:0.7rem; white-space:nowrap;">SAT, VC, IS</div>
+          </div>
+          <!-- P subset -->
+          <div style="position:absolute; top: 50%; left: 20px; transform:translateY(-50%); border: 2px solid #4f8ef7; border-radius: 50%; width: 150px; height: 120px;">
+            <div style="position:absolute; top:6px; left:50%; transform:translateX(-50%); color:#4f8ef7; font-size:0.8rem; font-weight:700;">P</div>
+            <div style="position:absolute; bottom:16px; left:50%; transform:translateX(-50%); color: var(--text2); font-size:0.7rem; white-space:nowrap;">Dijkstra, BFS</div>
+            <div style="position:absolute; bottom:4px; left:50%; transform:translateX(-50%); color: var(--text2); font-size:0.7rem; white-space:nowrap;">2SAT, Sort</div>
+          </div>
+        </div>
+        <div style="margin-top:12px; color: var(--text2); font-size:0.85rem;">
+          P ⊆ NP-complete ⊆ NP | Отворен въпрос: P = NP?
+        </div>
+      </div>
+
+      <table>
+        <tr><th>Клас</th><th>Дефиниция</th><th>Примери</th></tr>
+        <tr><td><strong>P</strong></td><td>Решими от детерм. МТ в полином. врем.</td><td>2SAT, Sorting, ShortestPath</td></tr>
+        <tr><td><strong>NP</strong></td><td>Решими от НМТ в полином. врем.</td><td>SAT, VertexCover, Clique, IS</td></tr>
+        <tr><td><strong>NP-c</strong></td><td>NP + най-трудните в NP (всяка NP задача ≤p тях)</td><td>SAT, 3SAT, VertexCover, IS, Clique</td></tr>
+      </table>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>NP = задачи, при чиито Да-екземпляри може да се <em>верифицира</em> решението в полиномиално время</li>
+          <li>P ⊆ NP (всяка детерминирана МТ е специален случай на НМТ)</li>
+          <li>Дали P = NP? — Отворен въпрос от 1971 г., $1 000 000 награда!</li>
+          <li>Ако P ≠ NP: NP-complete задачи са в NP, но не в P</li>
+          <li>NP не е "Non-Polynomial" — а "Nondeterministically Polynomial"!</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Определете класа NP. Докажете, че P ⊆ NP. Нарисувайте диаграма на P, NP, NP-complete (при допускане P ≠ NP)."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 7: Karp редукции -->
+  <section class="topic" id="t7">
+    <div class="topic-header">
+      <h2>Karp редукции (Полиномиални редукции) ≤p</h2>
+      <div class="topic-num">7</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция</div>
+        <p><strong>Определение 141: Полиномиална редукция (Karp редукция)</strong></p>
+        <p>Нека \(\Pi_1\) и \(\Pi_2\) са задачи за разпознаване. Казваме, че \(\Pi_1\) <strong>полиномиално се свежда</strong> до \(\Pi_2\), бележим \(\Pi_1 \le_p \Pi_2\), ако съществува функция \(f: \Sigma^* \to \Sigma^*\), такава че:</p>
+        <ul class="bullet">
+          <li>\(f\) е изчислима от полиномиална МТ</li>
+          <li>За всеки вход \(x\): \(x \in L(\Pi_1) \iff f(x) \in L(\Pi_2)\)</li>
+        </ul>
+        <p>Интуиция: Ако знаем как да решим \(\Pi_2\), можем да решим и \(\Pi_1\) — чрез преобразуване на входа.</p>
+      </div>
+
+      <div class="sec-h">Свойства на ≤p</div>
+      <div class="thm">
+        <div class="thm-title">Рефлексивност: П ≤p П</div>
+        <p>Тривиалното преобразуване f(x) = x е полиномиално. Ерго, всяка задача се свежда до себе си.</p>
+      </div>
+      <div class="thm">
+        <div class="thm-title">Теорема 128 (Транзитивност): Ако П₁ ≤p П₂ и П₂ ≤p П₃, то П₁ ≤p П₃</div>
+        <p><strong>Доказателство:</strong> Нека \(f_1\) е редукцията от \(\Pi_1\) към \(\Pi_2\) и \(f_2\) е редукцията от \(\Pi_2\) към \(\Pi_3\). Тогава \(f = f_2 \circ f_1\) е редукция от \(\Pi_1\) към \(\Pi_3\). Тъй като композицията на полиномиални МТ е полиномиална, f е полиномиална. Коректността следва от: \(x \in L_1 \iff f_1(x) \in L_2 \iff f_2(f_1(x)) \in L_3\).</p>
+      </div>
+
+      <div class="viz">
+Karp редукция П₁ ≤p П₂:
+
+Екземпляр на П₁             Екземпляр на П₂
+     x   ──── f (полином.) ────→  f(x)
+      ↓                              ↓
+ Да-екземпляр?    тстк        Да-екземпляр?
+
+Ако знаем алгоритъм за П₂:
+  Алгоритъм за П₁(x):
+    1. Изчисли f(x) в полиномиално время
+    2. Реши f(x) за П₂
+    3. Върни същия отговор
+</div>
+
+      <div class="sec-h">Полиномиална еквивалентност и несравнимост</div>
+      <table>
+        <tr><th>Отношение</th><th>Означение</th><th>Значение</th></tr>
+        <tr><td>Полин. еквивалентност</td><td>\(\Pi_1 \equiv_p \Pi_2\)</td><td>\(\Pi_1 \le_p \Pi_2\) И \(\Pi_2 \le_p \Pi_1\)</td></tr>
+        <tr><td>Строго по-малка</td><td>\(\Pi_1 &lt;_p \Pi_2\)</td><td>\(\Pi_1 \le_p \Pi_2\) И \(\Pi_2 \not\le_p \Pi_1\) (ако P≠NP)</td></tr>
+        <tr><td>Несравними</td><td>\(\Pi_1 \not\le_p \Pi_2\) и \(\Pi_2 \not\le_p \Pi_1\)</td><td>Нито едното се свежда до другото</td></tr>
+      </table>
+
+      <div class="thm">
+        <div class="thm-title">Теорема 129: Класът P и полиномиалните редукции</div>
+        <p>Ако \(\Pi_1 \le_p \Pi_2\) и \(\Pi_2 \in P\), то \(\Pi_1 \in P\).</p>
+        <p><em>Контрапозитивно:</em> Ако \(\Pi_1 \notin P\) и \(\Pi_1 \le_p \Pi_2\), то \(\Pi_2 \notin P\).</p>
+      </div>
+
+      <div class="thm">
+        <div class="thm-title">Теорема 130: P е минималният клас</div>
+        <p>P е затворен относно полиномиални редукции: ако \(\Pi \in P\) и \(\Pi' \le_p \Pi\), то \(\Pi' \in P\). P е "дъното" — ако задача в P е "твърда" за P, то тя е в P.</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>\(\Pi_1 \le_p \Pi_2\) означава "\(\Pi_1\) е не по-трудна от \(\Pi_2\)"</li>
+          <li>\(\le_p\) е рефлексивна и транзитивна (частична наредба)</li>
+          <li>Редукцията трябва да е ПОЛИНОМИАЛНА (не просто изчислима)</li>
+          <li>Теорема 129: ако \(\Pi_2 \in P\) и \(\Pi_1 \le_p \Pi_2\) → \(\Pi_1 \in P\)</li>
+          <li>Транзитивността позволява "верига" от редукции</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дефинирайте Karp редукция ≤p. Докажете транзитивността (Теорема 128). Формулирайте Теорема 129. Каква е интуицията зад редукцията?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 8: NP-c и NP-h -->
+  <section class="topic" id="t8">
+    <div class="topic-header">
+      <h2>Класове NP-c (NP-пълна) и NP-h (NP-трудна)</h2>
+      <div class="topic-num">8</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точни дефиниции</div>
+        <p><strong>Определение 142: Клас NP-c (NP-complete, NP-пълен)</strong></p>
+        <p>Задача \(\Pi\) е <strong>NP-пълна</strong>, ако:</p>
+        <ol style="padding-left: 20px; margin: 8px 0;">
+          <li>\(\Pi \in NP\) (Pi е в NP)</li>
+          <li>За всяка \(\Pi' \in NP\): \(\Pi' \le_p \Pi\) (всяка NP задача се свежда полиномиално до Pi)</li>
+        </ol>
+        <p>С други думи: \(\Pi\) е в NP и е "най-трудна" в NP.</p>
+        <hr>
+        <p><strong>Определение 143: Клас NP-h (NP-hard, NP-труден)</strong></p>
+        <p>Задача \(\Pi\) е <strong>NP-трудна</strong>, ако:</p>
+        <ol style="padding-left: 20px; margin: 8px 0;">
+          <li>За всяка \(\Pi' \in NP\): \(\Pi' \le_p \Pi\)</li>
+        </ol>
+        <p><em>Забележка:</em> NP-трудната задача не е задължително в NP! Например задачи за оптимизация (а не разпознаване) са NP-трудни, но не са в NP.</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p><strong>NP-пълна:</strong> "Ако мога да реша тази задача ефикасно, мога да реша ВСИЧКИ задачи в NP ефикасно." Тоест, тя е едновременно в NP (верификацията е полиномиална) и е "NP-трудна" (всички NP задачи се свеждат до нея).</p>
+      <p><strong>NP-трудна:</strong> "Поне толкова трудна, колкото всяка задача в NP" — но може да не е самата в NP (може да е по-трудна).</p>
+
+      <div class="viz">
+Структура на NP и NP-complete:
+
+                     NP
+    ┌────────────────────────────────────────┐
+    │                                        │
+    │      P ⊆ NP                            │
+    │  ┌──────────┐                          │
+    │  │    P     │  ← 2SAT, Matching, ...   │
+    │  └──────────┘                          │
+    │                                        │
+    │   ┌────────────────┐                   │
+    │   │  NP-complete   │ ← SAT, VC, IS,    │
+    │   │   (⊆ NP ∩ NP-h)│   Clique, TSP-R  │
+    │   └────────────────┘                   │
+    └────────────────────────────────────────┘
+
+NP-hard (съдържа NP-complete, но и повече):
+  → Halting Problem (не е в NP, но е NP-hard)
+  → TSP (оптимизация, не разпознаване)
+
+Ако P ≠ NP: P ∩ NP-complete = ∅
+Ако P = NP: P = NP = NP-complete
+</div>
+
+      <div class="thm">
+        <div class="thm-title">Следствие: Ако NP-пълна задача е в P, тогава P = NP</div>
+        <p>Нека \(\Pi\) е NP-пълна и \(\Pi \in P\). За всяка \(\Pi' \in NP\): \(\Pi' \le_p \Pi\). По Теорема 129: \(\Pi \in P\) и \(\Pi' \le_p \Pi\) → \(\Pi' \in P\). Следователно \(NP \subseteq P\). Но \(P \subseteq NP\), ерго \(P = NP\).</p>
+      </div>
+
+      <table>
+        <tr><th>Клас</th><th>В NP?</th><th>Всички NP ≤p ?</th><th>Примери</th></tr>
+        <tr><td><strong>P</strong></td><td>Да</td><td>Не</td><td>2SAT, BFS</td></tr>
+        <tr><td><strong>NP \ P</strong> (ако P≠NP)</td><td>Да</td><td>Не</td><td>Факторизация (?)</td></tr>
+        <tr><td><strong>NP-complete</strong></td><td>Да</td><td>Да</td><td>SAT, VertexCover, IS</td></tr>
+        <tr><td><strong>NP-hard \ NP-complete</strong></td><td>Не</td><td>Да</td><td>Halting Problem, TSP (opt.)</td></tr>
+      </table>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>NP-complete = NP + NP-hard (двете условия едновременно)</li>
+          <li>NP-hard = всички задачи от NP се свеждат до нея (но самата тя може да не е в NP)</li>
+          <li>NP-complete ⊂ NP ∩ NP-hard</li>
+          <li>Ако намерим полиномиален алгоритъм за ЕДНА NP-пълна задача → P = NP</li>
+          <li>Оптимизационните версии на NP-пълни задачи са NP-трудни</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="card-label">Връзка с другите теми</div>
+        <p>Теоремата на Cook (Лекция 15) показва, че SAT е NP-пълна — първата естествена задача с това свойство. Впоследствие (Лекция 15 и 16), чрез редукции от SAT, доказваме NP-пълнотата на 3SAT, Vertex Cover, Independent Set, Clique, Dominating Set и много други.</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дефинирайте NP-пълна (Определение 142) и NP-трудна (Определение 143) задача. Каква е разликата? Нарисувайте диаграма. Докажете, че ако NP-пълна задача е в P, то P = NP."</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const body = document.body;
+  body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+function updateProgress() {
+  const boxes = document.querySelectorAll('input[type="checkbox"]');
+  const checked = Array.from(boxes).filter(b => b.checked).length;
+  const pct = Math.round(checked / boxes.length * 100);
+  document.getElementById('progress-bar-inner').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${pct}% готовност (${checked}/${boxes.length} теми)`;
+}
+const sections = document.querySelectorAll('.topic');
+const links = document.querySelectorAll('#sidebar a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+  links.forEach(a => { a.classList.remove('active'); if (a.getAttribute('href') === '#' + current) a.classList.add('active'); });
+});
+</script>
+</body>
+</html>

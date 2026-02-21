@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лекция 9 - Срязващи върхове, МПД, Prim, Kruskal | ДАА 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #1a1d27; --bg3: #242838;
+    --accent: #4f8ef7; --accent2: #7c5cbf; --green: #2ecc71;
+    --yellow: #f39c12; --red: #e74c3c; --text: #e8eaf0;
+    --text2: #9ca3af; --border: #2d3148;
+    --def-bg: #0d2137; --def-border: #1e5799;
+    --ex-bg: #0d2d1a; --ex-border: #1e7d3e;
+    --key-bg: #2d2100; --key-border: #7d5c00;
+    --code-bg: #141822;
+  }
+  [data-theme="light"] {
+    --bg: #f0f2f8; --bg2: #ffffff; --bg3: #e8ecf5;
+    --accent: #2563eb; --accent2: #7c3aed; --green: #16a34a;
+    --yellow: #d97706; --red: #dc2626; --text: #1e293b;
+    --text2: #64748b; --border: #cbd5e1;
+    --def-bg: #eff6ff; --def-border: #3b82f6;
+    --ex-bg: #f0fdf4; --ex-border: #22c55e;
+    --key-bg: #fffbeb; --key-border: #f59e0b;
+    --code-bg: #1e293b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  #layout { display: flex; min-height: 100vh; }
+  #sidebar { width: 280px; background: var(--bg2); border-right: 1px solid var(--border);
+    position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto;
+    transition: transform 0.3s; z-index: 100; padding: 20px 0; }
+  #sidebar h2 { color: var(--accent); font-size: 0.85rem; text-transform: uppercase;
+    letter-spacing: 1px; padding: 0 20px 10px; border-bottom: 1px solid var(--border); }
+  #sidebar ul { list-style: none; padding: 10px 0; }
+  #sidebar li a { display: block; padding: 8px 20px; color: var(--text2); text-decoration: none;
+    font-size: 0.88rem; border-left: 3px solid transparent; transition: all 0.2s; }
+  #sidebar li a:hover, #sidebar li a.active { color: var(--accent); border-left-color: var(--accent);
+    background: rgba(79,142,247,0.08); }
+  #main { margin-left: 280px; flex: 1; padding: 40px; max-width: 1000px; }
+  #topbar { position: sticky; top: 0; background: var(--bg2); border-bottom: 1px solid var(--border);
+    z-index: 50; display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 40px; margin: -40px -40px 40px; }
+  #topbar h1 { font-size: 1.1rem; color: var(--accent); }
+  .btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text); cursor: pointer; font-size: 0.85rem; }
+  .btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  #progress-wrap { background: var(--bg3); border-radius: 8px; padding: 16px 20px;
+    margin-bottom: 32px; border: 1px solid var(--border); }
+  #progress-wrap h3 { font-size: 0.9rem; color: var(--text2); margin-bottom: 10px; }
+  #progress-bar-outer { background: var(--bg); border-radius: 99px; height: 8px; overflow: hidden; }
+  #progress-bar-inner { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 99px; transition: width 0.5s; }
+  #progress-label { font-size: 0.85rem; color: var(--text2); margin-top: 6px; }
+  .topic { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 40px; overflow: hidden; scroll-margin-top: 80px; }
+  .topic-header { padding: 20px 24px; background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: space-between; }
+  .topic-header h2 { color: white; font-size: 1.15rem; }
+  .topic-num { background: rgba(255,255,255,0.2); color: white; border-radius: 50%;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .topic-body { padding: 24px; }
+  .card { border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .card.def { background: var(--def-bg); border-left: 4px solid var(--def-border); }
+  .card.def .card-label { color: var(--accent); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.ex { background: var(--ex-bg); border-left: 4px solid var(--ex-border); }
+  .card.ex .card-label { color: var(--green); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.key { background: var(--key-bg); border-left: 4px solid var(--key-border); }
+  .card.key .card-label { color: var(--yellow); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.warn { background: rgba(231,76,60,0.07); border-left: 4px solid var(--red); }
+  .sec-h { font-size: 0.95rem; font-weight: 700; color: var(--accent); margin: 20px 0 8px;
+    display: flex; align-items: center; gap: 8px; }
+  .sec-h::before { content: ''; display: inline-block; width: 3px; height: 16px;
+    background: var(--accent); border-radius: 2px; }
+  pre { background: var(--code-bg); color: #cdd6f4; border-radius: 8px; padding: 16px 20px;
+    overflow-x: auto; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem;
+    line-height: 1.6; margin: 12px 0; border: 1px solid var(--border); }
+  code { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem; }
+  .kw { color: #cba6f7; } .cm { color: #6c7086; font-style: italic; }
+  .nm { color: #89dceb; } .op { color: #89b4fa; } .str { color: #a6e3a1; }
+  .num { color: #fab387; }
+  .viz { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 20px; font-family: monospace; font-size: 0.85rem; color: #cdd6f4;
+    white-space: pre; overflow-x: auto; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+  th { background: var(--bg3); color: var(--accent); padding: 10px 12px; text-align: left;
+    border-bottom: 2px solid var(--accent); }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: rgba(79,142,247,0.05); }
+  ul.bullet { list-style: none; padding: 0; }
+  ul.bullet li { padding: 6px 0 6px 24px; position: relative; }
+  ul.bullet li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+  .exam-box { background: linear-gradient(135deg, rgba(231,76,60,0.1), rgba(231,76,60,0.05));
+    border: 1px solid var(--red); border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .exam-box .card-label { color: var(--red); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .conn-box { background: rgba(124,92,191,0.1); border: 1px solid var(--accent2);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .conn-box .card-label { color: var(--accent2); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .thm { background: rgba(79,142,247,0.07); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+  .thm-title { color: var(--accent); font-weight: 700; margin-bottom: 8px; }
+  p { margin: 10px 0; }
+  b, strong { color: var(--accent); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  @media (max-width: 768px) {
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; padding: 20px; }
+    #topbar { padding: 12px 20px; margin: -20px -20px 20px; }
+  }
+</style>
+</head>
+<body data-theme="dark">
+<div id="layout">
+<nav id="sidebar">
+  <h2>Лекция 9 - Навигация</h2>
+  <ul>
+    <li><a href="#t1">Срязващи върхове и мостове</a></li>
+    <li><a href="#t2">МПД — Основи и Теорема 93</a></li>
+    <li><a href="#t3">Алгоритъм на Prim</a></li>
+    <li><a href="#t4">Алгоритъм на Kruskal</a></li>
+    <li><a href="#t5">Union-Find структури</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+  <div id="topbar">
+    <h1>ДАА 2026 - Лекция 9: Срязващи върхове, МПД, Prim, Kruskal</h1>
+    <button class="btn" onclick="toggleTheme()">Тема</button>
+  </div>
+
+  <div id="progress-wrap">
+    <h3>Готовност за изпит</h3>
+    <div id="progress-bar-outer"><div id="progress-bar-inner" style="width:0%"></div></div>
+    <div id="progress-label">Отметнете темите, които сте научили</div>
+    <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;">
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Срязващи върхове</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> МПД и Теорема 93</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Алгоритъм на Prim</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Алгоритъм на Kruskal</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Union-Find</label>
+    </div>
+  </div>
+
+  <!-- TOPIC 1: Articulation Points -->
+  <section class="topic" id="t1">
+    <div class="topic-header">
+      <h2>Срязващи върхове и мостове</h2>
+      <div class="topic-num">1</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — по лекции на проф. Марков</div>
+        <p><strong>Срязващ връх (articulation point / cut vertex):</strong> Връх v в свързан неориентиран граф G е срязващ, ако премахването му (заедно с инцидентните му ребра) прави G несвързан.</p>
+        <p><strong>Мост (bridge):</strong> Ребро e в свързан неориентиран граф G е мост, ако премахването му прави G несвързан.</p>
+        <p><strong>Приложения:</strong> Намиране на уязвими точки в мрежи (телекомуникационни, електрически, транспортни). Мост = критично ребро без резервен маршрут; срязващ връх = критичен комутатор/рутер.</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Представете си интернет мрежа. Срязващ връх е рутер, чието изключване разделя мрежата на две несвързани части. Мост е кабел, чието скъсване прекъсва единствената връзка между две части от мрежата. Ако нямате резервни маршрути, срязващите върхове и мостовете са уязвими точки.</p>
+
+      <div class="sec-h">Визуализация</div>
+      <div class="viz">
+Граф с срязващи върхове:
+
+    1 --- 2 --- 3
+          |
+          4 --- 5
+               / \
+              6   7
+
+Срязващ връх: 2 (ако го премахнем, 1 е изолиран от 3,4,5,6,7)
+              5 (ако го премахнем, 4 е изолиран от 6,7)
+Мост: ребро (2,3), ребро (2,4)
+
+Ако премахнем 2:
+    1           3
+                |
+                4 --- 5
+                     / \
+                    6   7
+→ Компонента {1} е отделена от {3,4,5,6,7} ✓
+      </div>
+
+      <div class="sec-h">Алгоритъм 25 и 26 — Намиране на срязващи върхове</div>
+      <p>Алгоритъмът използва DFS и масив <strong>low[v]</strong> — "най-малкото d-значение, достижимо от v и от поддървото на v с използване на най-много едно ребро назад".</p>
+<pre><code><span class="cm">-- Алгоритъм 25: AP (Articulation Points) — обвиваща функция</span>
+<span class="kw">AP</span>(G = (V, E))
+<span class="num">1</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">2</span>      color[i] ← white
+<span class="num">3</span>      π[i] ← NIL
+<span class="num">4</span>  time ← 0
+<span class="num">5</span>  result ← ∅         <span class="cm">-- множеството от срязващи върхове</span>
+<span class="num">6</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">7</span>      <span class="kw">if</span> color[i] = white
+<span class="num">8</span>          AP-VISIT(G, i)
+<span class="num">9</span>  <span class="kw">return</span> result
+
+<span class="cm">-- Алгоритъм 26: AP-VISIT — рекурсивно ядро</span>
+<span class="kw">AP-VISIT</span>(G; x)
+<span class="num">1</span>  time++; d[x] ← time; low[x] ← d[x]
+<span class="num">2</span>  color[x] ← gray
+<span class="num">3</span>  child_count ← 0    <span class="cm">-- деца в DFS дървото</span>
+<span class="num">4</span>  <span class="kw">foreach</span> y ∈ adj[x]
+<span class="num">5</span>      <span class="kw">if</span> color[y] = white
+<span class="num">6</span>          child_count++
+<span class="num">7</span>          π[y] ← x
+<span class="num">8</span>          AP-VISIT(G, y)
+<span class="num">9</span>          low[x] ← min(low[x], low[y])   <span class="cm">-- актуализираме low[x]</span>
+<span class="num">10</span>         <span class="cm">-- x е срязващ, ако: (корен и ≥2 деца) ИЛИ (не-корен и low[y] ≥ d[x])</span>
+<span class="num">11</span>         <span class="kw">if</span> π[x] = NIL <span class="kw">and</span> child_count ≥ 2
+<span class="num">12</span>             result ← result ∪ {x}
+<span class="num">13</span>         <span class="kw">if</span> π[x] ≠ NIL <span class="kw">and</span> low[y] ≥ d[x]
+<span class="num">14</span>             result ← result ∪ {x}
+<span class="num">15</span>     <span class="kw">else if</span> y ≠ π[x]        <span class="cm">-- y е сив и не е родителят</span>
+<span class="num">16</span>         low[x] ← min(low[x], d[y])
+<span class="num">17</span> color[x] ← black; time++; f[x] ← time</code></pre>
+
+      <div class="thm">
+        <div class="thm-title">Теорема 89, 90, 91 — Условия за срязващ връх</div>
+        <p><strong>Теорема 89:</strong> Коренът на DFS дървото е срязващ връх тогава и само тогава, когато има поне две деца в DFS дървото.</p>
+        <p><strong>Теорема 90:</strong> Не-коренов връх x е срязващ тогава и само тогава, когато съществува дете y на x в DFS дървото, такова че low[y] ≥ d[x]. (Нито y, нито поддървото му имат ребро назад към предшественик на x.)</p>
+        <p><strong>Теорема 91:</strong> Реброто (x, y), където y е дете на x в DFS дървото, е мост тогава и само тогава, когато low[y] &gt; d[x].</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>low[v] = min{d[v], min{d[u] | (v,u) е back edge от поддървото на v}}</li>
+          <li>Сложност: Θ(n + m) — базирана на DFS</li>
+          <li>Разлика мост / срязващ: low[y] &gt; d[x] → мост; low[y] ≥ d[x] → срязващ</li>
+          <li>Корен: специален случай — гледаме броя на децата, не low-стойностите</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дефинирайте срязващ връх и мост. Опишете алгоритъма (псевдокод). Формулирайте условията от Теореми 89-91."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 2: MST Fundamentals -->
+  <section class="topic" id="t2">
+    <div class="topic-header">
+      <h2>МПД — Основи, Теорема 93 (МПД теорема)</h2>
+      <div class="topic-num">2</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — Определения 86-90</div>
+        <p><strong>Тегловен граф (Определение 86):</strong> Наредена двойка (G, w) от граф G = (V, E) и тегловна функция w: E → ℝ.</p>
+        <p><strong>Покриващо дърво (Определение 87):</strong> Покриващ подграф на G, който е дърво (свързан и ацикличен).</p>
+        <p><strong>МПД (Определение 88):</strong> Покриващо дърво T* такова, че w(T*) = Σ{w(e) | e ∈ E(T*)} е минимално сред всички ПД.</p>
+        <p><strong>Сигурно ребро (Определение 89):</strong> Ребро e ∉ A е сигурно за A, ако съществува МПД T', такова че A ∪ {e} ⊆ E(T').</p>
+        <p><strong>Срез (Определение 90):</strong> Разбиване S = {V₁, V₂} на V(G). Ребро (u,v) <em>прекосява</em> S, ако u ∈ V₁ и v ∈ V₂. Срезът е <em>съобразен</em> с E', ако нито едно ребро от E' не го прекосява. Реброто е <em>леко</em>, ако е с минимално тегло сред прекосяващите.</p>
+      </div>
+
+      <div class="sec-h">Алгоритъм 27 — Обща схема на алгоритъм за МПД</div>
+<pre><code><span class="cm">-- Алгоритъм 27: Обща схема за МПД</span>
+<span class="kw">Обща схема за МПД</span>(G: граф, w: тегловна функция)
+<span class="num">1</span>  A ← ∅
+<span class="num">2</span>  <span class="kw">while</span> A не образува ПД <span class="kw">do</span>
+<span class="num">3</span>      намери ребро e, което е сигурно за A
+<span class="num">4</span>      A ← A ∪ {e}
+<span class="num">5</span>  <span class="kw">return</span> A</code></pre>
+
+      <div class="thm">
+        <div class="thm-title">Теорема 93 — МПД теорема (Theorem 23.1 от [CLR])</div>
+        <p>Нека G = (V, E) е свързан тегловен граф с w: E → ℝ. Нека A ⊆ E е такова, че съществува МПД T, такова че A ⊆ E(T). Нека S = {V₁, V₂} е срез в G, съобразен с A. Нека e = (u, v) е произволно леко ребро, прекосяващо S. Тогава e е сигурно за A.</p>
+      </div>
+
+      <div class="sec-h">Доказателство на Теорема 93</div>
+      <div class="card def">
+        <div class="card-label">Доказателство (по лекциите)</div>
+        <p>Нека T е МПД с A ⊆ E(T). Ако e ∈ E(T) — готово. Нека e ∉ E(T).</p>
+        <p>Добавяме e към T → уницикличен покриващ граф U. Нека C е цикълът в U. Понеже e прекосява S и C е цикъл, в C има и второ ребро e', прекосяващо S (e' ≠ e).</p>
+        <p>Изтриваме e' от U → ново ПД T'. Тогава: w(T') = w(T) + w(e) - w(e')</p>
+        <p>Тъй като e е леко: w(e) ≤ w(e'), следователно w(e) - w(e') ≤ 0, значи w(T') ≤ w(T).</p>
+        <p>Тъй като T е МПД: w(T) ≤ w(T'). Следователно w(T) = w(T').</p>
+        <p>Следователно T' е МПД, и A ∪ {e} ⊆ E(T'). Значи e е сигурно за A. QED.</p>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">Конкретен пример — Визуализация на срез и леко ребро</div>
+        <div class="viz">
+Граф G (тегла на ребрата):
+        1
+   A ----- B
+   |       |
+  4|  (3)  |2
+   |       |
+   C ----- D
+        5
+
+Нека A = {} (празно множество), S = {V₁={A,C}, V₂={B,D}}
+
+Прекосяващи ребра:
+  (A,B) с тегло 1
+  (C,D) с тегло 5
+
+Леко прекосяващо ребро: (A,B) с тегло 1
+Теорема 93: (A,B) е сигурно за A={} → добавяме го в МПД ✓
+
+Следващ срез: S = {V₁={A,B,C}, V₂={D}}
+Прекосяващи: (B,D)=2, (C,D)=5
+Леко: (B,D)=2 → добавяме
+
+Следващ срез: S = {V₁={A,B,C,D}, V₂={}} → МПД = {(A,B), (A,C), (B,D)} с тегло 1+4+2=7
+        </div>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Теорема 93 = основата на Prim и Kruskal</li>
+          <li>Срез съобразен с A означава: никое ребро от A не го прекосява</li>
+          <li>Леко ребро = с минимално тегло сред прекосяващите дадения срез</li>
+          <li>Доказателството: добавяме лекото ребро, изтриваме по-тежкото от цикъла</li>
+          <li>Наблюдение 67: ПД съществува тстк G е свързан</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Формулирайте и докажете Теорема 93 (МПД теорема). Дефинирайте понятията срез, прекосяващо ребро, съобразен срез и леко ребро."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 3: Prim -->
+  <section class="topic" id="t3">
+    <div class="topic-header">
+      <h2>Алгоритъм на Prim (Алгоритъм 28)</h2>
+      <div class="topic-num">3</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Идея на Prim</div>
+        <p>Prim строи МПД като расте дърво от един начален връх s. На всяка итерация добавя леко ребро, прекосяващо среза {V(T), V\V(T)}, където V(T) е множеството от вече добавените върхове. Ребрата в A <strong>винаги образуват едно дърво</strong> (не гора).</p>
+      </div>
+
+      <div class="sec-h">Алгоритъм 28: МПД Prim2 (с приоритетна опашка)</div>
+<pre><code><span class="cm">-- Алгоритъм 28: МПД Prim2 (изтънчен вариант)</span>
+<span class="kw">МПД Prim2</span>(G = (V, E): неор. свързан граф, w: тегл. ф-я, s: стартов връх)
+<span class="num">1</span>  <span class="kw">foreach</span> u ∈ V
+<span class="num">2</span>      u.key ← ∞          <span class="cm">-- минимално тегло на ребро от u към дървото</span>
+<span class="num">3</span>      π[u] ← Nil
+<span class="num">4</span>  s.key ← 0
+<span class="num">5</span>  създай празна min-приоритетна опашка Q
+<span class="num">6</span>  Q ← V                <span class="cm">-- всички върхове в опашката (Build-Heap)</span>
+<span class="num">7</span>  <span class="kw">while</span> not isempty(Q) <span class="kw">do</span>
+<span class="num">8</span>      x ← Extract-Min(Q)   <span class="cm">-- върхът с минимален ключ</span>
+<span class="num">9</span>      <span class="kw">foreach</span> y ∈ adj[x]
+<span class="num">10</span>         <span class="kw">if</span> y ∈ Q <span class="kw">and</span> w(x,y) &lt; y.key
+<span class="num">11</span>             y.key ← w(x,y)  <span class="cm">-- Decrease-Key</span>
+<span class="num">12</span>             π[y] ← x
+<span class="num">13</span> <span class="kw">return</span> π[1..n]</code></pre>
+
+      <div class="sec-h">Конкретен пример — Prim върху граф с 5 върха</div>
+      <div class="card ex">
+        <div class="card-label">Стъпка по стъпка</div>
+        <div class="viz">
+Граф (тегла):
+    A-B: 4,  A-C: 2,  B-C: 1,  B-D: 5,  C-D: 8,  C-E: 10,  D-E: 2
+
+Старт от A (s=A):
+Начало: key[A]=0, key[B]=∞, key[C]=∞, key[D]=∞, key[E]=∞
+
+Итерация 1: Extract-Min → x=A (key=0)
+  Съседи на A: B(тегло 4), C(тегло 2)
+  → key[B]=4, π[B]=A; key[C]=2, π[C]=A
+  Q={B(4), C(2), D(∞), E(∞)}
+
+Итерация 2: Extract-Min → x=C (key=2)
+  Съседи на C: A(вадена), B(тегло 1 < 4), D(тегло 8), E(тегло 10)
+  → key[B]=1, π[B]=C; key[D]=8, π[D]=C; key[E]=10, π[E]=C
+  Q={B(1), D(8), E(10)}
+
+Итерация 3: Extract-Min → x=B (key=1)
+  Съседи на B: A(вадена), C(вадена), D(тегло 5 < 8)
+  → key[D]=5, π[D]=B
+  Q={D(5), E(10)}
+
+Итерация 4: Extract-Min → x=D (key=5)
+  Съседи на D: B(вадена), C(вадена), E(тегло 2 < 10)
+  → key[E]=2, π[E]=D
+  Q={E(2)}
+
+Итерация 5: Extract-Min → x=E (key=2), Q={}
+
+МПД: ребрата {(A,C), (C,B), (B,D), (D,E)} с тегло 2+1+5+2 = 10
+Дърво: A--C--B--D--E
+        </div>
+      </div>
+
+      <div class="thm">
+        <div class="thm-title">Теорема 94 — Коректност на Prim</div>
+        <p>Масивът π[1..n], върнат от Алгоритъм 28, реализира МПД на G. Доказателството използва Теорема 93: на всяка итерация реброто (x, π[x]) е леко прекосяващо среза {V\Q, Q}, който е съобразен с текущото A.</p>
+      </div>
+
+      <div class="sec-h">Сложност по време</div>
+      <table>
+        <tr><th>Вариант</th><th>Структура</th><th>Сложност</th><th>Кога е по-добър?</th></tr>
+        <tr><td>Базов (Prim1)</td><td>Масив + линейно търсене</td><td>Θ(n²)</td><td>При плътни графи (m ≈ n²)</td></tr>
+        <tr><td>Изтънчен (Prim2)</td><td>Двоична пирамида</td><td>Θ(m·lg n)</td><td>При разредени графи (m ≪ n²)</td></tr>
+        <tr><td>Prim с Fibonacci heap</td><td>Fibonacci heap</td><td>Θ(m + n·lg n)</td><td>Теоретично оптимален за разредени графи</td></tr>
+      </table>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Prim расте ЕДНО дърво (за разлика от Kruskal, който расте гора)</li>
+          <li>key[v] = минималното тегло на ребро, свързващо v с дървото</li>
+          <li>Decrease-Key е ключова операция — при двоична пирамида: Θ(lg n)</li>
+          <li>Коректността следва директно от Теорема 93</li>
+          <li>Extract-Min: n пъти × Θ(lg n) = Θ(n·lg n); foreach: m пъти × Θ(lg n) = Θ(m·lg n)</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Опишете алгоритъма на Prim (псевдокод). Обяснете как се използва Теорема 93 за доказателство на коректност. Каква е сложността при двоична пирамида?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 4: Kruskal -->
+  <section class="topic" id="t4">
+    <div class="topic-header">
+      <h2>Алгоритъм на Kruskal (Алгоритъм 29)</h2>
+      <div class="topic-num">4</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Идея на Kruskal</div>
+        <p>Kruskal сортира ребрата по тегло и ги разглежда едно по едно. Ако крайните точки на ребро са в различни дървета на текущата гора F, сливаме тези дървета чрез реброто. В края остава едно дърво — МПД.</p>
+      </div>
+
+      <div class="sec-h">Алгоритъм 29: МПД Kruskal (ефикасна реализация)</div>
+<pre><code><span class="cm">-- Алгоритъм 29: МПД Kruskal (с Union-Find)</span>
+<span class="kw">МПД Kruskal</span>(G = ({1,...,n}, E): неор. свързан граф, w: тегл. ф-я)
+<span class="num">1</span>  A ← ∅
+<span class="num">2</span>  направи разбиването {{1}, {2}, ..., {n}}  <span class="cm">-- n едноелементни дяла</span>
+<span class="num">3</span>  сортирай E по тегла в редица e₁, e₂, ..., eₘ   <span class="cm">-- Θ(m·lg m)</span>
+<span class="num">4</span>  count ← 0
+<span class="num">5</span>  <span class="kw">while</span> count &lt; n-1 <span class="kw">do</span>
+<span class="num">6</span>      нека e = (u, v) е следващото ребро в сортираната редица
+<span class="num">7</span>      <span class="kw">if</span> Find(u) ≠ Find(v)    <span class="cm">-- краищата са в различни компоненти?</span>
+<span class="num">8</span>          A ← A ∪ {e}
+<span class="num">9</span>          Union(Find(u), Find(v))
+<span class="num">10</span>         count++
+<span class="num">11</span> <span class="kw">return</span> A</code></pre>
+
+      <div class="sec-h">Конкретен пример — Kruskal върху граф с 5 върха</div>
+      <div class="card ex">
+        <div class="card-label">Стъпка по стъпка</div>
+        <div class="viz">
+Граф: A-B:4, A-C:2, B-C:1, B-D:5, C-D:8, C-E:10, D-E:2
+
+Сортирани ребра: B-C:1, A-C:2, D-E:2, A-B:4, B-D:5, C-D:8, C-E:10
+
+Начало: {{A}, {B}, {C}, {D}, {E}}
+
+Ребро B-C (тегло 1): Find(B)={B} ≠ Find(C)={C} → Union
+  A←{A}  BC←{B,C}  D←{D}  E←{E}
+  A ← {B-C}
+
+Ребро A-C (тегло 2): Find(A)={A} ≠ Find(C)={B,C} → Union
+  ABC←{A,B,C}  D←{D}  E←{E}
+  A ← {B-C, A-C}
+
+Ребро D-E (тегло 2): Find(D)={D} ≠ Find(E)={E} → Union
+  ABC←{A,B,C}  DE←{D,E}
+  A ← {B-C, A-C, D-E}
+
+Ребро A-B (тегло 4): Find(A)={A,B,C} = Find(B)={A,B,C} → ПРОПУСКАМЕ (цикъл!)
+
+Ребро B-D (тегло 5): Find(B)={A,B,C} ≠ Find(D)={D,E} → Union
+  ABCDE←{A,B,C,D,E}
+  A ← {B-C, A-C, D-E, B-D}
+
+count = 4 = n-1 → СПИРАМЕ
+
+МПД = {B-C(1), A-C(2), D-E(2), B-D(5)} с тегло = 10
+        </div>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Kruskal расте ГОРА (много дървета), докато Prim расте ЕДНО дърво</li>
+          <li>Сложност: Θ(m·lg n) — доминира сортирането Θ(m·lg m) = Θ(m·lg n)</li>
+          <li>Ефикасността зависи от реализацията на Find и Union (Union-Find)</li>
+          <li>Коректността: Теорема 97 — Kruskal generic връща МПД (чрез Теорема 93)</li>
+          <li>Теорема 95: Kruskal терминира; Теорема 96: Kruskal връща ПД</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="card-label">Връзка с другите теми</div>
+        <p>И Prim, и Kruskal са алчни алгоритми — локален оптимален избор води до глобален оптимум (гарантирано от Теорема 93). Разликата: Prim е като BFS (расте от един връх), Kruskal е като сортиране + Union-Find.</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Опишете алгоритъма на Kruskal (псевдокод). Как се осигурява ефикасност? Каква е сложността?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 5: Union-Find -->
+  <section class="topic" id="t5">
+    <div class="topic-header">
+      <h2>Union-Find структури данни (Алгоритми 30, 31)</h2>
+      <div class="topic-num">5</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция</div>
+        <p>Union-Find (Disjoint Set Union) е структура данни за поддържане на разбиване на опорно множество V с две операции:</p>
+        <ul class="bullet">
+          <li><strong>Find(u):</strong> връща лидера (идентификатора) на дяла, в който е u</li>
+          <li><strong>Union(i, j):</strong> слива дяловете с лидери i и j в един дял</li>
+        </ul>
+        <p>Реализация: ориентирана гора от антиарборесценции. Лидерът = коренът на дървото. π[u] = родителят на u; за корен: π[u] = u (примка към себе си).</p>
+      </div>
+
+      <div class="sec-h">Алгоритъм 30: Find</div>
+<pre><code><span class="cm">-- Алгоритъм 30: Find</span>
+<span class="kw">Find</span>(u: елемент от V)
+<span class="num">1</span>  <span class="kw">if</span> u ≠ π[u]
+<span class="num">2</span>      <span class="kw">return</span> Find(π[u])   <span class="cm">-- качваме се нагоре по дървото</span>
+<span class="num">3</span>  <span class="kw">else</span>
+<span class="num">4</span>      <span class="kw">return</span> u             <span class="cm">-- u е корен (лидер)</span></code></pre>
+
+      <div class="sec-h">Алгоритъм 31: Union by Rank</div>
+<pre><code><span class="cm">-- Алгоритъм 31: Union by Rank (евристика)</span>
+<span class="kw">Union</span>(i, j: лидери на различни дялове)
+<span class="num">1</span>  <span class="kw">if</span> rank[i] &gt; rank[j]
+<span class="num">2</span>      π[j] ← i           <span class="cm">-- по-ниско дърво се закача под по-високото</span>
+<span class="num">3</span>  <span class="kw">else if</span> rank[i] &lt; rank[j]
+<span class="num">4</span>      π[i] ← j
+<span class="num">5</span>  <span class="kw">else</span>                    <span class="cm">-- равни рангове</span>
+<span class="num">6</span>      π[j] ← i
+<span class="num">7</span>      rank[i]++           <span class="cm">-- увеличаваме ранга само при равни рангове</span></code></pre>
+
+      <div class="thm">
+        <div class="thm-title">Теорема 98 — Максималната височина при Union by Rank</div>
+        <p>При изпълнение на Union by Rank, максималната височина на дървото с n елементи е O(lg n).</p>
+        <p><strong>Следствие за Kruskal:</strong> При Union by Rank, Find работи в O(lg n) → while-цикълът на Kruskal работи в O(m·lg n) → общата сложност на Kruskal е Θ(m·lg n).</p>
+      </div>
+
+      <div class="sec-h">Визуализация — Преди и след Union by Rank</div>
+      <div class="card ex">
+        <div class="card-label">Пример: Union(1,3) след Union(1,2) и Union(3,4)</div>
+        <div class="viz">
+След Union(1,2): rank[1]=1        След Union(3,4): rank[3]=1
+       1                                  3
+       |                                  |
+       2                                  4
+
+Union(1,3): rank[1] = rank[3] = 1 → закачаме 3 под 1, rank[1]++
+
+          1                (rank=2)
+         / \
+        2   3              (rank=1 всяко)
+            |
+            4
+
+Find(4): 4→3→1  → 2 стъпки
+Find(2): 2→1    → 1 стъпка
+
+Ако вместо Union by Rank бяхме правили:
+  Union(3 под 1) Вариант 2: 1→2, 1→3→4  (по-ниско) ← по-добро за Find
+  Вариант 1 (от лекцията): закачаме 3 под 1 = ВАРИАНТ 1 е бърз за Union O(1)
+                            но може да стигне линейна дълбочина без евристиката!
+
+Union by Rank ГАРАНТИРА: максимална височина ≤ ⌊lg n⌋
+        </div>
+      </div>
+
+      <div class="sec-h">Сравнение на подходите</div>
+      <table>
+        <tr><th>Реализация</th><th>Find</th><th>Union</th><th>Приложение в Kruskal</th></tr>
+        <tr><td>Всеки елемент носи името</td><td>Θ(1)</td><td>Θ(n)</td><td>Θ(nm) — бавно</td></tr>
+        <tr><td>Указател към хранилище</td><td>Θ(1)</td><td>Θ(n)</td><td>Θ(nm) — бавно</td></tr>
+        <tr><td>Ориентирана гора (без евристика)</td><td>O(n)</td><td>Θ(1)</td><td>O(nm) — бавно</td></tr>
+        <tr><td><strong>Union by Rank</strong></td><td><strong>O(lg n)</strong></td><td><strong>Θ(1)*</strong></td><td><strong>Θ(m·lg n) ✓</strong></td></tr>
+      </table>
+      <p><em>*Union работи в Θ(1), ако лидерите са известни (Find е отделна операция)</em></p>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Наблюдение 68: Сложността на Find = Θ(h), където h е височината на дървото</li>
+          <li>Union by Rank: закачаме по-ниското дърво под по-високото; при равни — увеличаваме ранга</li>
+          <li>Теорема 98: max височина при Union by Rank = O(lg n)</li>
+          <li>Rank ≠ реална височина! Rank е горна граница на височината</li>
+          <li>Проблем с Find без евристика: линеен списък → O(n) Find</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="card-label">Връзка с другите теми</div>
+        <p>Union-Find е обща структура данни с приложения извън МПД: задачата 2-SAT, проверка за цикличност, мрежи и клъстеризация. Без Union-Find алгоритъмът на Kruskal би бил O(nm) вместо O(m·lg n).</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Опишете Union-Find структурата и евристиката Union by Rank. Защо е нужна тази евристика? Формулирайте Теорема 98. Как влияе на сложността на Kruskal?"</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const body = document.body;
+  body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+function updateProgress() {
+  const boxes = document.querySelectorAll('input[type="checkbox"]');
+  const checked = Array.from(boxes).filter(b => b.checked).length;
+  const pct = Math.round(checked / boxes.length * 100);
+  document.getElementById('progress-bar-inner').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${pct}% готовност (${checked}/${boxes.length} теми)`;
+}
+const sections = document.querySelectorAll('.topic');
+const links = document.querySelectorAll('#sidebar a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+  links.forEach(a => { a.classList.remove('active'); if (a.getAttribute('href') === '#' + current) a.classList.add('active'); });
+});
+</script>
+</body>
+</html>

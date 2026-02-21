@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лекция 4 — Въведение. Елементарни сортиращи алгоритми</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+<style>
+  :root {
+    --bg: #0d1117; --bg2: #161b22; --bg3: #1c2128;
+    --text: #e6edf3; --muted: #8b949e;
+    --blue: #1f6feb; --blue-light: #388bfd; --blue-bg: #0d2140;
+    --green: #2ea043; --green-light: #56d364; --green-bg: #0d3020;
+    --yellow: #d29922; --yellow-light: #e3b341; --yellow-bg: #2d2000;
+    --purple: #8957e5; --purple-light: #bc8cff; --purple-bg: #1c1040;
+    --red: #da3633; --red-light: #f85149; --red-bg: #2d0606;
+    --border: #30363d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; line-height: 1.7; }
+  a { color: var(--blue-light); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Sidebar */
+  #sidebar {
+    position: fixed; top: 0; left: 0; width: 260px; height: 100vh;
+    background: var(--bg2); border-right: 1px solid var(--border);
+    overflow-y: auto; padding: 20px 0; z-index: 100;
+  }
+  #sidebar h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 0 16px 10px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+  #sidebar ul { list-style: none; padding: 0; }
+  #sidebar ul li a { display: block; padding: 6px 16px; font-size: 13px; color: var(--muted); border-left: 3px solid transparent; }
+  #sidebar ul li a:hover { color: var(--text); border-left-color: var(--blue-light); background: var(--bg3); }
+  #sidebar .section-header { padding: 10px 16px 4px; font-size: 11px; text-transform: uppercase; color: var(--blue-light); letter-spacing: 1px; margin-top: 8px; }
+
+  /* Main content */
+  #main { margin-left: 260px; padding: 40px 48px; max-width: 1100px; }
+
+  /* Page header */
+  .page-header { border-bottom: 1px solid var(--border); margin-bottom: 40px; padding-bottom: 24px; }
+  .page-header .lecture-badge { background: var(--blue-bg); color: var(--blue-light); border: 1px solid var(--blue); padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; margin-bottom: 12px; }
+  .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+  .page-header .subtitle { color: var(--muted); font-size: 15px; }
+  .page-header .meta { margin-top: 12px; font-size: 13px; color: var(--muted); }
+
+  /* Section */
+  .topic { margin-bottom: 56px; padding-top: 16px; border-top: 2px solid var(--border); }
+  .topic:first-of-type { border-top: none; }
+  .topic-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 24px; color: var(--text); display: flex; align-items: center; gap: 12px; }
+  .topic-title .icon { font-size: 1.2rem; }
+
+  /* Cards */
+  .card { border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; border: 1px solid; }
+  .card-blue   { background: var(--blue-bg);   border-color: var(--blue);   }
+  .card-green  { background: var(--green-bg);  border-color: var(--green);  }
+  .card-yellow { background: var(--yellow-bg); border-color: var(--yellow); }
+  .card-purple { background: var(--purple-bg); border-color: var(--purple); }
+  .card-red    { background: var(--red-bg);    border-color: var(--red);    }
+  .card-gray   { background: var(--bg2);       border-color: var(--border); }
+
+  .card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 10px; }
+  .card-blue   .card-label { color: var(--blue-light); }
+  .card-green  .card-label { color: var(--green-light); }
+  .card-yellow .card-label { color: var(--yellow-light); }
+  .card-purple .card-label { color: var(--purple-light); }
+  .card-red    .card-label { color: var(--red-light); }
+  .card-gray   .card-label { color: var(--muted); }
+
+  .card h3 { font-size: 1rem; margin-bottom: 10px; }
+  .card p, .card li { font-size: 15px; }
+  .card ul, .card ol { padding-left: 24px; margin-top: 8px; }
+  .card ul li, .card ol li { margin-bottom: 6px; }
+
+  /* Pseudocode */
+  pre { border-radius: 8px; margin: 12px 0; overflow-x: auto; }
+  pre code { font-size: 14px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+
+  /* Inline code */
+  code:not(pre code) { background: var(--bg3); border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+
+  /* ASCII visualization */
+  .ascii-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-family: monospace; font-size: 13px; white-space: pre; overflow-x: auto; color: var(--green-light); margin: 12px 0; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th { background: var(--bg3); padding: 10px 14px; text-align: left; border: 1px solid var(--border); color: var(--muted); font-weight: 600; }
+  td { padding: 8px 14px; border: 1px solid var(--border); }
+  tr:nth-child(even) td { background: var(--bg2); }
+
+  /* Step-by-step */
+  .steps { counter-reset: step; }
+  .step { display: flex; gap: 14px; margin-bottom: 14px; align-items: flex-start; }
+  .step-num { background: var(--blue); color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+  .step-content { flex: 1; }
+  .step-content p { margin-bottom: 4px; font-size: 15px; }
+
+  /* Highlight inline */
+  .hl-blue { color: var(--blue-light); font-weight: 600; }
+  .hl-green { color: var(--green-light); font-weight: 600; }
+  .hl-yellow { color: var(--yellow-light); font-weight: 600; }
+  .hl-purple { color: var(--purple-light); font-weight: 600; }
+  .hl-red { color: var(--red-light); font-weight: 600; }
+
+  /* Proof block */
+  .proof-block { border-left: 4px solid var(--purple); padding-left: 16px; margin: 12px 0; }
+  .proof-block .proof-label { font-size: 12px; text-transform: uppercase; color: var(--purple-light); font-weight: 700; margin-bottom: 8px; }
+
+  /* Back to top */
+  .back-top { display: inline-block; margin-top: 8px; font-size: 13px; color: var(--muted); }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    #sidebar { display: none; }
+    #main { margin-left: 0; padding: 24px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <h2>Лекция 4</h2>
+  <div class="section-header">Сортиране</div>
+  <ul>
+    <li><a href="#sorting-task">Задачата Сортиране</a></li>
+    <li><a href="#binary-search">Двоично търсене</a></li>
+    <li><a href="#other-apps">Други приложения</a></li>
+    <li><a href="#stability">Стабилност</a></li>
+    <li><a href="#insertion-sort">Insertion Sort</a></li>
+    <li><a href="#insertion-proof">Доказателство (Лема 23 + Теорема 56)</a></li>
+    <li><a href="#complexity-summary">Обобщение на сложността</a></li>
+  </ul>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+
+<div class="page-header">
+  <div class="lecture-badge">Лекция 4</div>
+  <h1>Въведение. Елементарни сортиращи алгоритми.</h1>
+  <div class="subtitle">Задачата Сортиране, Двоично търсене, Стабилност, Insertion Sort</div>
+  <div class="meta">ДАА — проф. Минко Марков, 2026 &nbsp;|&nbsp; Теория за изпит</div>
+</div>
+
+<!-- ============================================================
+     TOPIC 1: Задачата Сортиране
+     ============================================================ -->
+<section class="topic" id="sorting-task">
+  <div class="topic-title"><span class="icon">📋</span> Задачата Сортиране</div>
+
+  <div class="card card-blue">
+    <div class="card-label">Точна дефиниция — по лекции на преподавателя</div>
+    <p><strong>Изч. Задача 13: Сортиране</strong></p>
+    <ul>
+      <li><strong>Екземпляр:</strong> Редица \(X = (a_1, a_2, \ldots, a_n)\), чиито елементи са от множество \(A\), върху което е дефинирана релация на пълна преднаредба \(\preceq \subseteq A \times A\).</li>
+      <li><strong>Решение:</strong> Пермутация \((a_1', a_2', \ldots, a_n')\) на елементите на \(X\), такава че \(a_1' \preceq a_2' \preceq \cdots \preceq a_n'\).</li>
+    </ul>
+    <p style="margin-top:10px; color: var(--muted); font-size:14px;">Забележка: Екземплярът е редицата, а не мултимножеството. Елементите не са непременно числа — те могат да имат ключ и сателитна информация.</p>
+  </div>
+
+  <div class="card card-green">
+    <div class="card-label">Лесно обяснение</div>
+    <p>Имаш купчина карти, разбъркани произволно. Целта е да ги наредиш от най-малката до най-голямата. Ако картите имат стойности (ключове) и допълнителна информация (например цвят), ние сортираме само по ключовете — останалото вървИ с тях.</p>
+    <p style="margin-top:8px;">Важното е, че <span class="hl-green">редицата е наредена</span> — a₁ стои на позиция 1, a₂ на позиция 2 и т.н. Не е просто множество, защото може да има повторения и редът преди сортирането е важен.</p>
+  </div>
+
+  <div class="card card-yellow">
+    <div class="card-label">Ключови неща за запомняне</div>
+    <ul>
+      <li>Екземплярът е <strong>редица</strong>, не (мулти)множество.</li>
+      <li>Решението е <strong>пермутация</strong> на входните елементи в сортиран вид.</li>
+      <li>Релацията \(\preceq\) трябва да е <strong>пълна преднаредба</strong> (рефлексивна, транзитивна, тотална).</li>
+      <li>В учебна цел разглеждаме сортиране на цели числа с \(\preceq = \leq\).</li>
+      <li>На практика: записи с ключ и сателитна информация; може да има първичен и вторичен ключ.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     TOPIC 2: Двоично търсене
+     ============================================================ -->
+<section class="topic" id="binary-search">
+  <div class="topic-title"><span class="icon">🔍</span> Алгоритъмът за двоично търсене (итеративен) с доказателство за коректност</div>
+
+  <div class="card card-blue">
+    <div class="card-label">Точна дефиниция — по лекции на преподавателя</div>
+    <p><strong>Изч. Задача 16: Търсене</strong><br>
+    Екземпляр: a₁, a₂, …, aₙ, key — обекти от един тип.<br>
+    Решение: Индексът на елемент равен на key, или индикация, че такъв няма.</p>
+    <p style="margin-top:8px;">Алгоритъмът изисква масивът да е <span class="hl-blue">сортиран без повторения</span>. Сложността е <strong>Θ(lg n)</strong> в най-лошия случай — точно \(\lfloor\lg n\rfloor + 1\) сравнения.</p>
+  </div>
+
+  <div class="card card-gray">
+    <div class="card-label">Псевдокод — Алгоритъм 4: Alg BSearch Iter</div>
+<pre><code class="plaintext">Alg BSearch Iter (Сортиран числен масив A[1..n] без повторения, число key)
+1  l ← 1
+2  h ← n
+3  while l ≤ h do
+4      mid ← ⌊(l+h)/2⌋
+5      if A[mid] = key
+6          return mid
+7      else if key < A[mid]
+8          h ← mid - 1
+9      else
+10         l ← mid + 1
+11 return -1</code></pre>
+  </div>
+
+  <div class="card card-green">
+    <div class="card-label">Лесно обяснение с аналогия</div>
+    <p>Представи си, че търсиш дума в речник. Отваряш на средата — ако думата е по-рано в азбуката, гледаш в лявата половина; ако е по-късно — в дясната. Повтаряш, докато намериш думата или не останат страници. С 7 милиарда записа са нужни само 33 стъпки!</p>
+    <div class="ascii-box">
+A: [ 2  5  8 12 16 19 24 ]  key = 16
+      l              h
+
+Стъпка 1: mid=4, A[4]=12 < 16  → l = 5
+               l     h
+Стъпка 2: mid=6, A[6]=19 > 16  → h = 5
+               l,h
+Стъпка 3: mid=5, A[5]=16 = 16  → return 5</div>
+  </div>
+
+  <div class="card card-purple">
+    <div class="card-label">Доказателство за коректност (Теорема 54)</div>
+    <p><strong>Теорема 54:</strong> За всяко изпълнение на Alg BSearch Iter(A[1..n], key), ако key се среща в A, алгоритъмът връща индекса на key; иначе връща −1.</p>
+
+    <div class="proof-block">
+      <div class="proof-label">Инвариант 5</div>
+      <p>Всеки път, когато изпълнението е на ред 3: ако key ∈ A[1..n], то key ∈ A[l..h].</p>
+    </div>
+
+    <div class="steps" style="margin-top:16px;">
+      <div class="step">
+        <div class="step-num">Б</div>
+        <div class="step-content"><p><strong>База:</strong> При първото достигане на ред 3, l=1 и h=n, така че A[l..h] = A[1..n]. Инвариантът е тривиално верен.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">П</div>
+        <div class="step-content">
+          <p><strong>Поддръжка:</strong> Тялото на цикъла ще се изпълни, значи A[mid] ≠ key. Два случая:</p>
+          <ul>
+            <li><strong>key &lt; A[mid]:</strong> Заради транзитивността на &lt; и факта, че A е сортиран, key не е в A[mid..h]. Затова h ← mid-1, и инвариантът остава верен.</li>
+            <li><strong>key &gt; A[mid]:</strong> Аналогично, key не е в A[l..mid-1], затова l ← mid+1.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">Т</div>
+        <div class="step-content">
+          <p><strong>Терминация:</strong> Два начина за изход от цикъла:</p>
+          <ul>
+            <li><strong>l &gt; h:</strong> A[l..h] е празен. От инварианта: key не е в A[1..n]. Алгоритъмът правилно връща −1.</li>
+            <li><strong>A[mid] = key:</strong> Алгоритъмът правилно връща mid.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-red">
+    <div class="card-label">Изпитен въпрос</div>
+    <p>"Дайте псевдокод на итеративното двоично търсене и докажете коректността му чрез инвариант на цикъл. Какъв е инвариантът?" </p>
+    <p style="margin-top:8px;">Отговорът включва: псевдода, формулировката на Инвариант 5, базата, поддръжката (двата случая), терминацията (двата случая).</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     TOPIC 3: Други приложения
+     ============================================================ -->
+<section class="topic" id="other-apps">
+  <div class="topic-title"><span class="icon">⚡</span> Други приложения на сортирането</div>
+
+  <div class="card card-blue">
+    <div class="card-label">Точна дефиниция — по лекции на преподавателя</div>
+    <p>Предимството на сортираните данни се корени в <strong>транзитивността</strong> на релацията ≼. Ако редицата е сортирана и aᵢ ≼ x, то aⱼ ≼ x за всяко j &lt; i.</p>
+    <p style="margin-top:8px;">Алгоритмичният фолклор: ако сте изправен пред непозната задача, едно от първите неща, които трябва да опитате, е да сортирате данните.</p>
+  </div>
+
+  <table>
+    <tr><th>Задача</th><th>Наивен алг.</th><th>С предварително сортиране</th></tr>
+    <tr><td>Най-близки елементи (1D)</td><td>Θ(n²)</td><td>Sort + едно сканиране = Θ(n lg n)</td></tr>
+    <tr><td>Уникалност на елементите</td><td>Θ(n²)</td><td>Sort + едно сканиране = Θ(n lg n)</td></tr>
+    <tr><td>Обединение на масиви</td><td>Θ(mn)</td><td>Sort + merge = Θ((m+n) lg n)</td></tr>
+    <tr><td>Мода</td><td>Θ(n²)</td><td>Sort + едно сканиране = Θ(n lg n)</td></tr>
+    <tr><td>Медиана</td><td>Θ(n²)</td><td>Sort + средният ел. = Θ(n lg n)</td></tr>
+    <tr><td>2SUM</td><td>Θ(n²)</td><td>Sort + двоични указатели = Θ(n)</td></tr>
+    <tr><td>3SUM</td><td>Θ(n³)</td><td>Sort + итерация = Θ(n²)</td></tr>
+  </table>
+
+  <div class="card card-green">
+    <div class="card-label">Лесно обяснение</div>
+    <p>Сортирането е като "подреждане на гардероба" — след като го подредите веднъж, намирате всичко бързо. Примерно, за намиране на дублиращи се числа: в несортиран масив трябва да сравните всяка двойка (O(n²)), но в сортиран — просто проверявате съседите (O(n) след O(n lg n) за сортиране).</p>
+  </div>
+
+  <div class="card card-yellow">
+    <div class="card-label">Ключови неща за запомняне</div>
+    <ul>
+      <li>Почти всяка задача "се свежда" до Θ(n lg n) с предварително сортиране.</li>
+      <li>Двоичното търсене изисква сортиран масив — дава Θ(lg n) вместо Θ(n).</li>
+      <li>3SUM има приложения в компютърната геометрия (3 прави пресичащи се в точка, разделяне на отсечки и др.).</li>
+      <li>Медианата може да се намери и в Θ(n) без сортиране — алгоритъмът SELECT (Лекция 6).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     TOPIC 4: Стабилност
+     ============================================================ -->
+<section class="topic" id="stability">
+  <div class="topic-title"><span class="icon">⚖️</span> Стабилност на сортиращи алгоритми</div>
+
+  <div class="card card-blue">
+    <div class="card-label">Точна дефиниция — по лекции на преподавателя (Определение 50)</div>
+    <p><strong>Стабилно сортиране</strong> е сортиране, което не променя взаимното разположение на елементи с еднакви ключове.</p>
+    <p style="margin-top:8px;">При стабилно сортиране: за всеки два елемента с еднакви ключове, ако единият е вляво от другия преди сортирането, той задължително ще е вляво след сортирането.</p>
+  </div>
+
+  <div class="card card-green">
+    <div class="card-label">Лесно обяснение с пример</div>
+    <p>Представи си: сортираш студенти по факултетен номер. Ако двама студенти имат еднакви номера, стабилното сортиране ще ги остави в оригиналния им ред (например, по реда на имената им). Нестабилно сортиране може да ги разбърка произволно.</p>
+    <p style="margin-top:8px;"><strong>Практическото значение (Задача 51):</strong> Ако искаш да сортираш по (ключ1, ключ2), можеш да направиш 2 стабилни сортирания — първо по ключ2, после по ключ1. Резултатът е лексикографски сортиран. <em>Нестабилното</em> второ сортиране би разбъркало наредбата по ключ2.</p>
+    <div class="ascii-box">
+ВХОД:  (1,4)  (3,2)  (1,2)  (3,1)
+
+СТАБИЛНО сортиране по първи ключ:
+  (1,4)  (1,2)  (3,2)  (3,1)  ← Запазен ред (1,4) преди (1,2)
+
+НЕСТАБИЛНО може да даде:
+  (1,2)  (1,4)  (3,1)  (3,2)  ← Редът е нарушен!</div>
+  </div>
+
+  <div class="card card-yellow">
+    <div class="card-label">Ключови неща за запомняне</div>
+    <ul>
+      <li><strong>Стабилни алгоритми:</strong> Insertion Sort, Merge Sort, Counting Sort.</li>
+      <li><strong>Нестабилни алгоритми:</strong> Heap Sort, Quick Sort, Selection Sort.</li>
+      <li>Всеки нестабилен алг. може да се стабилизира чрез добавяне на началната позиция като вторичен ключ — но това изисква Θ(n) допълнителна памет.</li>
+      <li>Стабилизирането нарушава in-place свойството!</li>
+    </ul>
+  </div>
+
+  <div class="card card-red">
+    <div class="card-label">Изпитен въпрос</div>
+    <p>"Дефинирайте стабилно сортиране. Защо е важно? Дайте пример, в който нестабилното сортиране дава грешен резултат при двуфазно сортиране."</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     TOPIC 5: Insertion Sort
+     ============================================================ -->
+<section class="topic" id="insertion-sort">
+  <div class="topic-title"><span class="icon">🃏</span> Алгоритъм Insertion Sort — псевдокод</div>
+
+  <div class="card card-blue">
+    <div class="card-label">Точна дефиниция — по лекции на преподавателя (Алгоритъм 5)</div>
+    <p>Insertion Sort сортира по начин, напомнящ наредждането на карти в ръка: за всяка нова карта (A[i]), тя се "пъха" на правилното място в вече сортираната лява зона A[1..i-1].</p>
+  </div>
+
+  <div class="card card-gray">
+    <div class="card-label">Псевдокод — Алгоритъм 5</div>
+<pre><code class="plaintext">Insertion Sort(A[1..n]: array of integers)
+1  for i ← 2 to n
+2      key ← A[i]
+3      j ← i - 1
+4      while j > 0 and A[j] > key do
+5          A[j+1] ← A[j]
+6          j--
+7      A[j+1] ← key</code></pre>
+  </div>
+
+  <div class="card card-green">
+    <div class="card-label">Пример — стъпка по стъпка</div>
+    <p>Вход: A = [5, 2, 4, 6, 1, 3]</p>
+<div class="ascii-box">
+i=2: key=2, j=1
+  A[1]=5 > 2 → A[2]←5, j=0
+  A[1] ← 2    Result: [2, 5, 4, 6, 1, 3]
+
+i=3: key=4, j=2
+  A[2]=5 > 4 → A[3]←5, j=1
+  A[1]=2 ≤ 4  → stop
+  A[2] ← 4    Result: [2, 4, 5, 6, 1, 3]
+
+i=4: key=6, j=3
+  A[3]=5 ≤ 6  → stop
+  A[4] ← 6    Result: [2, 4, 5, 6, 1, 3]
+
+i=5: key=1, j=4
+  A[4]=6>1→ A[5]←6; A[3]=5>1→ A[4]←5;
+  A[2]=4>1→ A[3]←4; A[1]=2>1→ A[2]←2; j=0
+  A[1] ← 1    Result: [1, 2, 4, 5, 6, 3]
+
+i=6: key=3, j=5
+  A[5]=6>3→ A[6]←6; A[4]=5>3→ A[5]←5;
+  A[3]=4>3→ A[4]←4; A[2]=2≤3 → stop
+  A[3] ← 3    Result: [1, 2, 3, 4, 5, 6] ✓</div>
+  </div>
+
+  <div class="card card-yellow">
+    <div class="card-label">Сложност и свойства</div>
+    <ul>
+      <li><strong>Сложност по време:</strong> Θ(n²) в най-лошия случай (обратно сортиран вход).</li>
+      <li><strong>Сложност по памет:</strong> Θ(1) допълнителна памет — in-place алгоритъм.</li>
+      <li><strong>Стабилен:</strong> Да! Заради строгото неравенство <code>A[j] &gt; key</code> на ред 4 — при равни ключове не се разменя редът.</li>
+      <li>Много добър за <em>почти сортирани</em> масиви (близо до Θ(n) в такъв случай).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     TOPIC 6: Доказателство за коректност
+     ============================================================ -->
+<section class="topic" id="insertion-proof">
+  <div class="topic-title"><span class="icon">📐</span> Доказателство за коректност на Insertion Sort (Лема 23 и Теорема 56)</div>
+
+  <div class="card card-blue">
+    <div class="card-label">Идея на доказателството — по лекции на преподавателя</div>
+    <p>Доказателството е <strong>двустъпково</strong> — отвътре навън:</p>
+    <ol style="padding-left:20px; margin-top:8px;">
+      <li><strong>Лема 23</strong> — доказва ефекта от <em>вътрешния</em> (while) цикъл: той правилно поставя key на позицията j+1.</li>
+      <li><strong>Теорема 56</strong> — използва Лема 23, за да докаже, че <em>外ният</em> (for) цикъл сортира целия масив.</li>
+    </ol>
+  </div>
+
+  <div class="card card-purple">
+    <div class="card-label">Лема 23 — Коректността на вътрешния цикъл</div>
+    <p><strong>Формулировка:</strong> Разглеждаме едно изпълнение на for-цикъла (редове 1–7). Нека t₁ е първото достигане на ред 4, t₂ е последното достигане на ред 4. Нека A¹ e масивът в момент t₁, A² в момент t₂. Допускаме, че A¹[1..i-1] е сортиран, key = A¹[i], j₁ = i-1. Тогава в момент t₂:</p>
+    <ul style="margin-top:8px;">
+      <li>(α) A²[1..j₂] = A¹[1..j₂] и елементите му са точно тези от A¹[1..i-1], по-малки или равни на key;</li>
+      <li>(β) A²[j₂+2..i] = A¹[j₂+1..i-1] и елементите му са точно тези от A¹[1..i-1], по-големи от key.</li>
+    </ul>
+
+    <div class="proof-block" style="margin-top:16px;">
+      <div class="proof-label">Инвариант 7 — вътрешният цикъл</div>
+      <p>При всяко достигане на ред 4:</p>
+      <ul>
+        <li>(I) A[1..j] = A¹[1..j]</li>
+        <li>(II) A[j+2..i] = A¹[j+1..i-1]</li>
+        <li>(III) За всяко x ∈ A[j+2..i]: x &gt; key</li>
+      </ul>
+    </div>
+
+    <div class="steps" style="margin-top:14px;">
+      <div class="step">
+        <div class="step-num">Б</div>
+        <div class="step-content">
+          <p><strong>База (t₁, j = i-1):</strong></p>
+          <ul>
+            <li>(I): A[1..i-1] = A¹[1..i-1] — тривиално, масивът не е сменен.</li>
+            <li>(II): A[i+1..i] и A¹[i..i-1] са <em>празни</em> — верно в празния смисъл.</li>
+            <li>(III): Верно в празен смисъл.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">П</div>
+        <div class="step-content">
+          <p><strong>Поддръжка:</strong> Тялото се изпълнява (j &gt; 0 и A[j] &gt; key). Ред 5: A[j+1] ← A[j], ред 6: j--.</p>
+          <ul>
+            <li>(I): A[1..j-1] не е сменен. След j--, спрямо новото j: A[1..j] = A¹[1..j]. ✓</li>
+            <li>(II): A[j+1..i] = A¹[j..i-1] след размяната; след j-- → A[j+2..i] = A¹[j+1..i-1]. ✓</li>
+            <li>(III): A[j] &gt; key (условие за итерация) и от (III) преди — A[j+2..i] &gt; key; след j-- → A[j+2..i] &gt; key. ✓</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">Т</div>
+        <div class="step-content">
+          <p><strong>Терминация (t₂):</strong> Не е вярно (j &gt; 0 ∧ A[j] &gt; key).</p>
+          <ul>
+            <li><strong>Случай j₂ = 0:</strong> A[1..j₂] е празен; A[2..i] = A¹[1..i-1] и всички &gt; key → (α) верно в пр. смисъл; (β) верно. ✓</li>
+            <li><strong>Случай A[j₂] ≤ key:</strong> От (I) A[1..j₂] = A¹[1..j₂], а A[j₂] ≤ key и A е сортиран → (α) верно. (β) следва от (II) и (III). ✓</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-purple">
+    <div class="card-label">Теорема 56 — Коректността на Insertion Sort</div>
+    <p><strong>Твърдение:</strong> Insertion Sort е сортиращ алгоритъм (сортира коректно всеки вход).</p>
+
+    <div class="proof-block" style="margin-top:12px;">
+      <div class="proof-label">Инвариант 8 — за-цикълът</div>
+      <p>Всеки път, когато изпълнението е на ред 1: текущият подмасив A[1..i-1] се състои от <em>същите</em> елементи като входният A₀[1..i-1], но в <em>сортиран</em> вид.</p>
+    </div>
+
+    <div class="steps" style="margin-top:14px;">
+      <div class="step">
+        <div class="step-num">Б</div>
+        <div class="step-content"><p>i=2 → A[1..1] = A₀[1] — едноелементен масив, тривиално сортиран. ✓</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">П</div>
+        <div class="step-content">
+          <p>Допускаме инварианта е верен при i. Тогава A[1..i-1] е сортиран. Ред 2: key = A[i]. Ред 3: j = i-1. Прилагаме Лема 23 → в края на while: A[1..j] ≤ key, A[j+2..i] &gt; key. Ред 7: A[j+1] ← key → A[1..i] е сортиран и съдържа A₀[1..i]. При i+1: инвариантът е верен. ✓</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">Т</div>
+        <div class="step-content"><p>Последното достигане: i = n+1. Инвариантът дава: A[1..n] съдържа елементите на A₀[1..n] в сортиран вид. ✓ □</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-red">
+    <div class="card-label">Изпитен въпрос</div>
+    <p>"Формулирайте и докажете Лема 23 и Теорема 56 за коректността на Insertion Sort."</p>
+    <p style="margin-top:8px;">Ключово: трябва да изброите двата инварианта, базата, поддръжката и терминацията за всеки от тях. Покажете как Теорема 56 използва Лема 23.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     TOPIC 7: Summary Table
+     ============================================================ -->
+<section class="topic" id="complexity-summary">
+  <div class="topic-title"><span class="icon">📊</span> Обобщение на сложността и свойствата</div>
+
+  <table>
+    <tr><th>Алгоритъм</th><th>Най-лош случай</th><th>Среден случай</th><th>Памет</th><th>Стабилен</th><th>In-place</th></tr>
+    <tr><td>Insertion Sort</td><td>Θ(n²)</td><td>Θ(n²)</td><td>Θ(1)</td><td>✓ Да</td><td>✓ Да</td></tr>
+    <tr><td>Selection Sort</td><td>Θ(n²)</td><td>Θ(n²)</td><td>Θ(1)</td><td>✗ Не</td><td>✓ Да</td></tr>
+    <tr><td>Merge Sort</td><td>Θ(n lg n)</td><td>Θ(n lg n)</td><td>Θ(n)</td><td>✓ Да</td><td>✗ Не</td></tr>
+    <tr><td>Heap Sort</td><td>Θ(n lg n)</td><td>Θ(n lg n)</td><td>Θ(1)</td><td>✗ Не</td><td>✓ Да</td></tr>
+    <tr><td>Quick Sort</td><td>Θ(n²)</td><td>Θ(n lg n)</td><td>Θ(lg n)</td><td>✗ Не</td><td>✓ Да</td></tr>
+  </table>
+
+  <div class="card card-yellow">
+    <div class="card-label">Връзка с другите теми</div>
+    <ul>
+      <li><strong>Лекция 5:</strong> Heap Sort използва двоична пирамида за Θ(n lg n) с Θ(1) памет.</li>
+      <li><strong>Лекция 6:</strong> Merge Sort и Quick Sort са примери за схемата Разделяй-и-Владей.</li>
+      <li><strong>Лекция 13:</strong> Долна граница Ω(n lg n) за всеки сортиращ алгоритъм, базиран на сравнения.</li>
+      <li>Стабилността на Insertion Sort се дължи на <code>A[j] &gt; key</code> (строго) — при равни не разменя.</li>
+    </ul>
+  </div>
+
+  <a href="#" class="back-top">↑ Към началото</a>
+</section>
+
+</div><!-- /main -->
+</body>
+</html>

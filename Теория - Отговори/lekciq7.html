@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лекция 7 – Counting Sort. Представяния на графи. BFS</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --card: #1c2128;
+    --border: #30363d;
+    --accent1: #58a6ff;
+    --accent2: #3fb950;
+    --accent3: #f0883e;
+    --accent4: #bc8cff;
+    --accent5: #ff7b72;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --highlight: #ffd70033;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+  }
+  /* SIDEBAR */
+  nav {
+    width: 260px;
+    min-width: 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 1.5rem 0;
+  }
+  nav h2 { color: var(--accent1); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; padding: 0 1.2rem 1rem; }
+  nav a {
+    display: block;
+    padding: 0.45rem 1.2rem;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.82rem;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+  nav a:hover { color: var(--accent1); border-color: var(--accent1); background: #58a6ff11; }
+  nav .nav-section { color: var(--accent3); font-weight: 700; margin-top: 1rem; font-size: 0.75rem; padding: 0.3rem 1.2rem; text-transform: uppercase; }
+  /* MAIN */
+  main { flex: 1; padding: 2.5rem 3rem; max-width: 1000px; }
+  h1 { font-size: 2rem; color: var(--accent1); border-bottom: 2px solid var(--border); padding-bottom: 0.8rem; margin-bottom: 0.4rem; }
+  .subtitle { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 2.5rem; }
+  h2 { font-size: 1.35rem; color: var(--accent3); margin: 2.5rem 0 1rem; padding-left: 0.8rem; border-left: 4px solid var(--accent3); }
+  h3 { font-size: 1.05rem; color: var(--accent2); margin: 1.5rem 0 0.6rem; }
+  p { line-height: 1.75; color: var(--text); margin-bottom: 0.9rem; }
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1.2rem;
+    position: relative;
+  }
+  .card-definition { border-left: 4px solid var(--accent1); }
+  .card-intuition { border-left: 4px solid var(--accent2); }
+  .card-visual { border-left: 4px solid var(--accent4); }
+  .card-example { border-left: 4px solid var(--accent3); }
+  .card-key { border-left: 4px solid var(--accent5); }
+  .card-exam { border-left: 4px solid #f0e68c; background: #1a1a0a; }
+  .card-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 0.7rem;
+    display: block;
+  }
+  .lbl-def { color: var(--accent1); }
+  .lbl-int { color: var(--accent2); }
+  .lbl-vis { color: var(--accent4); }
+  .lbl-ex  { color: var(--accent3); }
+  .lbl-key { color: var(--accent5); }
+  .lbl-exam { color: #f0e68c; }
+  /* CODE */
+  pre {
+    border-radius: 8px;
+    margin: 0.8rem 0;
+    font-size: 0.82rem;
+    overflow-x: auto;
+  }
+  code.inline { background: #21262d; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.85rem; color: var(--accent2); }
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.88rem; }
+  th { background: #21262d; color: var(--accent1); padding: 0.6rem 0.9rem; text-align: left; border: 1px solid var(--border); }
+  td { padding: 0.5rem 0.9rem; border: 1px solid var(--border); color: var(--text); }
+  tr:nth-child(even) td { background: #1a1f26; }
+  /* ASCII diagram */
+  .ascii { font-family: 'Courier New', monospace; background: #0d1117; padding: 1rem 1.2rem; border-radius: 6px; border: 1px solid var(--border); color: var(--accent2); font-size: 0.82rem; overflow-x: auto; white-space: pre; line-height: 1.4; }
+  /* bullets */
+  ul { margin: 0.5rem 0 0.5rem 1.5rem; }
+  li { margin-bottom: 0.4rem; line-height: 1.65; }
+  li::marker { color: var(--accent1); }
+  /* step table */
+  .step { display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 0.6rem; }
+  .step-num { background: var(--accent1); color: #000; font-weight: 700; width: 26px; min-width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; }
+  .badge {
+    display: inline-block;
+    background: var(--accent4);
+    color: #000;
+    border-radius: 4px;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-right: 0.4rem;
+  }
+  .tag-lec { background: #1f3a5f; color: var(--accent1); border: 1px solid var(--accent1); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  .link-row { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.6rem; }
+  .link-badge { background: #21262d; border: 1px solid var(--border); border-radius: 20px; padding: 0.2rem 0.7rem; font-size: 0.78rem; color: var(--accent4); }
+</style>
+</head>
+<body>
+
+<nav>
+  <h2>Лекция 7</h2>
+  <div class="nav-section">Counting Sort</div>
+  <a href="#cs-pseudocode">Псевдокод</a>
+  <a href="#cs-lema34">Лема 34 – 2-ри цикъл</a>
+  <a href="#cs-lema35">Лема 35 – 3-ти цикъл</a>
+  <a href="#cs-thm75">Теорема 75 – Стабилност</a>
+  <a href="#cs-complexity">Сложност</a>
+  <div class="nav-section">Графи</div>
+  <a href="#graph-representations">Представяния на графи</a>
+  <a href="#graph-comparison">Сравнение и разредени графи</a>
+  <div class="nav-section">Обхождания</div>
+  <a href="#traversal-intro">Обща схема</a>
+  <a href="#bfs-pseudocode">BFS псевдокод</a>
+  <a href="#bfs-lema36">Лема 36 – Апроксимация</a>
+  <a href="#bfs-lema37">Лема 37 – d-стойности</a>
+  <a href="#bfs-thm76">Теорема 76 – Коректност</a>
+</nav>
+
+<main>
+<h1>Лекция 7</h1>
+<p class="subtitle">Сортиране в линейно време. Counting Sort. Представяния на графи. BFS обхождане.</p>
+
+<!-- ═══════════════════════════════════════════════ COUNTING SORT ═══ -->
+<h2 id="cs-pseudocode">Алгоритъм 16: Counting Sort – Псевдокод</h2>
+
+<div class="card card-definition">
+  <span class="card-label lbl-def">📖 По лекции на преподавателя – Exact Definition</span>
+  <p>Входът е масив <strong>A[1..n]</strong> от числа, за всяко от които е известно, че <strong>A[i] ∈ {1, 2, ..., k}</strong>. Алгоритъмът използва работен масив <strong>C[0..k]</strong> и изходен масив <strong>B[1..n]</strong>.</p>
+</div>
+
+<div class="card card-visual">
+  <span class="card-label lbl-vis">Псевдокод</span>
+<pre><code class="language-python">COUNTING-SORT(A[1..n], k):
+  # (* ∀ i ∈ {1,...,n}: A[i] ∈ {1,...,k} *)
+  create B[1..n] and C[0..k]
+
+  # Цикъл 1: нулиране на C
+  for i ← 0 to k:
+    C[i] ← 0
+
+  # Цикъл 2: броене
+  for i ← 1 to n:
+    C[A[i]] += 1
+
+  # Цикъл 3: натрупване (prefix sums)
+  for i ← 1 to k:
+    C[i] ← C[i] + C[i-1]
+
+  # Цикъл 4: разпределение (стабилен!)
+  for i ← n downto 1:
+    B[C[A[i]]] ← A[i]
+    C[A[i]] -= 1
+
+  return B
+</code></pre>
+</div>
+
+<div class="card card-intuition">
+  <span class="card-label lbl-int">Лесно обяснение</span>
+  <p>Представете си, че сортирате ученически тетрадки, всяка с оценка от 1 до 6. Counting Sort първо <strong>брои</strong> колко тетрадки има с всяка оценка (Цикъл 2), после изчислява <strong>накъде</strong> трябва да отиде всяка оценка в наредения масив (Цикъл 3 – prefix suми), и накрая <strong>наредена</strong> ги поставя на правилните места, като върви <strong>отдясно наляво</strong>, за да запази стабилността (Цикъл 4).</p>
+  <p>Причината за Цикъл 4 да върви <em>отдясно наляво</em>: ако два елемента имат еднаква стойност, десният трябва да стои по-надясно и в изходния масив – това е стабилността.</p>
+</div>
+
+<div class="card card-example">
+  <span class="card-label lbl-ex">Конкретен пример – n=8, k=6, A = [3,4,1,3,4,1,4,6]</span>
+  <div class="ascii">
+A:   [3, 4, 1, 3, 4, 1, 4, 6]
+      1  2  3  4  5  6  7  8
+
+СЛЕД Цикъл 2 (броене):
+C:   [0, 2, 0, 2, 3, 0, 1]
+idx:  0  1  2  3  4  5  6
+
+СЛЕД Цикъл 3 (prefix suми):
+C:   [0, 2, 2, 4, 7, 7, 8]
+idx:  0  1  2  3  4  5  6
+
+Цикъл 4 (i от 8 до 1):
+i=8: A[8]=6 → B[C[6]]=B[8]=6, C[6]--→7
+i=7: A[7]=4 → B[C[4]]=B[7]=4, C[4]--→6
+i=6: A[6]=1 → B[C[1]]=B[2]=1, C[1]--→1
+i=5: A[5]=4 → B[C[4]]=B[6]=4, C[4]--→5
+i=4: A[4]=3 → B[C[3]]=B[4]=3, C[3]--→3
+i=3: A[3]=1 → B[C[1]]=B[1]=1, C[1]--→0
+i=2: A[2]=4 → B[C[4]]=B[5]=4, C[4]--→4
+i=1: A[1]=3 → B[C[3]]=B[3]=3, C[3]--→2
+
+B:   [1, 1, 3, 3, 4, 4, 4, 6]  ✓ сортиран!
+</div>
+</div>
+
+<!-- ═══ ЛЕМА 34 ═══ -->
+<h2 id="cs-lema34">Лема 34: Ефектът от втория цикъл</h2>
+
+<div class="card card-definition">
+  <span class="card-label lbl-def">📖 Формулировка (Лема 34)</span>
+  <p>След приключването на втория for-цикъл (редове 5–6):</p>
+  <p>\[ \forall j \in \{0, \ldots, k\} : C[j] = \#(j, A[1..n]) \]</p>
+  <p>Тоест, <strong>C[j] е броят на появите на j в масива A</strong>.</p>
+</div>
+
+<div class="card card-intuition">
+  <span class="card-label lbl-int">Доказателство (скица)</span>
+  <p><strong>Инвариант 24:</strong> При всяко достигане на ред 5, <code class="inline">∀j ∈ {0,...,k}: C[j] = #(j, A[1..i-1])</code>.</p>
+  <ul>
+    <li><strong>База:</strong> При i=1, A[1..0] е празен, C е нулиран от Цикъл 1 → OK.</li>
+    <li><strong>Поддръжка:</strong> При итерация i, ако j=A[i]: C[j]++ → C[j] = #(j, A[1..i]). Ако j≠A[i]: C[j] непроменен → C[j] = #(j, A[1..i]).</li>
+    <li><strong>Терминация:</strong> При i=n+1 → C[j] = #(j, A[1..n]).</li>
+  </ul>
+</div>
+
+<!-- ═══ ЛЕМА 35 ═══ -->
+<h2 id="cs-lema35">Лема 35: Ефектът от третия цикъл</h2>
+
+<div class="card card-definition">
+  <span class="card-label lbl-def">📖 Формулировка (Лема 35)</span>
+  <p>След приключването на третия for-цикъл (редове 7–8), за всяко <strong>j ∈ {0,...,k}</strong>:</p>
+  <p>\[ C[j] = \sum_{t=0}^{j} \#(t, A[1..n]) \]</p>
+  <p>Тоест, <strong>C[j] е броят на елементите на A, по-малки или равни на j</strong>.</p>
+</div>
+
+<div class="card card-intuition">
+  <span class="card-label lbl-int">Доказателство (скица)</span>
+  <p><strong>Инвариант 25:</strong> При всяко достигане на ред 7, <code class="inline">∀j ∈ {0,...,i-1}: C[j] = Σ_{t=0}^{j} #(t, A[1..n])</code>.</p>
+  <ul>
+    <li><strong>База:</strong> i=1: C[0] = #(0, A[1..n]) = 0 (Следствие 26) ✓</li>
+    <li><strong>Поддръжка:</strong> С[i] → C[i-1] + (стара С[i]) = Σ_{t=0}^{i-1}#(t,...) + #(i,...) = Σ_{t=0}^{i}#(t,...) ✓</li>
+    <li><strong>Терминация:</strong> i=k+1 → заместваме и получаваме твърдението за всяко j ∈ {0,...,k}.</li>
+  </ul>
+</div>
+
+<!-- ═══ ТЕОРЕМА 75 ═══ -->
+<h2 id="cs-thm75">Теорема 75: Counting Sort е стабилен</h2>
+
+<div class="card card-definition">
+  <span class="card-label lbl-def">📖 Определение 64 + Теорема 75</span>
+  <p><strong>Правилното място</strong> на елемент x в A[1..n] е: броят на елементите на A, по-малки от x, <em>плюс</em> броят на елементите равни на x, вляво от x, <em>плюс</em> 1.</p>
+  <p><strong>Теорема 75:</strong> Counting Sort е стабилен сортиращ алгоритъм, т.е. поставя всеки елемент на неговото правилно място.</p>
+</div>
+
+<div class="card card-intuition">
+  <span class="card-label lbl-int">Доказателство (Инвариант 26)</span>
+  <p><strong>Инвариант 26</strong> за четвъртия цикъл (ред 9): При всяко достигане на ред 9:</p>
+  <ul>
+    <li><strong>(α)</strong> ∀j ∈ {0,...,k}: ако j се среща в A[1..i], то C[j] съдържа правилното място на най-десния елемент от A[1..i] със стойност j.</li>
+    <li><strong>(β)</strong> Всички елементи от A[i+1..n] са на своите правилни места в B.</li>
+  </ul>
+  <p><strong>База (i=n):</strong> (β) е тривиално (A[n+1..n] е празен). (α): C[j] (от Лема 35) = броят на елементите ≤j = правилното място на най-десния елемент с ст-ст j.</p>
+  <p><strong>Терминация (i=0):</strong> от (β) → всички елементи от A[1..n] са на правилните си места. Следователно B е сортиран стабилно.</p>
+</div>
+
+<div class="card card-example">
+  <span class="card-label lbl-ex">Защо итерираме ОТДЯСНО НАЛЯВО?</span>
+  <div class="ascii">
+A = [4, 4, 4]  →  три четворки. Нека ги оцветим: 4_a, 4_b, 4_c
+
+Ако итерираме отляво надясно:
+  i=1: B[7]=4_a, C[4]--→6   ← 4_a отива на позиция 7
+  i=2: B[6]=4_b, C[4]--→5   ← 4_b отива на позиция 6
+  → В B: позиция 6=4_b, 7=4_a  →  РЕДЪТ Е ОБЪРНАТ! (4_b преди 4_a)
+
+Ако итерираме отдясно наляво (Counting Sort):
+  i=3: B[7]=4_c, C[4]--→6   ← последният стои на последното място
+  i=2: B[6]=4_b, C[4]--→5   ← среден стои по-ляво
+  i=1: B[5]=4_a, C[4]--→4   ← първият е на позиция 5
+  → В B: 5=4_a, 6=4_b, 7=4_c  →  РЕДЪТ Е ЗАПАЗЕН! ✓ СТАБИЛЕН
+</div>
+</div>
+
+<!-- ═══ СЛОЖНОСТ ═══ -->
+<h2 id="cs-complexity">Сложност по време на Counting Sort</h2>
+
+<div class="card card-definition">
+  <span class="card-label lbl-def">📖 Анализ</span>
+  <ul>
+    <li>Цикъл 1: Θ(k)</li>
+    <li>Цикъл 2: Θ(n)</li>
+    <li>Цикъл 3: Θ(k)</li>
+    <li>Цикъл 4: Θ(n)</li>
+    <li><strong>Общо: Θ(n + k)</strong></li>
+  </ul>
+  <p>Ако k = O(n) (честа ситуация) → сложността е <strong>Θ(n)</strong>. Значително подобрение спрямо Θ(n lg n) на базираните на сравнения алгоритми.</p>
+  <p>Сложността по памет е също Θ(n + k). Алгоритъмът <em>не</em> е in-place.</p>
+</div>
+
+<div class="card card-key">
+  <span class="card-label lbl-key">Ключови неща за запомняне</span>
+  <ul>
+    <li>Counting Sort работи САМО ако ключовете са в известен ограничен диапазон {1,...,k}.</li>
+    <li>Четвъртият цикъл върви <em>отдясно наляво</em> – без това не е стабилен.</li>
+    <li>Стабилността е КРИТИЧНА за използването му в Radix Sort.</li>
+    <li>Не се основава на сравнения → може да "наруши" долната граница Ω(n lg n).</li>
+    <li>Сложност Θ(n+k); при k=O(n) → Θ(n) (линейна).</li>
+  </ul>
+</div>
+
+<div class="card card-exam">
+  <span class="card-label lbl-exam">Изпитен въпрос</span>
+  <p><strong>Типичен въпрос:</strong> "Доказателството на коректността на Counting Sort. Формулирайте Лема 34, Лема 35 и Теорема 75 и ги докажете."</p>
+  <p><strong>Ключово в отговора:</strong> Трите инварианта (24, 25, 26), конкретните формулировки с #(j, A[1..n]) нотацията, защо се итерира отдясно наляво.</p>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════ ГРАФИ ═══ -->
+<h2 id="graph-representations">Основни представяния на графи</h2>
+
+<div class="card card-definition">
+  <span class="card-label lbl-def">📖 По лекции на преподавателя</span>
+  <p>Нека G = (V, E), V = {u₁,...,uₙ}, E = {e₁,...,eₘ}.</p>
+  <p><strong>1. Списъци на съседство (adjacency lists):</strong> За всеки връх се дава списък от неговите съседи (неориентиран) или деца (ориентиран). Списъците са точно n на брой и не са наредени.</p>
+  <p><strong>2. Матрица на съседство (adjacency matrix):</strong> Булева матрица n×n, където клетка (i,j) съдържа 1 тстк има ребро от uᵢ до uⱼ (ориентиран) или между тях (неориентиран). При неориентиран граф матрицата е симетрична.</p>
+</div>
+
+<div class="card card-visual">
+  <span class="card-label lbl-vis">Визуализация</span>
+  <div class="ascii">
+Граф G: 1─2─3
+         │   │
+         4───┘
+
+Списъци на съседство:       Матрица на съседство:
+adj[1] → [2, 4]             1 2 3 4
+adj[2] → [1, 3]           1[0 1 0 1]
+adj[3] → [2, 4]           2[1 0 1 0]
+adj[4] → [1, 3]           3[0 1 0 1]
+                           4[1 0 1 0]
+</div>
+</div>
+
+<h2 id="graph-comparison">Сравнение и разредени графи</h2>
+
+<div class="card card-definition">
+  <span class="card-label lbl-def">📖 Таблица 8.1 от лекциите</span>
+  <table>
+    <tr><th>Действие</th><th>Матрица</th><th>Списъци</th></tr>
+    <tr><td>Тест (uᵢ,uⱼ) ∈ E</td><td>Θ(1)</td><td>Θ(n)</td></tr>
+    <tr><td>Намиране на d(uᵢ)</td><td>Θ(n)</td><td>Θ(n)</td></tr>
+    <tr><td>Добавяне на ребро</td><td>Θ(1)</td><td>Θ(n)</td></tr>
+    <tr><td>Изтриване на ребро</td><td>Θ(1)</td><td>Θ(n)</td></tr>
+    <tr><td>Преброяване на ребра</td><td>Θ(n²)</td><td>Θ(m+n)</td></tr>
+    <tr><td>Обхождане</td><td>Θ(n²)</td><td>Θ(m+n)</td></tr>
+    <tr><td>Размер</td><td>Θ(n²)</td><td>Θ(m+n)</td></tr>
+  </table>
+</div>
+
+<div class="card card-definition">
+  <span class="card-label lbl-def">📖 Определение 70: Разредени графи</span>
+  <p>Нека G е безкрайно множество от графи. Казваме, че G са <strong>разредени графи</strong> (sparse graphs), ако за всеки G ∈ G е изпълнено |E(G)| = O(|V(G)|). Тоест, съществува константа c > 0, такава че |E(G)| ≤ c|V(G)| за всеки G ∈ G.</p>
+  <p><strong>Примери за разредени класове:</strong></p>
+  <ul>
+    <li>Дървета: m = n-1</li>
+    <li>Планарни графи: m ≤ 3n-6</li>
+    <li>Графи с ограничена максимална степен Δ: m ≤ Δn/2 = O(n)</li>
+  </ul>
+</div>
+
+<div class="card card-intuition">
+  <span class="card-label lbl-int">Следствие: кога да ползваме кой?</span>
+  <ul>
+    <li>Разредени графи (m = O(n)) → <strong>списъчно представяне</strong> (размер Θ(n) срещу Θ(n²))</li>
+    <li>Гъсти графи (m ≈ n²) → матрицата е сравнима по размер, но дава O(1) тест</li>
+    <li>Алгоритмите BFS и DFS предпочитат списъчно представяне → Θ(n+m)</li>
+  </ul>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════ ОБХОЖДАНИЯ ═══ -->
+<h2 id="traversal-intro">Обхождания на графи – Обща схема</h2>
+
+<div class="card card-definition">
+  <span class="card-label lbl-def">📖 По лекции – Задача и схема</span>
+  <p>Задачата за <strong>обхождане</strong> е дефинирана за ориентирани мултиграфи с възможни примки. Целта: да посетим максимална достижима от стартовия връх u part от графа – без зациклане, без пропускане.</p>
+  <p><strong>Схема:</strong> Поддържаме множество S. Начало: S = {u}. На всяка итерация:</p>
+  <ol style="margin: 0.5rem 0 0.5rem 1.5rem;">
+    <li>Вземаме връх x от S</li>
+    <li>За всяко ребро (x, y): ако y е бял → правим y черен и го слагаме в S</li>
+    <li>Повтаряме, докато S е непразно</li>
+  </ol>
+</div>
+
+<div class="card card-intuition">
+  <span class="card-label lbl-int">Защо маркираме върхове, не ребра?</span>
+  <p>Маркирането на върхове изисква Θ(n) памет. Маркирането на ребра изисква Θ(m) памет. Тъй като m може да е квадратично повече от n, маркираме върхове.</p>
+  <p><strong>Потенциални грешки:</strong> зациклане (повтаряне на вече посетени върхове) и пропускане. Маркирането решава и двете: не-бял връх не влиза повторно в S.</p>
+</div>
+
+<div class="card card-intuition">
+  <span class="card-label lbl-int">Коректност на схемата</span>
+  <p><strong>Не зацикля:</strong> В S влизат само бели върхове, стават черни веднага. Черен не може да стане бял.</p>
+  <p><strong>Не пропуска:</strong> Допуска се противното. Нека v е недостигнат бял връх. В графа има ориентиран път p: u→...→v. u е черен, v е бял → в p има черен a и бял b = дете на a. Но в даден момент a е бил изваден от S и всичките му деца са станали черни → противоречие.</p>
+  <p><strong>Реализация с опашка</strong> → BFS; <strong>реализация със стек</strong> → нещо близко до DFS.</p>
+</div>
+
+<!-- ═══ BFS ПСЕВДОКОД ═══ -->
+<h2 id="bfs-pseudocode">Алгоритъм 17: BFS – Псевдокод</h2>
+
+<div class="card card-visual">
+  <span class="card-label lbl-vis">Псевдокод</span>
+<pre><code class="language-python">BFS(G = (V, E): ориентиран мултиграф; s ∈ V):
+  for i ← 1 to n:
+    color[i] ← WHITE
+    d[i] ← ∞
+    π[i] ← NIL
+  color[s] ← GRAY
+  d[s] ← 0
+  Q ← empty queue
+  enqueue(Q, s)
+  while not isEmpty(Q):
+    x ← dequeue(Q)
+    foreach y ∈ adj[x]:
+      if color[y] = WHITE:
+        color[y] ← GRAY
+        d[y] ← d[x] + 1
+        π[y] ← x
+        enqueue(Q, y)
+    color[x] ← BLACK
+</code></pre>
+</div>
+
+<div class="card card-example">
+  <span class="card-label lbl-ex">Стъпки на BFS върху малък граф</span>
+  <div class="ascii">
+Граф (ориентиран):  s → 1 → 3
+                    s → 2 → 3
+
+Изпълнение от s:
+  Начало: d[s]=0, Q=[s], всички бели освен s(сив)
+
+  Стъпка 1: dequeue→x=s. adj[s]={1,2}
+    y=1: бял → d[1]=1, π[1]=s, сив, Q=[1]
+    y=2: бял → d[2]=1, π[2]=s, сив, Q=[1,2]
+    s→черен
+
+  Стъпка 2: dequeue→x=1. adj[1]={3}
+    y=3: бял → d[3]=2, π[3]=1, сив, Q=[2,3]
+    1→черен
+
+  Стъпка 3: dequeue→x=2. adj[2]={3}
+    y=3: СИВ → пропуск
+    2→черен
+
+  Стъпка 4: dequeue→x=3. adj[3]={}
+    3→черен, Q=[]
+
+  Резултат: d[s]=0, d[1]=1, d[2]=1, d[3]=2
+</div>
+</div>
+
+<!-- ═══ ЛЕМА 36 ═══ -->
+<h2 id="bfs-lema36">Лема 36: BFS апроксимира разстоянията отгоре</h2>
+
+<div class="card card-definition">
+  <span class="card-label lbl-def">📖 Формулировка (Лема 36)</span>
+  <p>Всеки път, когато изпълнението е на ред 9 (while-цикъла), за всеки v ∈ V е вярно, че:</p>
+  <p>\[ d[v] \geq \delta(s, v) \]</p>
+  <p>Тоест, d-стойностите никога не са по-малки от действителните разстояния.</p>
+</div>
+
+<div class="card card-intuition">
+  <span class="card-label lbl-int">Доказателство (скица)</span>
+  <p><strong>По индукция</strong> по достиганията на ред 9:</p>
+  <ul>
+    <li><strong>База:</strong> d[s]=0=δ(s,s). За v≠s: d[v]=∞ ≥ δ(s,v) ✓</li>
+    <li><strong>Поддръжка:</strong> При обработка на x (d[x] ≥ δ(s,x) по инд. предп.), за бяло дете y: d[y] ← d[x]+1 ≥ δ(s,x)+1 ≥ δ(s,y), понеже съществува път s→...→x→y с дължина δ(s,x)+1.</li>
+  </ul>
+</div>
+
+<!-- ═══ ЛЕМА 37 ═══ -->
+<h2 id="bfs-lema37">Лема 37: d-стойности в опашката</h2>
+
+<div class="card card-definition">
+  <span class="card-label lbl-def">📖 Формулировка (Лема 37)</span>
+  <p>Нека в момент t опашката Q = ⟨u₁, u₂, ..., uₖ⟩. Тогава:</p>
+  <p>\[ d[u_1] \leq d[u_2] \leq \cdots \leq d[u_k] \leq d[u_1] + 1 \]</p>
+  <p>Тоест, в опашката има или еднакви d-стойности, или точно две съседни (различаващи се с 1).</p>
+</div>
+
+<div class="card card-intuition">
+  <span class="card-label lbl-int">Интуиция</span>
+  <p>BFS "обработва" върховете на слоеве: първо слой 0 (само s), след това слой 1 (всички на разстояние 1 от s), след това слой 2, и т.н. Следователно в опашката могат да има само върхове от текущия и следващия слой.</p>
+</div>
+
+<!-- ═══ ТЕОРЕМА 76 ═══ -->
+<h2 id="bfs-thm76">Теорема 76: Коректност на BFS за разстоянията</h2>
+
+<div class="card card-definition">
+  <span class="card-label lbl-def">📖 Формулировка (Теорема 76)</span>
+  <p>След терминирането на BFS(G, s):</p>
+  <p>\[ \forall v \in V : d[v] = \delta(s, v) \]</p>
+</div>
+
+<div class="card card-intuition">
+  <span class="card-label lbl-int">Доказателство (чрез допускане на противното)</span>
+  <p>Допускаме, че ∃v: d[v] ≠ δ(s,v). От Лема 36: d[v] > δ(s,v). Нека v е такъв с <em>минимално</em> δ(s,v). Нека w е предпоследният връх в най-кратък път s→...→w→v. Тогава δ(s,v) = δ(s,w)+1, и d[w] = δ(s,w).</p>
+  <p>Следва: d[v] > δ(s,v) = δ(s,w)+1 = d[w]+1.</p>
+  <p>Разглеждаме момента t, когато w се вади от Q. Три случая за цвета на v:</p>
+  <ul>
+    <li><strong>v бял:</strong> d[v] ← d[w]+1 → противоречие с d[v] > d[w]+1</li>
+    <li><strong>v сив:</strong> v е влязъл в Q преди w → d[v] ≤ d[w]+1 → противоречие (Следствие 27)</li>
+    <li><strong>v черен:</strong> v е изваден преди w → d[v] ≤ d[w] < d[w]+1 → противоречие</li>
+  </ul>
+  <p>И в трите случая противоречие → d[v] = δ(s,v). □</p>
+</div>
+
+<div class="card card-key">
+  <span class="card-label lbl-key">Ключови неща за запомняне – BFS</span>
+  <ul>
+    <li>BFS с опашка → обхожда по нива (слоеве от стартовия връх)</li>
+    <li>d[v] = δ(s,v) след BFS (Теорема 76)</li>
+    <li>Сложност по време: <strong>Θ(n+m)</strong> при списъчно представяне</li>
+    <li>π[1..n] реализира дърво на най-кратките пътища (Теорема 77)</li>
+    <li>Трите цвята: бял=непосетен, сив=в опашката, черен=приключен</li>
+  </ul>
+</div>
+
+<div class="card card-exam">
+  <span class="card-label lbl-exam">Изпитен въпрос</span>
+  <p><strong>Въпрос:</strong> "Доказателство на Теорема 76: BFS изчислява коректно разстоянията. Опишете нужните леми."</p>
+  <p><strong>Структура на отговора:</strong> (1) BFS псевдокод, (2) Определение 72 за разстояние в ориентиран граф, (3) Лема 36 (апроксимация отгоре), (4) Лема 37 (d-стойности в опашката), (5) Следствие 27, (6) Теорема 76 чрез contradiction.</p>
+</div>
+
+<div class="card card-visual">
+  <span class="card-label lbl-vis">Връзка с другите теми</span>
+  <div class="link-row">
+    <span class="link-badge">Counting Sort → Radix Sort (Лекция 7)</span>
+    <span class="link-badge">BFS → DFS (Лекция 8)</span>
+    <span class="link-badge">BFS разстояния → Dijkstra (Лекция 11)</span>
+    <span class="link-badge">Обхождания → Топосортиране (Лекция 9)</span>
+    <span class="link-badge">Списъчно → разредени графи → Prim, Kruskal (Лекция 10)</span>
+  </div>
+</div>
+
+</main>
+
+<script>hljs.highlightAll();</script>
+</body>
+</html>

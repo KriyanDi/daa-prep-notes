@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лекция 5 - Двоична пирамида. Heapsort. Приоритетна опашка | ДАА 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #1a1d27; --bg3: #242838;
+    --accent: #4f8ef7; --accent2: #7c5cbf; --green: #2ecc71;
+    --yellow: #f39c12; --red: #e74c3c; --text: #e8eaf0;
+    --text2: #9ca3af; --border: #2d3148;
+    --def-bg: #0d2137; --def-border: #1e5799;
+    --ex-bg: #0d2d1a; --ex-border: #1e7d3e;
+    --key-bg: #2d2100; --key-border: #7d5c00;
+    --code-bg: #141822;
+  }
+  [data-theme="light"] {
+    --bg: #f0f2f8; --bg2: #ffffff; --bg3: #e8ecf5;
+    --accent: #2563eb; --accent2: #7c3aed; --green: #16a34a;
+    --yellow: #d97706; --red: #dc2626; --text: #1e293b;
+    --text2: #64748b; --border: #cbd5e1;
+    --def-bg: #eff6ff; --def-border: #3b82f6;
+    --ex-bg: #f0fdf4; --ex-border: #22c55e;
+    --key-bg: #fffbeb; --key-border: #f59e0b;
+    --code-bg: #1e293b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  #layout { display: flex; min-height: 100vh; }
+  #sidebar {
+    width: 280px; background: var(--bg2); border-right: 1px solid var(--border);
+    position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto;
+    transition: transform 0.3s; z-index: 100; padding: 20px 0;
+  }
+  #sidebar h2 { color: var(--accent); font-size: 0.85rem; text-transform: uppercase;
+    letter-spacing: 1px; padding: 0 20px 10px; border-bottom: 1px solid var(--border); }
+  #sidebar ul { list-style: none; padding: 10px 0; }
+  #sidebar li a { display: block; padding: 8px 20px; color: var(--text2); text-decoration: none;
+    font-size: 0.88rem; border-left: 3px solid transparent; transition: all 0.2s; }
+  #sidebar li a:hover, #sidebar li a.active { color: var(--accent); border-left-color: var(--accent);
+    background: rgba(79,142,247,0.08); }
+  #main { margin-left: 280px; flex: 1; padding: 40px; max-width: 1000px; }
+  #topbar { position: sticky; top: 0; background: var(--bg2); border-bottom: 1px solid var(--border);
+    z-index: 50; display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 40px; margin: -40px -40px 40px; }
+  #topbar h1 { font-size: 1.1rem; color: var(--accent); }
+  .btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text); cursor: pointer; font-size: 0.85rem; }
+  .btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  #progress-wrap { background: var(--bg3); border-radius: 8px; padding: 16px 20px;
+    margin-bottom: 32px; border: 1px solid var(--border); }
+  #progress-wrap h3 { font-size: 0.9rem; color: var(--text2); margin-bottom: 10px; }
+  #progress-bar-outer { background: var(--bg); border-radius: 99px; height: 8px; overflow: hidden; }
+  #progress-bar-inner { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 99px; transition: width 0.5s; }
+  #progress-label { font-size: 0.85rem; color: var(--text2); margin-top: 6px; }
+  .topic { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 40px; overflow: hidden; scroll-margin-top: 80px; }
+  .topic-header { padding: 20px 24px; background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: space-between; }
+  .topic-header h2 { color: white; font-size: 1.15rem; }
+  .topic-num { background: rgba(255,255,255,0.2); color: white; border-radius: 50%;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .topic-body { padding: 24px; }
+  .card { border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .card.def { background: var(--def-bg); border-left: 4px solid var(--def-border); }
+  .card.def .card-label { color: var(--accent); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.ex { background: var(--ex-bg); border-left: 4px solid var(--ex-border); }
+  .card.ex .card-label { color: var(--green); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.key { background: var(--key-bg); border-left: 4px solid var(--key-border); }
+  .card.key .card-label { color: var(--yellow); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.warn { background: rgba(231,76,60,0.07); border-left: 4px solid var(--red); }
+  .sec-h { font-size: 0.95rem; font-weight: 700; color: var(--accent); margin: 20px 0 8px;
+    display: flex; align-items: center; gap: 8px; }
+  .sec-h::before { content: ''; display: inline-block; width: 3px; height: 16px;
+    background: var(--accent); border-radius: 2px; }
+  pre { background: var(--code-bg); color: #cdd6f4; border-radius: 8px; padding: 16px 20px;
+    overflow-x: auto; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem;
+    line-height: 1.6; margin: 12px 0; border: 1px solid var(--border); }
+  code { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem; }
+  .kw { color: #cba6f7; } .cm { color: #6c7086; font-style: italic; }
+  .nm { color: #89dceb; } .op { color: #89b4fa; } .str { color: #a6e3a1; }
+  .num { color: #fab387; }
+  .viz { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 20px; font-family: monospace; font-size: 0.85rem; color: #cdd6f4;
+    white-space: pre; overflow-x: auto; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+  th { background: var(--bg3); color: var(--accent); padding: 10px 12px; text-align: left;
+    border-bottom: 2px solid var(--accent); }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: rgba(79,142,247,0.05); }
+  ul.bullet { list-style: none; padding: 0; }
+  ul.bullet li { padding: 6px 0 6px 24px; position: relative; }
+  ul.bullet li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+  .thm { background: rgba(79,142,247,0.08); border: 1px solid rgba(79,142,247,0.3);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .thm-label { color: var(--accent); font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; }
+  .exam-box { background: rgba(231,76,60,0.07); border: 1px solid rgba(231,76,60,0.4);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .exam-label { color: var(--red); font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; }
+  .conn-box { background: rgba(46,204,113,0.07); border: 1px solid rgba(46,204,113,0.3);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .conn-label { color: var(--green); font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; }
+  .check-wrap { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+  .check-wrap input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
+  .check-wrap label { font-size: 0.9rem; color: var(--text2); cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="layout">
+<nav id="sidebar">
+  <h2>Лекция 5 — Навигация</h2>
+  <ul>
+    <li><a href="#t1">1. Съвършено и попълнено двоично дърво</a></li>
+    <li><a href="#t2">2. Двоична пирамида и линеаризация</a></li>
+    <li><a href="#t3">3. Пирамидална инверсия и Heapify</a></li>
+    <li><a href="#t4">4. Naive Build Heap — Теорема 63</a></li>
+    <li><a href="#t5">5. Iterative Heapify — Теорема 64</a></li>
+    <li><a href="#t6">6. Build Heap (Floyd) — Теореми 66, 67</a></li>
+    <li><a href="#t7">7. Heapsort — Теорема 68</a></li>
+    <li><a href="#t8">8. Приоритетна опашка и Increase-Key</a></li>
+  </ul>
+</nav>
+<div id="main">
+  <div id="topbar">
+    <h1>Лекция 5 — Двоична пирамида. Heapsort. Приоритетна опашка</h1>
+    <button class="btn" onclick="toggleTheme()">Светла тема</button>
+  </div>
+
+  <div id="progress-wrap">
+    <h3>Напредък</h3>
+    <div id="progress-bar-outer"><div id="progress-bar-inner" style="width:0%"></div></div>
+    <div id="progress-label">0 от 8 теми изучени</div>
+  </div>
+
+  <!-- TOPIC 1 -->
+  <div class="topic" id="t1">
+    <div class="topic-header">
+      <h2>Съвършено и попълнено двоично дърво</h2>
+      <div class="topic-num">1</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Точни дефиниции</div>
+      <div class="card def">
+        <div class="card-label">Определение 51: Съвършено двоично дърво (Perfect Binary Tree)</div>
+        <p>Съвършено двоично дърво (СДД) е дефинирано индуктивно:</p>
+        <ul class="bullet">
+          <li><strong>База:</strong> Едно единствено листо е СДД с височина 0.</li>
+          <li><strong>Стъпка:</strong> Ако \(T_L\) и \(T_R\) са СДД с еднаква височина \(h\), то дървото с корен, чиито ляво и дясно поддърво са \(T_L\) и \(T_R\), е СДД с височина \(h+1\).</li>
+        </ul>
+      </div>
+      <div class="card def">
+        <div class="card-label">Определение 52: Попълнено двоично дърво (Complete Binary Tree)</div>
+        <p>Попълнено двоично дърво (ПДД) е дефинирано индуктивно:</p>
+        <ul class="bullet">
+          <li><strong>База:</strong> Едно единствено листо е ПДД с височина 0.</li>
+          <li><strong>Стъпка — случай 1:</strong> Ако \(T_L\) е СДД с височина \(h\) и \(T_R\) е ПДД с височина \(h\), то дърво с корен + \(T_L\) + \(T_R\) е ПДД с височина \(h+1\).</li>
+          <li><strong>Стъпка — случай 2:</strong> Ако \(T_L\) е ПДД с височина \(h+1\) и \(T_R\) е СДД с височина \(h\), то дърво с корен + \(T_L\) + \(T_R\) е ПДД с височина \(h+1\).</li>
+        </ul>
+      </div>
+
+      <div class="thm">
+        <div class="thm-label">Теорема 59, 60, 61, 62 — Свойства на ПДД</div>
+        <ul class="bullet">
+          <li><strong>Теорема 59:</strong> СДД с височина \(h\) има точно \(2^{h+1} - 1\) върха и \(2^h\) листа.</li>
+          <li><strong>Теорема 60:</strong> ПДД с \(n\) върха има височина \(\lfloor \log_2 n \rfloor\).</li>
+          <li><strong>Теорема 61:</strong> ПДД с \(n\) върха има листа в диапазона \(\lceil n/2 \rceil\) до \(\lceil n/2 \rceil\), т.е. приблизително \(n/2\).</li>
+          <li><strong>Теорема 62 (Лема 26):</strong> Броят на върховете с височина \(k\) в ПДД с \(n\) върха е \(\lceil n / 2^{k+1} \rceil\).</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Визуализация</div>
+      <div class="viz">
+Съвършено двоично дърво (h=2, 7 върха):
+           1
+         /   \
+        2     3
+       / \   / \
+      4   5 6   7
+
+Попълнено двоично дърво (n=10):
+           1
+         /   \
+        2     3
+       / \   / \
+      4   5 6   7
+     / \ /
+    8  9 10
+(листата запълват отляво надясно)</div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>СДД: всички нива са пълни. ПДД: последното ниво може да е непълно, но запълнено <strong>отляво надясно</strong>.</li>
+          <li>Всяко СДД е ПДД, но не обратното.</li>
+          <li>Височина на ПДД с \(n\) върха: \(\lfloor \log_2 n \rfloor\) — ключова формула!</li>
+          <li>Листа: приблизително \(n/2\); нелиста: приблизително \(n/2\).</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Дефинирайте индуктивно съвършено и попълнено двоично дърво. Колко е височината на ПДД с n върха?</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c1" onchange="updateProgress()">
+        <label for="c1">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 2 -->
+  <div class="topic" id="t2">
+    <div class="topic-header">
+      <h2>Двоична пирамида и линеаризация</h2>
+      <div class="topic-num">2</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Точни дефиниции</div>
+      <div class="card def">
+        <div class="card-label">Определение 56: Двоична пирамида (Binary Heap)</div>
+        <p>Двоична пирамида е попълнено двоично дърво, чийто върхове са наредени от цели числа, такива че <strong>за всеки вътрешен връх, стойността му е по-голяма или равна на стойностите на децата му</strong>. (Максимална пирамида.)</p>
+        <p style="margin-top:8px">Формално: ако \(v\) е вътрешен връх с деца \(u\) и \(w\), то \(A[v] \geq A[u]\) и \(A[v] \geq A[w]\).</p>
+      </div>
+      <div class="card def">
+        <div class="card-label">Определение 57: Линеаризация на ПДД</div>
+        <p>Линеаризацията на ПДД с \(n\) върха е масивът \(A[1..n]\), получен чрез обхождане на дървото ниво по ниво, отляво надясно. Ако \(A[1..n]\) е линеаризацията, то за всяко \(i\):</p>
+        <ul class="bullet">
+          <li><strong>Parent(i)</strong> = \(\lfloor i/2 \rfloor\)</li>
+          <li><strong>Left(i)</strong> = \(2i\)</li>
+          <li><strong>Right(i)</strong> = \(2i+1\)</li>
+        </ul>
+        <p style="margin-top:8px">Листата на ПДД са елементите \(A[\lfloor n/2 \rfloor + 1], \ldots, A[n]\).</p>
+      </div>
+
+      <div class="sec-h">Визуализация</div>
+      <div class="viz">
+Пирамида (максимална):
+           16
+          /  \
+        14    10
+       / \   / \
+      8   7 9   3
+     / \
+    2   4
+
+Линеаризация: A = [16, 14, 10, 8, 7, 9, 3, 2, 4]
+Индекси:           1   2   3  4  5  6  7  8  9
+
+Parent(4) = ⌊4/2⌋ = 2  →  A[2]=14  ✓ (14 > 8)
+Left(2)   = 2*2   = 4  →  A[4]=8
+Right(2)  = 2*2+1 = 5  →  A[5]=7</div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Пирамидното свойство: Parent ≥ Children (за максимална пирамида).</li>
+          <li>Коренът (A[1]) е <strong>максималният елемент</strong>.</li>
+          <li>Формулите Parent/Left/Right са <strong>задължителни</strong> за знаене наизуст.</li>
+          <li>Нелистата са A[1..⌊n/2⌋], листата са A[⌊n/2⌋+1..n].</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Дефинирайте двоична пирамида и нейната линеаризация. Запишете формулите за Parent, Left, Right.</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c2" onchange="updateProgress()">
+        <label for="c2">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 3 -->
+  <div class="topic" id="t3">
+    <div class="topic-header">
+      <h2>Пирамидална инверсия и Iterative Heapify</h2>
+      <div class="topic-num">3</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Точни дефиниции</div>
+      <div class="card def">
+        <div class="card-label">Определение 59: Пирамидална инверсия</div>
+        <p>Нека \(A[1..n]\) е линеаризация на ПДД. Двойка индекси \(\langle i, j \rangle\) е пирамидална инверсия, ако:</p>
+        <ul class="bullet">
+          <li>\(i\) е предшественик на \(j\) (т.е. \(j\) е в поддървото на \(i\)), и</li>
+          <li>\(A[i] < A[j]\) (нарушено пирамидно свойство).</li>
+        </ul>
+      </div>
+      <div class="card def">
+        <div class="card-label">Наблюдение 41: Подпирамида</div>
+        <p>Масивът \(A[1..n]\) е пирамида тогава и само тогава, когато няма нито една пирамидална инверсия.</p>
+        <p style="margin-top:8px">Подпирамида \(A[\![i]\!]\) = поддървото с корен \(i\) (обозначаваме с двойни скоби).</p>
+      </div>
+
+      <div class="sec-h">Алгоритъм Iterative Heapify</div>
+      <div class="card def">
+        <div class="card-label">Алгоритъм 7: Iterative Heapify</div>
+<pre><span class="nm">Iterative-Heapify</span>(<span class="nm">A</span>[<span class="num">1</span>..<span class="nm">n</span>], <span class="nm">i</span>)
+<span class="cm">(* A[Left(i)] и A[Right(i)], ако съществуват, са пирамиди *)</span>
+<span class="num">1</span>  <span class="nm">j</span> ← <span class="nm">i</span>
+<span class="num">2</span>  <span class="kw">while</span> <span class="nm">j</span> ≤ ⌊<span class="nm">n</span>/<span class="num">2</span>⌋ <span class="kw">do</span>   <span class="cm">(* докато j е нелисто *)</span>
+<span class="num">3</span>    <span class="nm">left</span> ← <span class="nm">Left</span>(<span class="nm">j</span>)
+<span class="num">4</span>    <span class="nm">right</span> ← <span class="nm">Right</span>(<span class="nm">j</span>)
+<span class="num">5</span>    <span class="kw">if</span> <span class="nm">A</span>[<span class="nm">left</span>] > <span class="nm">A</span>[<span class="nm">j</span>] <span class="kw">then</span> <span class="nm">largest</span> ← <span class="nm">left</span> <span class="kw">else</span> <span class="nm">largest</span> ← <span class="nm">j</span>
+<span class="num">6</span>    <span class="kw">if</span> <span class="nm">right</span> ≤ <span class="nm">n</span> <span class="kw">and</span> <span class="nm">A</span>[<span class="nm">right</span>] > <span class="nm">A</span>[<span class="nm">largest</span>] <span class="kw">then</span> <span class="nm">largest</span> ← <span class="nm">right</span>
+<span class="num">7</span>    <span class="kw">if</span> <span class="nm">largest</span> ≠ <span class="nm">j</span>
+<span class="num">8</span>      <span class="nm">swap</span>(<span class="nm">A</span>[<span class="nm">j</span>], <span class="nm">A</span>[<span class="nm">largest</span>])
+<span class="num">9</span>      <span class="nm">j</span> ← <span class="nm">largest</span>
+<span class="num">10</span>   <span class="kw">else</span> <span class="kw">break</span></pre>
+      </div>
+
+      <div class="thm">
+        <div class="thm-label">Теорема 64: Коректността на Iterative Heapify (частично)</div>
+        <p>Ако A[Left(i)] и A[Right(i)] (при съществуване) са пирамиди, след изпълнение на Iterative-Heapify(A, i), A[⟦i⟧] е пирамида.</p>
+        <p style="margin-top:8px"><strong>Доказателство (инвариант):</strong> Инвариантът е: "при всяко достигане на ред 2, A[⟦j⟧] е пирамида, ако A[j] ≥ A[Left(j)] и A[j] ≥ A[Right(j)]". В доказателството се разглеждат <strong>5 случая</strong> в поддръжката:</p>
+        <ul class="bullet">
+          <li>Случай I: A[left] ≤ A[j] и A[right] ≤ A[j] → largest = j → break → A[⟦j⟧] е пирамида.</li>
+          <li>Случай II: A[left] > A[j] и A[left] ≥ A[right] → largest = left → swap → рекурсивно продължаваме с j=left.</li>
+          <li>Случай III: A[right] > A[j] и A[right] > A[left] → largest = right → swap → j=right.</li>
+          <li>Случай IV: само левото дете съществува и A[left] > A[j] → largest = left → swap.</li>
+          <li>Случай V: само левото дете съществува и A[left] ≤ A[j] → break.</li>
+        </ul>
+        <p style="margin-top:8px"><em>За изпита е достатъчен само Случай I от поддръжката.</em></p>
+      </div>
+
+      <div class="sec-h">Визуализация — стъпки на Heapify</div>
+      <div class="viz">
+Вход: A[⟦3⟧] с A[3]=4 (нарушено свойство):
+        16
+       /  \
+      14   4    ← проблем: 4 < 10 (дете)
+     / \  / \
+    8   7 10  3
+
+Стъпка 1: Left(3)=6, Right(3)=7. A[6]=10 > A[3]=4 → largest=6
+          swap(A[3], A[6]) → A[3]=10, A[6]=4
+        16
+       /  \
+      14   10   ← фиксирано
+     / \  / \
+    8   7 4   3    ← 4 е листо, приключваме</div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Heapify "бута" елемента надолу докато намери правилно място или стане листо.</li>
+          <li>Предусловие: поддърветата на децата вече са пирамиди!</li>
+          <li>Сложност: \(O(\log n)\) — пропъсваме най-много \(\lfloor \log_2 n \rfloor\) нива.</li>
+          <li>За изпита — знай 5-те случая, но накратко можеш да се ограничиш до Случай I.</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Дефинирайте пирамидална инверсия. Дайте псевдокода на Iterative Heapify и докажете коректността му (поне Случай I от поддръжката на инварианта).</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c3" onchange="updateProgress()">
+        <label for="c3">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 4 -->
+  <div class="topic" id="t4">
+    <div class="topic-header">
+      <h2>Naive Build Heap — Алгоритъм 6, Теорема 63</h2>
+      <div class="topic-num">4</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Точна дефиниция</div>
+      <div class="card def">
+        <div class="card-label">Алгоритъм 6: Naive Build Heap</div>
+<pre><span class="nm">Naive-Build-Heap</span>(<span class="nm">A</span>[<span class="num">1</span>..<span class="nm">n</span>])
+<span class="num">1</span>  <span class="kw">for</span> <span class="nm">i</span> ← <span class="num">2</span> <span class="kw">to</span> <span class="nm">n</span>
+<span class="num">2</span>    <span class="nm">k</span> ← <span class="nm">i</span>
+<span class="num">3</span>    <span class="kw">while</span> <span class="nm">k</span> > <span class="num">1</span> <span class="kw">and</span> <span class="nm">A</span>[<span class="nm">Parent</span>(<span class="nm">k</span>)] &lt; <span class="nm">A</span>[<span class="nm">k</span>] <span class="kw">do</span>
+<span class="num">4</span>      <span class="nm">swap</span>(<span class="nm">A</span>[<span class="nm">k</span>], <span class="nm">A</span>[<span class="nm">Parent</span>(<span class="nm">k</span>)])
+<span class="num">5</span>      <span class="nm">k</span> ← <span class="nm">Parent</span>(<span class="nm">k</span>)</pre>
+      </div>
+
+      <div class="thm">
+        <div class="thm-label">Теорема 63: Коректността и сложността на Naive Build Heap</div>
+        <p>Naive-Build-Heap построява пирамида от произволен масив и работи в \(\Theta(n \log n)\) в най-лошия случай.</p>
+        <p style="margin-top:8px"><strong>Идея на доказателството:</strong> Инвариантът е "при всяко достигане на ред 1, A[1..i-1] е пирамида". Алгоритъмът "бута" новия елемент A[i] нагоре докато намери правилното му място — аналог на Insert в пирамида.</p>
+      </div>
+
+      <div class="sec-h">Защо е \(\Theta(n \log n)\)?</div>
+      <p>При вставяне на i-тия елемент, в най-лошия случай той "пропъква" нагоре \(O(\log i)\) нива. Сумата по всички i:</p>
+      <p style="text-align:center; margin:10px 0">\[\sum_{i=2}^{n} \log i = \log(n!) \approx n \log n \quad (\text{по формулата на Stirling})\]</p>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Идея: добавяме елементи един по един, всеки бута нагоре — като Insert.</li>
+          <li>Сложност: \(\Theta(n \log n)\) — <strong>по-бавен</strong> от Floyd Build Heap!</li>
+          <li>Инвариант: A[1..i-1] е пирамида при всяко достигане на ред 1.</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Дайте псевдокода на Naive Build Heap. Докажете коректността чрез инвариант. Каква е сложността?</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c4" onchange="updateProgress()">
+        <label for="c4">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 5 -->
+  <div class="topic" id="t5">
+    <div class="topic-header">
+      <h2>Iterative Heapify — Теорема 64 (5 случая)</h2>
+      <div class="topic-num">5</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Пълно доказателство на Теорема 64</div>
+      <div class="thm">
+        <div class="thm-label">Теорема 64: Коректността на Iterative Heapify</div>
+        <p>Ако A[⟦Left(i)⟧] и A[⟦Right(i)⟧] са пирамиди, след Iterative-Heapify(A[1..n], i), A[⟦i⟧] е пирамида.</p>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Инвариант 11</div>
+        <p>При всяко достигане на ред 2 на Iterative-Heapify: A[⟦Left(j)⟧] и A[⟦Right(j)⟧] (при съществуване) са пирамиди.</p>
+        <p style="margin-top:8px"><strong>База:</strong> При първото достигане на ред 2, j=i. По условие на Теоремата, и двете поддървета вече са пирамиди.</p>
+        <p style="margin-top:8px"><strong>Поддръжка:</strong> Разглеждаме достигане на ред 2, при което тялото на цикъла ще се изпълни. Имаме j ≤ ⌊n/2⌋ (j е нелисто). Нека l=Left(j), r=Right(j).</p>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">5 случая в поддръжката</div>
+        <p><strong>Случай I:</strong> A[l] ≤ A[j] и (r > n или A[r] ≤ A[j]).</p>
+        <p style="margin-left:16px">largest = j. Условието на ред 7 е лъжа → break. A[⟦j⟧] е пирамида, защото коренът е най-голям. Инвариантът не е засегнат, защото не правим swap.</p>
+
+        <p style="margin-top:12px"><strong>Случай II:</strong> A[l] > A[j] и A[l] ≥ A[r] (или r > n).</p>
+        <p style="margin-left:16px">largest = l. Разменяме A[j] с A[l]. Новото A[j] = старото A[l] ≥ A[r] и ≥ новото A[l] (защото старото A[l] беше ≥ всичко в A[⟦l⟧]). j ← l. При следващото достигане на ред 2 е нужно A[⟦Left(l)⟧] и A[⟦Right(l)⟧] да са пирамиди — те не бяха засегнати от swap-а. Инвариантът е в сила.</p>
+
+        <p style="margin-top:12px"><strong>Случай III:</strong> A[r] > A[j] и A[r] > A[l].</p>
+        <p style="margin-left:16px">largest = r. Разменяме A[j] с A[r]. Новото A[j] = старото A[r] > A[l]. j ← r. При следващото достигане на ред 2: A[⟦Left(r)⟧] и A[⟦Right(r)⟧] не са засегнати.</p>
+
+        <p style="margin-top:12px"><strong>Случай IV:</strong> r > n (само ляво дете) и A[l] > A[j].</p>
+        <p style="margin-left:16px">j е нелисто само ако j = ⌊n/2⌋. Разменяме A[j] с A[l]. j ← l. Но Left(l) > n (l е листо), следователно при следващото достигане на ред 2, условието j ≤ ⌊n/2⌋ е лъжа → цикълът терминира. A[⟦l⟧] е листо, следователно пирамида.</p>
+
+        <p style="margin-top:12px"><strong>Случай V:</strong> r > n и A[l] ≤ A[j].</p>
+        <p style="margin-left:16px">largest = j → break. A[j] ≥ A[l] и дясно дете няма → A[⟦j⟧] е пирамида.</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">За изпит — резюме на 5-те случая</div>
+        <table>
+          <tr><th>Случай</th><th>Условие</th><th>Действие</th><th>Резултат</th></tr>
+          <tr><td>I</td><td>j е подходящ корен</td><td>break</td><td>A[⟦j⟧] е пирамида</td></tr>
+          <tr><td>II</td><td>ляво е най-голямо</td><td>swap(j,l), j←l</td><td>продължаваме вляво</td></tr>
+          <tr><td>III</td><td>дясно е най-голямо</td><td>swap(j,r), j←r</td><td>продължаваме вдясно</td></tr>
+          <tr><td>IV</td><td>само ляво дете, ляво > j</td><td>swap(j,l), j←l (листо)</td><td>терминира</td></tr>
+          <tr><td>V</td><td>само ляво дете, ляво ≤ j</td><td>break</td><td>A[⟦j⟧] е пирамида</td></tr>
+        </table>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Формулирайте инварианта на Iterative Heapify. Разгледайте всичките 5 случая в поддръжката. (Забележка: за изпита е достатъчен само Случай I.)</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c5" onchange="updateProgress()">
+        <label for="c5">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 6 -->
+  <div class="topic" id="t6">
+    <div class="topic-header">
+      <h2>Build Heap на Floyd — Теорема 66 (коректност) и 67 (линейност)</h2>
+      <div class="topic-num">6</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Алгоритъм Build Heap</div>
+      <div class="card def">
+        <div class="card-label">Алгоритъм 8: Build Heap (Floyd, 1964)</div>
+<pre><span class="nm">Build-Heap</span>(<span class="nm">A</span>[<span class="num">1</span>..<span class="nm">n</span>])
+<span class="num">1</span>  <span class="kw">for</span> <span class="nm">i</span> ← ⌊<span class="nm">n</span>/<span class="num">2</span>⌋ <span class="kw">downto</span> <span class="num">1</span>
+<span class="num">2</span>    <span class="nm">Heapify</span>(<span class="nm">A</span>, <span class="nm">i</span>)</pre>
+        <p style="margin-top:8px">Идея: листата вече са пирамиди. Обработваме нелистата от дясно наляво (от ⌊n/2⌋ до 1), извиквайки Heapify за всяко.</p>
+      </div>
+
+      <div class="thm">
+        <div class="thm-label">Теорема 66: Коректността на Build Heap</div>
+        <p>Build-Heap построява пирамида от всеки вход.</p>
+        <p style="margin-top:8px"><strong>Инвариант 16:</strong> При всяко достигане на ред 1, A[⟦i+1⟧], A[⟦i+2⟧], …, A[⟦n⟧] са пирамиди.</p>
+        <p style="margin-top:8px"><strong>База:</strong> При i=⌊n/2⌋, A[⌊n/2⌋+1], …, A[n] са листа — тривиально пирамиди.</p>
+        <p style="margin-top:8px"><strong>Поддръжка:</strong> При достигане на ред 1 с i, A[⟦Left(i)⟧] и A[⟦Right(i)⟧] са пирамиди (по ИП, защото Left(i) > i и Right(i) > i). Heapify(A, i) прави A[⟦i⟧] пирамида (Теорема 64). i се декрементира. Инвариантът се запазва.</p>
+        <p style="margin-top:8px"><strong>Терминация:</strong> При i=0: A[⟦1⟧] = A е пирамида.</p>
+      </div>
+
+      <div class="thm">
+        <div class="thm-label">Теорема 67: Build Heap работи в линейно \(\Theta(n)\) време</div>
+        <p>Сложността по-горна граница:</p>
+        <p style="text-align:center; margin:10px 0">\[T(n) \leq \sum_{k=1}^{\lfloor \log n \rfloor} \left\lceil \frac{n}{2^{k+1}} \right\rceil \cdot k\]</p>
+        <p>Броят на върховете с височина k е \(\lceil n/2^{k+1} \rceil\) (Теорема 62). Всеки такъв връх може да "бута" надолу с най-много k стъпки.</p>
+        <p style="margin-top:8px">Опростена оценка:</p>
+        <p style="text-align:center; margin:10px 0">\[\sum_{k=1}^{\lfloor \log n \rfloor} \frac{n}{2^k} \cdot k \leq n \sum_{k=1}^{\infty} \frac{k}{2^k} = n \cdot 2 = O(n)\]</p>
+        <p>Редът \(\sum_{k=1}^{\infty} k/2^k = 2\) е сходящ (критерий на d'Alembert: \(\lim_{k\to\infty} \frac{(k+1)/2^{k+1}}{k/2^k} = 1/2 < 1\)).</p>
+      </div>
+
+      <div class="sec-h">Визуализация</div>
+      <div class="viz">
+Вход: A = [4, 1, 3, 2, 16, 9, 10, 14, 8, 7]
+⌊10/2⌋ = 5, обработваме i=5,4,3,2,1
+
+i=5: Heapify(A,5) → A[5]=16 > децата → OK
+i=4: Heapify(A,4) → A[4]=2 < A[8]=14 → swap → A[4]=14
+i=3: Heapify(A,3) → A[3]=3 < A[7]=10 → swap → A[3]=10
+i=2: Heapify(A,2) → A[2]=1 < A[5]=16 → swap → A[2]=16
+                           A[5]=1 < A[10]=7 → swap → A[5]=7
+i=1: Heapify(A,1) → A[1]=4 < A[2]=16 → swap → A[1]=16
+                          A[2]=4 < A[5]=7 → swap → A[2]=7
+                          ...
+
+Резултат: [16, 14, 10, 8, 7, 9, 3, 2, 4, 1] — пирамида!</div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Build Heap е \(\Theta(n)\) — <strong>линеен</strong>, въпреки че извиква Heapify n/2 пъти!</li>
+          <li>Ключът: повечето върхове са близо до листата и Heapify за тях работи почти за O(1).</li>
+          <li>Коректността се доказва с инвариант: поддървета на децата вече са пирамиди.</li>
+          <li>Инвариант: A[⟦i+1⟧], …, A[⟦n⟧] са пирамиди при достигане на ред 1.</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Дайте псевдокода на Build Heap. Докажете коректността чрез инвариант (Теорема 66). Докажете линейната сложност (Теорема 67).</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c6" onchange="updateProgress()">
+        <label for="c6">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 7 -->
+  <div class="topic" id="t7">
+    <div class="topic-header">
+      <h2>Heapsort — Теорема 68</h2>
+      <div class="topic-num">7</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Точна дефиниция</div>
+      <div class="card def">
+        <div class="card-label">Алгоритъм 9: Heapsort (Williams, 1964)</div>
+<pre><span class="nm">Heapsort</span>(<span class="nm">A</span>[<span class="num">1</span>..<span class="nm">n</span>])
+<span class="num">1</span>  <span class="nm">Build-Heap</span>(<span class="nm">A</span>)
+<span class="num">2</span>  <span class="kw">for</span> <span class="nm">i</span> ← <span class="nm">n</span> <span class="kw">downto</span> <span class="num">2</span>
+<span class="num">3</span>    <span class="nm">swap</span>(<span class="nm">A</span>[<span class="num">1</span>], <span class="nm">A</span>[<span class="nm">i</span>])
+<span class="num">4</span>    <span class="nm">Heapify</span>(<span class="nm">A</span>[<span class="num">1</span>..<span class="nm">i</span>-<span class="num">1</span>], <span class="num">1</span>)</pre>
+        <p style="margin-top:8px">Идея: коренът (A[1]) = максимален елемент. Поставяме го на края, свиваме пирамидата и възстановяваме пирамидното свойство.</p>
+      </div>
+
+      <div class="thm">
+        <div class="thm-label">Теорема 68: Коректността на Heapsort</div>
+        <p>Heapsort е коректен сортиращ алгоритъм.</p>
+        <p style="margin-top:8px"><strong>Инвариант 17:</strong> При всяко достигане на ред 2:</p>
+        <ul class="bullet">
+          <li>A[i+1..n] съдържа n-i най-големи елементи от A₀[1..n], в сортиран вид.</li>
+          <li>A[1..i] е пирамида.</li>
+        </ul>
+        <p style="margin-top:8px"><strong>База (i=n):</strong> A[n+1..n] е празен (вярно тривиально). A[1..n] е пирамида след Build-Heap.</p>
+        <p style="margin-top:8px"><strong>Поддръжка:</strong> A[1] е макс елемент на A[1..i]. swap(A[1],A[i]) → A[i] е на правилното място. A[i..n] съдържа n-i+1 най-големи в сортиран вид. Heapify(A[1..i-1], 1) → A[1..i-1] е пирамида. При следващо i, двете части на инварианта са в сила.</p>
+        <p style="margin-top:8px"><strong>Терминация (i=1):</strong> A[2..n] е n-1 най-големи елемента в сортиран вид. A[1] е минималният → A[1..n] е сортиран.</p>
+      </div>
+
+      <div class="sec-h">Визуализация</div>
+      <div class="viz">
+Стъпки на Heapsort върху [16,14,10,8,7,9,3,2,4,1]:
+
+i=10: swap(A[1],A[10]) → [1,14,10,8,7,9,3,2,4, | 16]
+      Heapify → [14,8,10,4,7,9,3,2,1, | 16]
+i=9:  swap(A[1],A[9])  → [1,8,10,4,7,9,3,2, | 14,16]
+      Heapify → [10,8,9,4,7,1,3,2, | 14,16]
+...
+i=2:  [2,1, | 3,4,7,8,9,10,14,16]
+      swap → [1, | 2,3,4,7,8,9,10,14,16]
+
+Финал: [1,2,3,4,7,8,9,10,14,16] ✓</div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Heapsort: 1) Build-Heap \(\Theta(n)\), 2) n-1 пъти: swap + Heapify \(\Theta(\log n)\) → общо \(\Theta(n \log n)\).</li>
+          <li>Heapsort е <strong>in-place</strong> (сложност по памет \(\Theta(1)\) при итеративен Heapify).</li>
+          <li>Heapsort <strong>не е стабилен</strong>.</li>
+          <li>Сложността е \(\Theta(n \log n)\) и в <strong>най-добрия случай</strong> (Допълнение 35).</li>
+        </ul>
+      </div>
+      <div class="conn-box">
+        <div class="conn-label">Сравнение с другите сортиращи алгоритми</div>
+        <table>
+          <tr><th>Алгоритъм</th><th>Най-лош</th><th>Среден</th><th>Памет</th><th>Стабилен</th></tr>
+          <tr><td>Heapsort</td><td>\(\Theta(n\log n)\)</td><td>\(\Theta(n\log n)\)</td><td>\(\Theta(1)\)</td><td>Не</td></tr>
+          <tr><td>Mergesort</td><td>\(\Theta(n\log n)\)</td><td>\(\Theta(n\log n)\)</td><td>\(\Theta(n)\)</td><td>Да</td></tr>
+          <tr><td>Naive Build Heap</td><td>\(\Theta(n\log n)\)</td><td>—</td><td>\(\Theta(1)\)</td><td>—</td></tr>
+        </table>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Дайте псевдокода на Heapsort. Формулирайте инварианта на цикъла и докажете коректността (Теорема 68). Каква е сложността?</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c7" onchange="updateProgress()">
+        <label for="c7">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 8 -->
+  <div class="topic" id="t8">
+    <div class="topic-header">
+      <h2>Приоритетна опашка и Increase-Key</h2>
+      <div class="topic-num">8</div>
+    </div>
+    <div class="topic-body">
+      <div class="sec-h">Точна дефиниция</div>
+      <div class="card def">
+        <div class="card-label">Приоритетна опашка (Priority Queue)</div>
+        <p>Приоритетна опашка е абстрактен тип данни (АТД), поддържащ следните операции:</p>
+        <ul class="bullet">
+          <li><strong>Insert(Q, x):</strong> Вставя елемент x в опашката.</li>
+          <li><strong>Maximum(Q):</strong> Връща максималния елемент.</li>
+          <li><strong>Extract-Max(Q):</strong> Изважда и връща максималния елемент.</li>
+          <li><strong>Increase-Key(Q, x, k):</strong> Увеличава ключа на елемент x до k ≥ текущ ключ.</li>
+        </ul>
+        <p style="margin-top:8px">Пирамидата е ефикасна имплементация на приоритетна опашка с <strong>\(O(\log n)\) за всяка операция</strong>.</p>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Increase-Key — псевдокод</div>
+<pre><span class="nm">Increase-Key</span>(<span class="nm">A</span>[<span class="num">1</span>..<span class="nm">n</span>], <span class="nm">i</span>, <span class="nm">key</span>)
+<span class="cm">(* key ≥ A[i] *)</span>
+<span class="num">1</span>  <span class="nm">A</span>[<span class="nm">i</span>] ← <span class="nm">key</span>
+<span class="num">2</span>  <span class="kw">while</span> <span class="nm">i</span> > <span class="num">1</span> <span class="kw">and</span> <span class="nm">A</span>[<span class="nm">Parent</span>(<span class="nm">i</span>)] &lt; <span class="nm">A</span>[<span class="nm">i</span>] <span class="kw">do</span>
+<span class="num">3</span>    <span class="nm">swap</span>(<span class="nm">A</span>[<span class="nm">i</span>], <span class="nm">A</span>[<span class="nm">Parent</span>(<span class="nm">i</span>)])
+<span class="num">4</span>    <span class="nm">i</span> ← <span class="nm">Parent</span>(<span class="nm">i</span>)</pre>
+        <p style="margin-top:8px">Идея: Увеличаваме A[i] и "бутаме" нагоре докато пирамидното свойство е нарушено — аналог на вставянето в Naive Build Heap.</p>
+      </div>
+
+      <div class="sec-h">Ефикасност на операциите с пирамида</div>
+      <table>
+        <tr><th>Операция</th><th>Сложност</th><th>Идея</th></tr>
+        <tr><td>Insert</td><td>\(O(\log n)\)</td><td>Добавяме листо и извикваме Increase-Key</td></tr>
+        <tr><td>Maximum</td><td>\(O(1)\)</td><td>Просто връщаме A[1]</td></tr>
+        <tr><td>Extract-Max</td><td>\(O(\log n)\)</td><td>swap(A[1], A[n]), n--, Heapify(A,1)</td></tr>
+        <tr><td>Increase-Key</td><td>\(O(\log n)\)</td><td>Обновяваме и бутаме нагоре</td></tr>
+        <tr><td>Build-Heap</td><td>\(\Theta(n)\)</td><td>Floyd алгоритъм</td></tr>
+      </table>
+
+      <div class="sec-h">Приложения</div>
+      <div class="conn-box">
+        <div class="conn-label">Приложения на приоритетната опашка</div>
+        <ul class="bullet">
+          <li><strong>Dijkstra</strong> (най-кратък път): Extract-Min при всяка стъпка.</li>
+          <li><strong>Prim</strong> (минимално покривно дърво): Increase-Key за обновяване на ключове.</li>
+          <li><strong>A* алгоритъм</strong>: управление на границата при търсене.</li>
+          <li><strong>Heapsort:</strong> Многократно Extract-Max дава сортиране.</li>
+          <li><strong>Huffman кодиране:</strong> Многократно обединяване на два най-малки елемента.</li>
+        </ul>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">За изпит</div>
+        <ul class="bullet">
+          <li>Пирамидата е <strong>имплементация</strong> на АТД приоритетна опашка.</li>
+          <li>Increase-Key "бута" нагоре — аналог на Insert в Naive Build Heap.</li>
+          <li>Всички операции: \(O(\log n)\), освен Maximum: \(O(1)\) и Build: \(\Theta(n)\).</li>
+        </ul>
+      </div>
+      <div class="exam-box">
+        <div class="exam-label">Изпитен въпрос</div>
+        <p>Какво е приоритетна опашка? Дайте псевдокода на Increase-Key. Каква е сложността на операциите?</p>
+      </div>
+      <div class="check-wrap">
+        <input type="checkbox" id="c8" onchange="updateProgress()">
+        <label for="c8">Изучена тема</label>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+function toggleTheme() {
+  const root = document.documentElement;
+  const isLight = root.getAttribute('data-theme') === 'light';
+  root.setAttribute('data-theme', isLight ? '' : 'light');
+  document.querySelector('#topbar .btn').textContent = isLight ? 'Светла тема' : 'Тъмна тема';
+}
+function updateProgress() {
+  const total = 8;
+  const checked = document.querySelectorAll('input[type=checkbox]:checked').length;
+  const pct = Math.round(checked / total * 100);
+  document.getElementById('progress-bar-inner').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = checked + ' от ' + total + ' теми изучени';
+}
+const links = document.querySelectorAll('#sidebar li a');
+const topics = document.querySelectorAll('.topic');
+window.addEventListener('scroll', () => {
+  let current = '';
+  topics.forEach(t => { if (window.scrollY >= t.offsetTop - 100) current = t.id; });
+  links.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+</script>
+</body>
+</html>

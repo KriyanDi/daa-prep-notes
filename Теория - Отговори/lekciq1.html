@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лекция 1 - Изчислителни задачи и алгоритми | ДАА 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #1a1d27; --bg3: #242838;
+    --accent: #4f8ef7; --accent2: #7c5cbf; --green: #2ecc71;
+    --yellow: #f39c12; --red: #e74c3c; --text: #e8eaf0;
+    --text2: #9ca3af; --border: #2d3148;
+    --def-bg: #0d2137; --def-border: #1e5799;
+    --ex-bg: #0d2d1a; --ex-border: #1e7d3e;
+    --key-bg: #2d2100; --key-border: #7d5c00;
+    --code-bg: #141822;
+  }
+  [data-theme="light"] {
+    --bg: #f0f2f8; --bg2: #ffffff; --bg3: #e8ecf5;
+    --accent: #2563eb; --accent2: #7c3aed; --green: #16a34a;
+    --yellow: #d97706; --red: #dc2626; --text: #1e293b;
+    --text2: #64748b; --border: #cbd5e1;
+    --def-bg: #eff6ff; --def-border: #3b82f6;
+    --ex-bg: #f0fdf4; --ex-border: #22c55e;
+    --key-bg: #fffbeb; --key-border: #f59e0b;
+    --code-bg: #1e293b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+  /* Layout */
+  #layout { display: flex; min-height: 100vh; }
+  #sidebar {
+    width: 280px; background: var(--bg2); border-right: 1px solid var(--border);
+    position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto;
+    transition: transform 0.3s; z-index: 100; padding: 20px 0;
+  }
+  #sidebar h2 { color: var(--accent); font-size: 0.85rem; text-transform: uppercase;
+    letter-spacing: 1px; padding: 0 20px 10px; border-bottom: 1px solid var(--border); }
+  #sidebar ul { list-style: none; padding: 10px 0; }
+  #sidebar li a { display: block; padding: 8px 20px; color: var(--text2); text-decoration: none;
+    font-size: 0.88rem; border-left: 3px solid transparent; transition: all 0.2s; }
+  #sidebar li a:hover, #sidebar li a.active { color: var(--accent); border-left-color: var(--accent);
+    background: rgba(79,142,247,0.08); }
+  #main { margin-left: 280px; flex: 1; padding: 40px; max-width: 1000px; }
+
+  /* Header */
+  #topbar { position: sticky; top: 0; background: var(--bg2); border-bottom: 1px solid var(--border);
+    z-index: 50; display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 40px; margin: -40px -40px 40px; }
+  #topbar h1 { font-size: 1.1rem; color: var(--accent); }
+  .btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text); cursor: pointer; font-size: 0.85rem; }
+  .btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* Progress bar */
+  #progress-wrap { background: var(--bg3); border-radius: 8px; padding: 16px 20px;
+    margin-bottom: 32px; border: 1px solid var(--border); }
+  #progress-wrap h3 { font-size: 0.9rem; color: var(--text2); margin-bottom: 10px; }
+  #progress-bar-outer { background: var(--bg); border-radius: 99px; height: 8px; overflow: hidden; }
+  #progress-bar-inner { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 99px; transition: width 0.5s; }
+  #progress-label { font-size: 0.85rem; color: var(--text2); margin-top: 6px; }
+
+  /* Topic sections */
+  .topic { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 40px; overflow: hidden; scroll-margin-top: 80px; }
+  .topic-header { padding: 20px 24px; background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: space-between; }
+  .topic-header h2 { color: white; font-size: 1.15rem; }
+  .topic-num { background: rgba(255,255,255,0.2); color: white; border-radius: 50%;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .topic-body { padding: 24px; }
+
+  /* Cards */
+  .card { border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .card.def { background: var(--def-bg); border-left: 4px solid var(--def-border); }
+  .card.def .card-label { color: var(--accent); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.ex { background: var(--ex-bg); border-left: 4px solid var(--ex-border); }
+  .card.ex .card-label { color: var(--green); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.key { background: var(--key-bg); border-left: 4px solid var(--key-border); }
+  .card.key .card-label { color: var(--yellow); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.warn { background: rgba(231,76,60,0.07); border-left: 4px solid var(--red); }
+
+  /* Section headers within topic */
+  .sec-h { font-size: 0.95rem; font-weight: 700; color: var(--accent); margin: 20px 0 8px;
+    display: flex; align-items: center; gap: 8px; }
+  .sec-h::before { content: ''; display: inline-block; width: 3px; height: 16px;
+    background: var(--accent); border-radius: 2px; }
+
+  /* Code blocks */
+  pre { background: var(--code-bg); color: #cdd6f4; border-radius: 8px; padding: 16px 20px;
+    overflow-x: auto; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem;
+    line-height: 1.6; margin: 12px 0; border: 1px solid var(--border); }
+  code { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem; }
+  .kw { color: #cba6f7; } .cm { color: #6c7086; font-style: italic; }
+  .nm { color: #89dceb; } .op { color: #89b4fa; } .str { color: #a6e3a1; }
+  .num { color: #fab387; }
+
+  /* Diagram / visualization */
+  .viz { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 20px; font-family: monospace; font-size: 0.85rem; color: #cdd6f4;
+    white-space: pre; overflow-x: auto; margin: 12px 0; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+  th { background: var(--bg3); color: var(--accent); padding: 10px 12px; text-align: left;
+    border-bottom: 2px solid var(--accent); }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: rgba(79,142,247,0.05); }
+
+  /* Bullet lists */
+  ul.bullet { list-style: none; padding: 0; }
+  ul.bullet li { padding: 6px 0 6px 24px; position: relative; }
+  ul.bullet li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+
+  /* Exam box */
+  .exam-box { background: linear-gradient(135deg, rgba(231,76,60,0.1), rgba(231,76,60,0.05));
+    border: 1px solid var(--red); border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .exam-box .card-label { color: var(--red); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+  /* Connection box */
+  .conn-box { background: rgba(124,92,191,0.1); border: 1px solid var(--accent2);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .conn-box .card-label { color: var(--accent2); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+  /* Theorem box */
+  .thm { background: rgba(79,142,247,0.07); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+  .thm-title { color: var(--accent); font-weight: 700; margin-bottom: 8px; }
+
+  p { margin: 10px 0; }
+  b, strong { color: var(--accent); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; padding: 20px; }
+    #topbar { padding: 12px 20px; margin: -20px -20px 20px; }
+  }
+</style>
+</head>
+<body data-theme="dark">
+
+<div id="layout">
+<nav id="sidebar">
+  <h2>Лекция 1 - Навигация</h2>
+  <ul>
+    <li><a href="#t1">Изчислителни задачи</a></li>
+    <li><a href="#t2">Видове изчислителни задачи</a></li>
+    <li><a href="#t3">Функция, съответна на задача</a></li>
+    <li><a href="#t4">Алгоритми и задачи</a></li>
+    <li><a href="#t5">Knuth за алгоритмите</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+  <div id="topbar">
+    <h1>ДАА 2026 - Лекция 1: Изчислителни задачи и алгоритми</h1>
+    <button class="btn" onclick="toggleTheme()">Тема</button>
+  </div>
+
+  <div id="progress-wrap">
+    <h3>Готовност за изпит</h3>
+    <div id="progress-bar-outer"><div id="progress-bar-inner" style="width:0%"></div></div>
+    <div id="progress-label">Отметнете темите, които сте научили</div>
+    <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;">
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Изчислителни задачи</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Видове задачи</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Функция, съответна на задача</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Алгоритми и задачи</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Knuth за алгоритмите</label>
+    </div>
+  </div>
+
+  <!-- TOPIC 1 -->
+  <section class="topic" id="t1">
+    <div class="topic-header">
+      <h2>Изчислителни задачи</h2>
+      <div class="topic-num">1</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — по лекции на преподавателя (проф. Минко Марков, 2026)</div>
+        <p><strong>Определение 1: Изчислителна задача</strong></p>
+        <p>Изчислителна задача \(\Pi\) е двуместна релация \(\Pi \subseteq I \times S\), където \(I\) е безкрайното множество от <strong>екземплярите</strong> (instances), а \(S\) е безкрайното или крайно множество от <strong>решенията</strong> (solutions). За всеки екземпляр \(x \in I\), за всяко решение \(y \in S\), такова че \((x,y) \in \Pi\), казваме, че \(y\) е решение за \(x\).</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Изчислителната задача е като <em>въпросник с безброй много въпроси</em>. За всеки "въпрос" (екземпляр) може да има нула, един или много "правилни отговора" (решения). Например задачата "намери път в граф" — за всеки граф с начален и краен връх може да има много пътища, или нито един.</p>
+      <p>Ключово разграничение: Задачата е <strong>статично описание</strong> (релация/множество), докато алгоритъмът е <strong>динамичен процес</strong> (механизъм).</p>
+
+      <div class="card warn">
+        <div class="card-label">Честа грешка!</div>
+        <p>Много студенти бъркат "алгоритъм" и "изчислителна задача". Те са фундаментално различни неща — задачата е статична релация, алгоритъмът е динамичен процес. За една задача има безброй много алгоритми!</p>
+      </div>
+
+      <div class="sec-h">Визуализация</div>
+      <div class="viz">
+Изчислителна задача Π ⊆ I × S
+
+Множество I (екземпляри)          Множество S (решения)
+┌─────────────────────────┐        ┌──────────────────────────┐
+│                         │        │                          │
+│  x₁ = ⟨G₁, u, v⟩  ─────┼──────▶ │  p₁ (път 1)              │
+│                         │  ─────▶│  p₂ (път 2)              │
+│                         │  ─────▶│  p₃ (път 3)              │
+│                         │        │                          │
+│  x₂ = ⟨G₂, u, v⟩  ─────┼──────▶ │  q₁ (единственият път)   │
+│                         │        │                          │
+│  x₃ = ⟨G₃, u, v⟩       │        │  (няма пътища)           │
+│  (несвързан граф)       │        │                          │
+└─────────────────────────┘        └──────────────────────────┘
+
+Π = { (x₁,p₁), (x₁,p₂), (x₁,p₃), (x₂,q₁) }
+(x₃ не е в релацията — няма решение)
+</div>
+
+      <div class="sec-h">Конкретен пример</div>
+      <div class="card ex">
+        <div class="card-label">Пример: Задачата "Намиране на прости числа"</div>
+        <ul class="bullet">
+          <li><strong>Екземпляри (I):</strong> Всички естествени числа ≥ 2, тоест {2, 3, 4, 5, 6, ...}</li>
+          <li><strong>Решения (S):</strong> {True, False}</li>
+          <li><strong>Релацията:</strong> (5, True) ∈ Π, (6, False) ∈ Π, (7, True) ∈ Π, (9, False) ∈ Π</li>
+          <li><strong>Забележка:</strong> Тук за всеки екземпляр има точно едно решение — задачата е функция!</li>
+        </ul>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">Пример: Задачата "Сортиране на числа" (Задача 6 от лекцията)</div>
+        <p><strong>Екземпляр:</strong> Редица A = (a₁, a₂, ..., aₙ) от числа.</p>
+        <p><strong>Решение:</strong> Пермутация (a'₁, a'₂, ..., a'ₙ) на числата от A, такава че a'₁ ≤ a'₂ ≤ ... ≤ a'ₙ.</p>
+        <p><em>Екземпляр:</em> A = (3, 1, 2). <em>Решение:</em> (1, 2, 3). Единствено в случая без повторения.</p>
+        <p><em>Екземпляр:</em> A = (2, 2, 1). <em>Решение:</em> (1, 2, 2). Отново единствено.</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Изчислителна задача = релация Π ⊆ I × S (формална дефиниция)</li>
+          <li>За един екземпляр може да има нула, едно или повече решения</li>
+          <li>Задачата е безкрайна (безброй много екземпляри) — само тогава анализът е смислен</li>
+          <li>Задачата е статичен обект (математическа релация), за разлика от алгоритъма</li>
+          <li>Garey и Johnson: задачата описва "общ въпрос с параметри"; екземплярът — конкретни стойности</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="card-label">Връзка с другите теми</div>
+        <p>Изчислителните задачи се свързват директно с алгоритмите (Тема 4), асимптотичната сложност (Лекция 2) и теорията на NP-пълнотата (Лекция 14). Релационното описание е основа за разбиране на разликата между задача и алгоритъм.</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p><strong>Типична формулировка:</strong> "Дайте формалната дефиниция на изчислителна задача. Обяснете как изглежда задачата Намиране на път в граф като релация."</p>
+        <p><strong>Трябва да знаете:</strong> Дефиниция 1 дословно (или с еквивалентна формулировка), и да дадете конкретен пример с екземпляри, решения и релацията между тях.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 2 -->
+  <section class="topic" id="t2">
+    <div class="topic-header">
+      <h2>Видове изчислителни задачи</h2>
+      <div class="topic-num">2</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — по лекции на преподавателя</div>
+        <p><strong>Три вида задачи (по лекция 1):</strong></p>
+        <p><strong>Определение 3: Задачи за разпознаване</strong><br>
+        Задача за разпознаване е всяка изчислителна задача \(\Pi \subseteq I \times S\), за която \(S = \{True, False\}\). Множеството от екземплярите се разбива на \(\Pi_Y\) (Да-екземпляри) и \(\Pi_N\) (Не-екземпляри).</p>
+        <p><strong>Определение 4: Оптимизационни задачи</strong><br>
+        Оптимизационна задача е задача, в която всеки екземпляр се асоциира с множество от <em>допустими решения</em>. Дефинирана е <em>целева функция</em>, изобразяваща решение в число (цена). Целта е минимизация или максимизация.</p>
+        <p><strong>Определение 5: Задачи за търсене</strong><br>
+        Задача за търсене е изчислителна задача, в която за даден екземпляр има нула, едно или повече решения. Може да се иска кой да е елемент от множеството от решенията или индикация, че то е празно.</p>
+      </div>
+
+      <div class="sec-h">Визуализация — Йерархия на видовете</div>
+      <div class="viz">
+┌─────────────────────────────────────────────────────────────┐
+│               ЗАДАЧИ ЗА ТЪРСЕНЕ (Search Problems)            │
+│   (най-общи — всяка задача е в някакъв смисъл за търсене)   │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │      ОПТИМИЗАЦИОННИ ЗАДАЧИ (Optimization)            │  │
+│  │  (с целева функция, минимизация или максимизация)    │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │    ЗАДАЧИ ЗА РАЗПОЗНАВАНЕ (Decision Problems)        │  │
+│  │    S = {True, False} — еднобитово решение            │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+Оптимизационните и разпознавателните задачи са строги
+подмножества на задачите за търсене.
+</div>
+
+      <div class="sec-h">Сравнителна таблица</div>
+      <table>
+        <tr><th>Вид задача</th><th>Множество решения S</th><th>Пример</th><th>Типичен въпрос</th></tr>
+        <tr><td><strong>За разпознаване</strong></td><td>{True, False}</td><td>Дали граф е свързан?</td><td>Да или Не?</td></tr>
+        <tr><td><strong>Оптимизационна</strong></td><td>Допустими решения с цена</td><td>Намери най-късия път</td><td>Какво е минимумът/максимумът?</td></tr>
+        <tr><td><strong>За търсене</strong></td><td>Произволно множество</td><td>Намери произволен път</td><td>Съществува ли решение? Дай едно.</td></tr>
+      </table>
+
+      <div class="card ex">
+        <div class="card-label">Конкретен пример: Задачата Hamiltonian Cycle</div>
+        <p><strong>Версия за разпознаване (Decision Problem):</strong></p>
+        <p>екземпляр: Неориентиран граф G. | въпрос: Дали има Хамилтонов цикъл в G?</p>
+        <hr>
+        <p><strong>Версия за търсене:</strong> Намери Хамилтонов цикъл в G или индикирай, че няма.</p>
+        <hr>
+        <p><strong>Версия за оптимизация (TSP — Пътуващ търговец):</strong> Намери Хамилтонов цикъл с минимална дължина.</p>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">Пример стъпка по стъпка: Оптимизационна задача "Най-кък път"</div>
+        <p><strong>Екземпляр:</strong> ⟨G, w, s, t⟩ — граф G с тегла w, начален връх s, краен връх t.</p>
+        <p><strong>Допустими решения:</strong> Всички пътища от s до t в G.</p>
+        <p><strong>Целева функция:</strong> За всеки път p, цената е w(p) = сума от теглата на ребрата.</p>
+        <p><strong>Цел:</strong> Минимизация (намери пътя с минималната цена).</p>
+        <p><strong>Можем да искаме:</strong></p>
+        <ul class="bullet">
+          <li>Само минималната цена (олекотен вариант)</li>
+          <li>Самия оптимален път (тежък вариант)</li>
+          <li>Броя на оптималните пътища (рядко)</li>
+        </ul>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Важно: Версия за разпознаване на оптимизационна задача (Наблюдение 2)</div>
+        <p>Всяка оптимизационна задача Π може да бъде превърната в задача за разпознаване Π', като добавим число k и заменим "намери оптималното решение" с "Дали има решение с цена ≤ k?"</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li><strong>Разпознаване:</strong> S = {True, False}, делим екземплярите на Да (ΠY) и Не (ΠN)</li>
+          <li><strong>Оптимизация:</strong> допустими решения + целева функция + цел (мин/макс)</li>
+          <li><strong>Търсене:</strong> най-общ вид — практически повтаря Определение 1</li>
+          <li>Задачите за разпознаване са важни за теорията на NP-пълнотата (Лекция 14)</li>
+          <li>На практика от оптимизационни задачи искаме оптимално решение, не само цената</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Изброете и дефинирайте трите вида изчислителни задачи. Дайте пример за всеки вид. Обяснете как оптимизационна задача може да се превърне в задача за разпознаване."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 3 -->
+  <section class="topic" id="t3">
+    <div class="topic-header">
+      <h2>Функция, съответна на изчислителна задача</h2>
+      <div class="topic-num">3</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — по лекции на преподавателя</div>
+        <p><strong>Определение 2: Функция, съответна на изчислителна задача</strong></p>
+        <p>Нека е дадена изчислителна задача \(\Pi \subseteq I \times S\). Нека \(\star\) е елемент, непринадлежащ на \(S\). Нека \(S' = S \cup \{\star\}\).</p>
+        <p>Функция, съответна на \(\Pi\), е всяка функция \(f: I \to S'\), такава чe \(\forall x \in I\):</p>
+        <ul class="bullet">
+          <li>ако съществува решение за \(x\), то \(f(x)\) е <em>някое</em> решение за \(x\);</li>
+          <li>ако не съществува решение за \(x\), то \(f(x) = \star\).</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Изчислителната задача е <em>релация</em> (може да има много решения за един екземпляр). Но алгоритъмът трябва да върне <em>точно едно</em> нещо. Тук се появява "функцията, съответна на задачата" — тя избира конкретно решение (или ★ ако няма решение).</p>
+      <p>Символът ★ (звездичка) играе роля на специален маркер — "няма решение".</p>
+
+      <div class="viz">
+Изчислителна задача Π (релация):              Функция съответна f (функция):
+
+x₁ ──→ p₁                                   x₁ ──→ p₂  (избираме едно от p₁, p₂, p₃)
+x₁ ──→ p₂     Π ⊆ I × S                     x₂ ──→ q₁
+x₁ ──→ p₃                                   x₃ ──→ ★   (няма решение)
+x₂ ──→ q₁
+x₃ ──→ (нищо)
+
+   S                                            S' = S ∪ {★}
+</div>
+
+      <div class="sec-h">Конкретен пример</div>
+      <div class="card ex">
+        <div class="card-label">Пример: Задачата Намиране на прост делител</div>
+        <p><strong>Задача:</strong> За дадено цяло число n > 1, намери прост делител.</p>
+        <p><strong>Екземпляри:</strong> {2, 3, 4, 5, 6, 7, 8, ...}</p>
+        <p><strong>Решения:</strong> Простите числа</p>
+        <p><strong>Релацията Π:</strong> (12, 2) ∈ Π, (12, 3) ∈ Π (и 2 и 3 са прости делители на 12)</p>
+        <p><strong>Функция, съответна на Π:</strong> f(12) = 2 <em>или</em> f(12) = 3 — избираме едно!</p>
+        <p>f(7) = 7 (единственото решение е самото 7)</p>
+        <p>Ако задачата беше "намери прост делител > n/2" за n=12: f(12) = ★ (няма такъв делител)</p>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Разяснение 3: Задачи и алгоритми</div>
+        <p>При дадена изчислителна задача, която е релация, <strong>алгоритъм за тази задача е всяка реализация на функция, съответна на тази задача-релация</strong>, на някакво приемливо ниво на детайлност.</p>
+        <p>Всеки детерминиран алгоритъм реализира именно <em>функция</em>, а не релация — при даден вход, изходът е строго определен!</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Задачата е релация (много решения за един вход), алгоритъмът реализира функция (едно решение)</li>
+          <li>f: I → S ∪ {★} — функцията, съответна на задачата</li>
+          <li>★ е специален символ за "няма решение"</li>
+          <li>За всяка задача има безброй много функции, съответни на нея</li>
+          <li>Алгоритмите реализират тотални функции (ако завършват винаги) или частични (ако могат да "зациклят")</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="card-label">Връзка с другите теми</div>
+        <p>Понятието "функция, съответна на задача" е мостът между статичното понятие "задача" и динамичното "алгоритъм". Свързва се с Разяснение 3 (задачи и алгоритми) и с въпроса дали алгоритъмът реализира тотална или частична функция (Лекция 2, доказателство за финитност).</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Какво е функция, съответна на изчислителна задача? Защо трябва да въвеждаме такова понятие, след като задачата вече е дефинирана?"</p>
+        <p><em>Отговор:</em> Защото задачата е релация (може да има много решения), а алгоритъмът трябва да върне конкретно едно. Нуждаем се от функция f: I → S ∪ {★}, която за всеки вход избира едно решение (или ★ при липса на решение).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 4 -->
+  <section class="topic" id="t4">
+    <div class="topic-header">
+      <h2>Алгоритми; алгоритми и изчислителни задачи</h2>
+      <div class="topic-num">4</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — по лекции на преподавателя</div>
+        <p><strong>Разяснение 3: Задачи и алгоритми</strong></p>
+        <p>При дадена изчислителна задача, която е релация, изобразяваща екземпляри в решения, <strong>алгоритъм за тази задача е всяка реализация на функция, съответна на тази задача-релация, на някакво приемливо ниво на детайлност.</strong></p>
+        <br>
+        <p><strong>Steve Skiena:</strong> "An algorithm is a procedure to accomplish a specific task. An algorithm is the idea behind any reasonable computer program."</p>
+        <br>
+        <p><strong>Jack Edmonds:</strong> "Here 'algorithm' is used in the strict sense to mean the idealization of some physical machinery which gives a definite output, consisting of cost plus the desired result, for each member of a specified domain of inputs."</p>
+        <br>
+        <p><strong>Edward Moore:</strong> "The methods given in this paper require no foresight or ingenuity, and hence deserve to be called algorithms. They would be especially suited for use in machine..."</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Алгоритъмът е <em>механична процедура</em> — последователност от ясни, недвусмислени инструкции, чието изпълнение не изисква човешка интуиция или прозрение. Може да се изпълни от машина.</p>
+      <p>Алгоритъмът е <strong>крайна</strong> редица от инструкции, работи в <strong>дискретно</strong> (стъпково) <strong>време</strong>, и е <strong>изолиран</strong> от "външния свят" (получава вход в началото, дава изход в края).</p>
+
+      <div class="viz">
+  ┌──────────────────────────────────────────────────┐
+  │                  АЛГОРИТЪМ                        │
+  │                                                  │
+  │  вход ──→ [Инструкция 1]                         │
+  │           [Инструкция 2]                         │
+  │           [Инструкция 3]                         │
+  │                 ...                              │
+  │           [Инструкция N] ──→ изход               │
+  │                                                  │
+  │  • Крайна редица инструкции                      │
+  │  • Дискретно, стъпково изпълнение                │
+  │  • Детерминиран — при същия вход, същият изход   │
+  │  • Изолиран — без "поглед навън" при работа      │
+  └──────────────────────────────────────────────────┘
+</div>
+
+      <div class="sec-h">Инструкции в алгоритъма</div>
+      <p>Допустимите инструкции се делят на:</p>
+      <ul class="bullet">
+        <li><strong>Императивни:</strong> присвояване, аритметика (a ← b + c)</li>
+        <li><strong>Условни:</strong> if...then...else, while...do, for...do</li>
+        <li><strong>Инструкции за извикване:</strong> викане на друг алгоритъм</li>
+        <li><strong>Входно-изходни:</strong> четене и писане</li>
+      </ul>
+
+      <div class="card def">
+        <div class="card-label">Конвенция 1: Атомарните променливи (от лекцията)</div>
+        <p>Приемаме, че всяка атомарна променлива се побира в единица памет, независимо от съдържанието, и всяка инструкция се изпълнява в <strong>една стъпка</strong> от дискретното време, независимо от размера на операндите.</p>
+        <p>Типове атомарни променливи: boolean, integer, real, char, pointer, vertex.</p>
+      </div>
+
+      <div class="card ex">
+        <div class="card-label">Конкретен пример: Евклидовият алгоритъм (Лекция 1)</div>
+<pre><code><span class="cm">-- Задача: намери НОД(a, b)</span>
+<span class="kw">Euclid</span>(a, b: естествени числа, a ≥ b, a > 0)
+<span class="num">1</span>  <span class="kw">if</span> b = 0
+<span class="num">2</span>      <span class="kw">return</span> a
+<span class="num">3</span>  <span class="kw">else</span>
+<span class="num">4</span>      <span class="kw">return</span> Euclid(b, a <span class="kw">mod</span> b)
+
+<span class="cm">-- Пример: НОД(12, 8)
+-- Euclid(12, 8) → Euclid(8, 4) → Euclid(4, 0) → return 4 ✓</span></code></pre>
+        <p>Евклидовият алгоритъм е <em>алгоритъм</em> (механична процедура) за <em>задачата</em> "намиране на НОД". За тази задача съществуват и много <em>други</em> алгоритми!</p>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Важен факт: Функциите са повече от алгоритмите! (Допълнение 3)</div>
+        <p>Алгоритмите са изброимо безкрайно много (краен текст над крайна азбука). Но функциите f: N → {0,1} са <em>неизброимо</em> безкрайно много (диагоналният аргумент на Cantor). Следователно, само безкрайно малко подмножество от функциите имат алгоритми, които ги реализират!</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Алгоритъм = реализация на функция (не на релация!)</li>
+          <li>За всяка задача → безброй много алгоритми (безброй много функции, съответни на задачата)</li>
+          <li>Вход → алгоритъм → изход (детерминиран процес)</li>
+          <li>Инструкциите са "механични" — без интуиция, изпълними от машина</li>
+          <li>Има функции без алгоритми (алгоритмично нерешими задачи)</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Обяснете връзката между алгоритми и изчислителни задачи. Защо казваме, че алгоритъмът реализира функция, а не релация?"</p>
+        <p><em>Отговор:</em> Задачата е релация (много решения), алгоритъмът е детерминиран — при един вход дава строго определен изход. Следователно алгоритъмът реализира функция (съответна на задачата), не самата задача-релация.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 5 -->
+  <section class="topic" id="t5">
+    <div class="topic-header">
+      <h2>Knuth за алгоритмите</h2>
+      <div class="topic-num">5</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — по лекции на преподавателя (Knuth, TAOCP том 1)</div>
+        <p><strong>Donald Knuth изброява пет задължителни свойства на всеки алгоритъм:</strong></p>
+        <br>
+        <p><strong>1. Финитност (Finiteness)</strong><br>
+        Всеки алгоритъм, за всеки свой вход, трябва да приключи работата си за <em>краен брой стъпки</em>. Процедура с всички свойства, освен финитност, се нарича <em>изчислителен метод</em>.</p>
+        <br>
+        <p><strong>2. Дефинитност (Definiteness)</strong><br>
+        Всяка стъпка на алгоритъма трябва да бъде дефинирана <em>прецизно и недвусмислено</em>.</p>
+        <br>
+        <p><strong>3. Вход (Input)</strong><br>
+        Всеки алгоритъм има нула или повече входни данни, зададени преди началото или динамично по време на изпълнението, взети от <em>определено множество</em>.</p>
+        <br>
+        <p><strong>4. Изход (Output)</strong><br>
+        Всеки алгоритъм има една или повече изходни данни, в определена релация с входните.</p>
+        <br>
+        <p><strong>5. Ефективност (Effectiveness)</strong><br>
+        Всяка операция трябва да може <em>принципно</em> да бъде извършена за <em>крайно</em> време от <em>човек с лист и молив</em>.</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение с аналогия</div>
+      <p>Представете си рецепта за торта. За да е "алгоритъм" по Knuth:</p>
+      <ul class="bullet">
+        <li><strong>Финитност:</strong> Рецептата трябва да завърши — не може да казва "разбърквайте вечно"</li>
+        <li><strong>Дефинитност:</strong> "Добавете малко сол" НЕ е дефинитно. "Добавете точно 5г сол" — да</li>
+        <li><strong>Вход:</strong> Съставките (брашно, яйца, ...) — точно определен списък</li>
+        <li><strong>Изход:</strong> Тортата — определена релация с входа</li>
+        <li><strong>Ефективност:</strong> Всяка стъпка може да се изпълни от човек (не "загрейте до температурата на Слънцето")</li>
+      </ul>
+
+      <div class="sec-h">Финитност — специален акцент</div>
+      <div class="viz">
+Как алгоритъмът може да НЕ завърши:
+
+1. ЗАЦИКЛЯНЕ — влиза в конфигурация, в която вече е бил:
+   for (;;);  ← безкраен цикъл
+
+2. НЕОГРАНИЧЕНО НАРАСТВАНЕ (теоретично) — мени променливи
+   без повторение на конфигурация:
+   for (i = 0, j = 1; i < 2; j++);
+
+Конфигурация = (стойности на всички промен.) + (текущата инструкция)
+</div>
+
+      <div class="card ex">
+        <div class="card-label">Пример: Алгоритъм, чиято финитност зависи от нерешена хипотеза</div>
+<pre><code><span class="cm">-- Dummy-Collatz: терминира ТТК ако Хипотеза на Collatz е вярна</span>
+<span class="kw">Dummy-Collatz</span>(n ∈ ℕ⁺)
+<span class="num">1</span>  <span class="kw">while</span> n ≠ 1 <span class="kw">do</span>
+<span class="num">2</span>      <span class="kw">if</span> iseven(n)
+<span class="num">3</span>          n ← n / 2
+<span class="num">4</span>      <span class="kw">else</span>
+<span class="num">5</span>          n ← 3n + 1
+
+<span class="cm">-- Хипотеза на Collatz (недоказана!): за всяко n, итерацията достига 1
+-- Пример: 14 → 7 → 22 → 11 → 34 → 17 → 52 → 26 → 13 → 40 → 20 → 10 → 5 → 1</span></code></pre>
+        <p>Доказателството за финитност може да е <em>изключително трудно</em> — понякога е еквивалентно на решаването на открит математически проблем!</p>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Ефективност — по-детайлно</div>
+        <p>Моделът с "човек с лист и молив" е <em>идеализация</em>: игнорираме количеството хартия, молив, умора, грешки. Интересуваме се само дали операцията може да завърши за <em>крайно</em> (но произволно голямо) <em>число стъпки</em>.</p>
+        <p><strong>Пример за НЕефективна операция:</strong> "Ако програмата P с вход x терминира, то..." — това изисква решаване на алгоритмично нерешимата <em>Стоп задача (Halting Problem)</em>!</p>
+      </div>
+
+      <table>
+        <tr><th>Свойство</th><th>Нарушение</th><th>Последствие</th></tr>
+        <tr><td>Финитност</td><td>Безкраен цикъл</td><td>Не е алгоритъм, а "изчислителен метод"</td></tr>
+        <tr><td>Дефинитност</td><td>Двусмислена стъпка</td><td>Различни машини може да дадат различен резултат</td></tr>
+        <tr><td>Вход</td><td>Липсва</td><td>Алгоритъм без вход — решава само 1 екземпляр</td></tr>
+        <tr><td>Изход</td><td>Липсва</td><td>Не е полезен — не решава задача</td></tr>
+        <tr><td>Ефективност</td><td>Нерешима стъпка</td><td>Не може да се изпълни физически</td></tr>
+      </table>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li><strong>5 свойства на Knuth:</strong> Финитност, Дефинитност, Вход, Изход, Ефективност</li>
+          <li>Без финитност — "изчислителен метод", не алгоритъм</li>
+          <li>Финитността може да е труднодоказуема (Goldbach, Collatz, Fermat)</li>
+          <li>Ефективност ≠ ефикасност — ефективността е за коректност, ефикасността за ресурси</li>
+          <li>Ефективността се модели с "човек с лист и молив" — без ограничение за ресурси, но операцията трябва да завърши</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="card-label">Връзка с другите теми</div>
+        <p>Финитността е свързана с доказателствата за коректност в Лекция 2 (доказателство за финитност). Ефективността разграничава алгоритми от операции, включващи алгоритмично нерешими задачи (Halting Problem — Задача 8).</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Изброете петте свойства на алгоритъмите според Knuth. Обяснете всяко от тях. Що е 'изчислителен метод' и как се различава от алгоритъм?"</p>
+        <p><em>Отговор:</em> [Петте свойства + дефиниция] Изчислителен метод е процедура с всички свойства освен финитност — може да не завърши за определени входове.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const body = document.body;
+  body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+function updateProgress() {
+  const boxes = document.querySelectorAll('input[type="checkbox"]');
+  const checked = Array.from(boxes).filter(b => b.checked).length;
+  const pct = Math.round(checked / boxes.length * 100);
+  document.getElementById('progress-bar-inner').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${pct}% готовност (${checked}/${boxes.length} теми)`;
+}
+// Active sidebar link on scroll
+const sections = document.querySelectorAll('.topic');
+const links = document.querySelectorAll('#sidebar a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+  links.forEach(a => { a.classList.remove('active'); if (a.getAttribute('href') === '#' + current) a.classList.add('active'); });
+});
+</script>
+</body>
+</html>

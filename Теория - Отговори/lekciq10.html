@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Лекция 10 – Най-къси пътища: Dijkstra, дагове, Bellman-Ford</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+  MathJax = {
+    tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #21262d;
+  --border: #30363d;
+  --text: #c9d1d9;
+  --text-dim: #8b949e;
+  --accent: #58a6ff;
+  --accent2: #3fb950;
+  --accent3: #f0883e;
+  --accent4: #ff7b72;
+  --accent5: #d2a8ff;
+  --highlight: #ffa657;
+  --code-bg: #0d1117;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  display: flex;
+}
+/* Sidebar */
+#sidebar {
+  width: 280px;
+  min-height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 1.5rem 1rem;
+  position: fixed;
+  top: 0; left: 0;
+  overflow-y: auto;
+  z-index: 100;
+}
+#sidebar h2 {
+  color: var(--accent);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+#sidebar ul { list-style: none; }
+#sidebar ul li { margin: 0.25rem 0; }
+#sidebar ul li a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 0.88rem;
+  display: block;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+#sidebar ul li a:hover {
+  background: var(--surface2);
+  color: var(--accent);
+}
+#sidebar ul li.section-header a {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-top: 0.8rem;
+}
+/* Main content */
+#main {
+  margin-left: 280px;
+  padding: 2.5rem 3rem;
+  max-width: 1000px;
+  width: 100%;
+}
+.page-title {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent5) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.page-subtitle {
+  color: var(--text-dim);
+  font-size: 1rem;
+  margin-bottom: 2.5rem;
+}
+/* Sections */
+.topic {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  scroll-margin-top: 1.5rem;
+}
+.topic-title {
+  color: var(--accent);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.topic-title::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 1.4rem;
+  background: var(--accent);
+  border-radius: 2px;
+}
+.section-label {
+  display: inline-block;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+  margin-right: 0.4rem;
+}
+.label-def { color: var(--accent5); border-color: var(--accent5); }
+.label-explain { color: var(--accent2); border-color: var(--accent2); }
+.label-viz { color: var(--accent3); border-color: var(--accent3); }
+.label-example { color: var(--highlight); border-color: var(--highlight); }
+.label-key { color: var(--accent4); border-color: var(--accent4); }
+.label-link { color: var(--accent); border-color: var(--accent); }
+.label-exam { color: var(--accent2); border-color: var(--accent2); background: rgba(63,185,80,0.08); }
+
+.subsection { margin: 1.2rem 0; }
+.subsection h3 {
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+p { margin-bottom: 0.8rem; }
+/* Code blocks */
+pre {
+  border-radius: 8px;
+  margin: 1rem 0;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+}
+pre code { font-size: 0.88rem; line-height: 1.6; }
+code:not(pre code) {
+  background: var(--surface2);
+  color: var(--accent5);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+/* Info boxes */
+.info-box {
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+  border-left: 4px solid;
+}
+.info-box.definition { background: rgba(88,166,255,0.08); border-color: var(--accent); }
+.info-box.theorem { background: rgba(210,168,255,0.08); border-color: var(--accent5); }
+.info-box.warning { background: rgba(255,123,114,0.08); border-color: var(--accent4); }
+.info-box.success { background: rgba(63,185,80,0.08); border-color: var(--accent2); }
+.info-box.note { background: rgba(240,136,62,0.08); border-color: var(--accent3); }
+.info-box strong { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; }
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+th {
+  background: var(--surface2);
+  color: var(--accent);
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+td {
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+/* Key points list */
+.key-list { list-style: none; }
+.key-list li {
+  padding: 0.4rem 0;
+  padding-left: 1.4rem;
+  position: relative;
+  color: var(--text);
+}
+.key-list li::before {
+  content: '▸';
+  color: var(--accent3);
+  position: absolute;
+  left: 0;
+  font-size: 0.8rem;
+  top: 0.5rem;
+}
+/* Mermaid diagrams */
+.mermaid {
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+/* Exam question */
+.exam-question {
+  background: linear-gradient(135deg, rgba(63,185,80,0.06) 0%, rgba(88,166,255,0.06) 100%);
+  border: 1px solid var(--accent2);
+  border-radius: 8px;
+  padding: 1.2rem;
+  margin-top: 1.2rem;
+}
+.exam-question strong { color: var(--accent2); display: block; margin-bottom: 0.4rem; }
+/* Step table */
+.step-table { font-size: 0.85rem; }
+.step-table td.highlight { background: rgba(88,166,255,0.15); color: var(--accent); font-weight: 600; }
+.step-table td.done { background: rgba(63,185,80,0.1); color: var(--accent2); }
+/* Responsive */
+@media (max-width: 900px) {
+  #sidebar { width: 240px; }
+  #main { margin-left: 240px; padding: 1.5rem; }
+}
+@media (max-width: 700px) {
+  #sidebar { display: none; }
+  #main { margin-left: 0; padding: 1.2rem; }
+}
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <h2>Лекция 10 – Навигация</h2>
+  <ul>
+    <li class="section-header"><a href="#sec-definitions">1. Основни дефиниции</a></li>
+    <li><a href="#sec-definitions">Тегло на път, δ(u,v)</a></li>
+    <li><a href="#sec-neg-cycles">Отрицателни цикли</a></li>
+    <li class="section-header"><a href="#sec-variants">2. Варианти на задачата</a></li>
+    <li><a href="#sec-variants">SSSP, APSP и др.</a></li>
+    <li class="section-header"><a href="#sec-theorem99">3. Теорема 99</a></li>
+    <li><a href="#sec-theorem99">Оптимална структура</a></li>
+    <li class="section-header"><a href="#sec-tree">4. Дърво на пътищата</a></li>
+    <li><a href="#sec-tree">Арборесценция</a></li>
+    <li class="section-header"><a href="#sec-mst-vs-sp">5. МПД vs Най-къс път</a></li>
+    <li class="section-header"><a href="#sec-relax">6. ISS и RELAX</a></li>
+    <li><a href="#sec-relax">Лема 41–44</a></li>
+    <li class="section-header"><a href="#sec-dijkstra">7. Алгоритъм на Dijkstra</a></li>
+    <li><a href="#sec-dijkstra">Теорема 100, 101</a></li>
+    <li class="section-header"><a href="#sec-dag">8. Алгоритъм за дагове</a></li>
+    <li><a href="#sec-dag">Алгоритъм 35</a></li>
+    <li class="section-header"><a href="#sec-bellman">9. Bellman-Ford</a></li>
+    <li><a href="#sec-bellman">Алгоритъм 36</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+  <div class="page-title">Лекция 10</div>
+  <div class="page-subtitle">Най-къси пътища в тегловни графи · Dijkstra · Дагове · Bellman-Ford</div>
+
+  <!-- ======================================================= -->
+  <!-- TOPIC 1: DEFINITIONS -->
+  <!-- ======================================================= -->
+  <article class="topic" id="sec-definitions">
+    <div class="topic-title">Основни дефиниции: тегло на път и δ(u,v)</div>
+
+    <div class="subsection">
+      <span class="section-label label-def">Дефиниция</span>
+      <div class="info-box definition">
+        <strong>Определение 91 – Тегло на път</strong>
+        Теглото на пътя $p$ е $w(p) = \sum_{e \in E(p)} w(e)$, тоест сумата от теглата на всички ребра в пътя.
+      </div>
+      <div class="info-box definition">
+        <strong>Определение 92 – Отрицателен цикъл</strong>
+        В ориентиран тегловен граф $G$, <strong>отрицателен цикъл</strong> е всеки прост цикъл с отрицателна сума от теглата на ребрата. В неориентиран граф – прост цикъл с отрицателна сума или ребро с отрицателно тегло.
+      </div>
+      <div class="info-box definition">
+        <strong>Определение 93 – Тегло на най-къс път δ(u,v)</strong>
+        $$\delta(u,v) = \begin{cases} \infty & \text{ако } \mathrm{Paths}(u,v) = \emptyset \\ -\infty & \text{ако } \exists\, p \in \mathrm{Paths}(u,v) \text{ съдържащ отрицателен цикъл} \\ \min\{w(p) \mid p \in \mathrm{Paths}(u,v)\} & \text{иначе} \end{cases}$$
+      </div>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-explain">Обяснение</span>
+      <p>Разглеждаме <strong>ориентирани тегловни графи</strong> с тегловна функция $w: E \to \mathbb{R}$. Пътищата <em>не са непременно прости</em> по конвенция (Конвенция 13). Примки и паралелни ребра не се допускат.</p>
+      <p>Теглото на пътя е просто сумата от теглата на ребрата. Ако пътищата не са прости, в граф с цикли $\mathrm{Paths}(u,v)$ може да е безкрайно множество.</p>
+      <div class="info-box note">
+        <strong>Забележка</strong>
+        "Най-къс път" (shortest path) е синоним на "път с най-малко тегло" (Конвенция 14). Под "дължина" в тегловен контекст се разбира тегло, а не брой ребра.
+      </div>
+    </div>
+
+    <div class="subsection" id="sec-neg-cycles">
+      <span class="section-label label-viz">Визуализация – Отрицателен цикъл</span>
+      <div class="mermaid">
+graph LR
+    u((u)) -- "1" --> v((v))
+    v -- "1" --> w_node((w))
+    w_node -- "-5" --> x_node((x))
+    x_node -- "1" --> v
+    x_node -- "1" --> y((y))
+    style w_node fill:#3d1f1f,color:#ff7b72,stroke:#ff7b72
+    style x_node fill:#3d1f1f,color:#ff7b72,stroke:#ff7b72
+    style v fill:#3d1f1f,color:#ff7b72,stroke:#ff7b72
+      </div>
+      <p>В цикъла $v \to w \to x \to v$ сумата е $1+1-5 = -3$. При всяко обхождане на цикъла пътят $u \rightsquigarrow y$ намалява с 3. Следователно $\delta(u,y) = -\infty$.</p>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-key">Ключови точки</span>
+      <ul class="key-list">
+        <li>При <strong>само положителни тегла</strong> – "най-къс път" е добре дефинирано.</li>
+        <li>При <strong>отрицателен цикъл</strong> достижим от $u$ към $v$ – $\delta(u,v) = -\infty$.</li>
+        <li>При <strong>отрицателни тегла, без цикли</strong> – задачата е добре дефинирана.</li>
+        <li>При <strong>липса на цикли</strong>, всеки най-къс път е прост (Наблюдение 71).</li>
+        <li>$\delta(u,v) \in \mathbb{R} \cup \{-\infty, +\infty\}$.</li>
+      </ul>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-link">Връзки</span>
+      <p>Дефинициите стоят в основата на всички алгоритми – Dijkstra (изисква $w > 0$), алгоритъм за дагове (нема цикли), Bellman-Ford (открива отрицателни цикли).</p>
+    </div>
+
+    <div class="exam-question">
+      <strong>Изпитен въпрос</strong>
+      Дефинирайте тегло на път и тегло на най-къс път $\delta(u,v)$. Обяснете защо при наличие на отрицателен цикъл $\delta(u,v) = -\infty$. Дайте пример.
+    </div>
+  </article>
+
+  <!-- ======================================================= -->
+  <!-- TOPIC 2: VARIANTS -->
+  <!-- ======================================================= -->
+  <article class="topic" id="sec-variants">
+    <div class="topic-title">Варианти на задачата за най-къс път</div>
+
+    <div class="subsection">
+      <span class="section-label label-def">Дефиниция</span>
+      <table>
+        <thead><tr><th>Задача</th><th>Вход</th><th>Изход</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Single Pair (SPSP)</strong><br/>Изч. Задача 27</td><td>$G, w, s, t$</td><td>$\delta(s,t)$</td></tr>
+          <tr><td><strong>Single Source (SSShP)</strong><br/>Изч. Задача 28</td><td>$G, w, s$</td><td>$\delta(s,v)$ за всяко $v$</td></tr>
+          <tr><td><strong>Single Destination</strong><br/>Изч. Задача 29</td><td>$G, w, t$</td><td>$\delta(v,t)$ за всяко $v$</td></tr>
+          <tr><td><strong>All Pairs (APShP)</strong><br/>Изч. Задача 30</td><td>$G, w$</td><td>$\delta(u,v)$ за всяко $u,v$</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-explain">Обяснение</span>
+      <p><strong>Single Pair</strong> изглежда алгоритмично най-лесна, но в най-лошия случай се налага да изчислим $\delta(s,v)$ за всяко $v$ – тоест е толкова трудна, колкото SSShP.</p>
+      <p><strong>Single Destination</strong> се свежда до SSShP чрез транспониране на графа.</p>
+      <p><strong>APShP</strong> може да се реши с n-кратно пускане на SSShP алгоритъм, но има специализирани алгоритми (Floyd-Warshall) с по-добра сложност.</p>
+      <p>Ние ще изучим подробно <strong>SSShP</strong>. За APShP – в Лекция 12 (Floyd-Warshall).</p>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-key">Ключови точки</span>
+      <ul class="key-list">
+        <li>Всички варианти са свързани – решението на единия може да се сведе до другия.</li>
+        <li>Генерирането на <em>всички</em> най-къси пътища е неефикасно – може да са $\Omega(2^n)$.</li>
+        <li>В практиката ни интересуват дължините и едно конкретно дърво на пътищата.</li>
+      </ul>
+    </div>
+
+    <div class="exam-question">
+      <strong>Изпитен въпрос</strong>
+      Изброй четирите варианта на задачата за най-къс път. Защо Single Pair е трудна колкото Single Source в най-лошия случай?
+    </div>
+  </article>
+
+  <!-- ======================================================= -->
+  <!-- TOPIC 3: THEOREM 99 -->
+  <!-- ======================================================= -->
+  <article class="topic" id="sec-theorem99">
+    <div class="topic-title">Теорема 99: Най-къс път се състои от най-къси подпътища</div>
+
+    <div class="subsection">
+      <span class="section-label label-def">Формулировка</span>
+      <div class="info-box theorem">
+        <strong>Теорема 99 (Оптимална подструктура)</strong>
+        Нека $G$ е ориентиран тегловен граф, $p$ е най-къс път от $s$ до $t$. Нека $u, v \in V(p)$, като $u$ предхожда $v$ в $p$. Тогава подпътят $q$ от $u$ до $v$ (вдлъжина на $p$) е най-къс път от $u$ до $v$.
+      </div>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-explain">Доказателство</span>
+      <p>Допускаме противното: съществува $q'$ такъв, че $u \overset{q'}{\rightsquigarrow} v$ и $w(q') < w(q)$. Тогава заменяме $q$ с $q'$ в $p$:</p>
+      $$p' = s \rightsquigarrow u \overset{q'}{\rightsquigarrow} v \rightsquigarrow t$$
+      <p>Получаваме $w(p') = w(p) - w(q) + w(q') < w(p)$, в противоречие с допускането, че $p$ е най-къс път. $\square$</p>
+      <div class="info-box note">
+        <strong>Важно</strong>
+        Доказателството работи, защото пътищата не са непременно прости. При прости пътища – вмъкването на $q'$ може да наруши простотата. При положителни тегла можем да "изрежем" общи части.
+      </div>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-viz">Визуализация</span>
+      <div class="mermaid">
+graph LR
+    s((s)) --> u((u))
+    u =="|q – оптимален|"==> v((v))
+    v --> t((t))
+    style u fill:#1c3a5c,color:#58a6ff,stroke:#58a6ff
+    style v fill:#1c3a5c,color:#58a6ff,stroke:#58a6ff
+      </div>
+      <p>Ако $q$ в горния граф не беше оптимален, целият $p$ нямаше да е оптимален.</p>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-key">Ключови точки</span>
+      <ul class="key-list">
+        <li>Принцип на "оптимална подструктура" – ключов за ДП и за алгоритмите на Dijkstra и Bellman-Ford.</li>
+        <li>За <strong>най-дълги пътища</strong> това свойство <em>не</em> е в сила!</li>
+        <li>Свойството следва пряко от линейността на $w(p) = \sum w(e)$.</li>
+      </ul>
+    </div>
+
+    <div class="exam-question">
+      <strong>Изпитен въпрос</strong>
+      Формулирай и докажи Теорема 99. Защо доказателството за прости пътища е по-сложно?
+    </div>
+  </article>
+
+  <!-- ======================================================= -->
+  <!-- TOPIC 4: SHORTEST PATH TREE -->
+  <!-- ======================================================= -->
+  <article class="topic" id="sec-tree">
+    <div class="topic-title">Дърво на най-късите пътища (Shortest-Path Tree)</div>
+
+    <div class="subsection">
+      <span class="section-label label-def">Дефиниция</span>
+      <p>Дървото на най-късите пътища от $s$ е <strong>ориентирана кореново дърво-арборесценция</strong> с корен $s$, такава че за всеки достижим от $s$ връх $v$, единственият $s \rightsquigarrow v$ в дървото е най-кратък път в $G$.</p>
+      <p>Представя се с масив на предшествия $\pi[1..n]$, аналогично на BFS/DFS.</p>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-explain">Защо Θ(n) памет е достатъчна?</span>
+      <p>На пръв поглед ни трябва $O(n^2)$ памет за $n$ пътя. Но всъщност достатъчно е $\Theta(n)$, защото:</p>
+      <ul class="key-list">
+        <li>Всеки два различни пътя $s \rightsquigarrow u$ и $s \rightsquigarrow v$ имат общ начален префикс до точката, в която се "разклоняват".</li>
+        <li>Можем да изберем общ подпът и да "слеем" пътищата в арборесценция.</li>
+        <li>Доказателство: ако $p_1$ (до $u$) и $q_1$ (до $z$, общ участък) имат различни тегла – едното не е оптимално; щом са равни, можем да ползваме само $p_1$.</li>
+      </ul>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-viz">Визуализация</span>
+      <div class="mermaid">
+graph TD
+    s((s)) --> a((a))
+    s --> b((b))
+    a --> c((c))
+    a --> d((d))
+    b --> e((e))
+    style s fill:#1c3a5c,color:#58a6ff,stroke:#58a6ff
+    style a fill:#1c2d3c,color:#c9d1d9
+    style b fill:#1c2d3c,color:#c9d1d9
+      </div>
+      <p>Арборесценцията с корен $s$ – всеки клон е най-кратък път.</p>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-key">Ключови точки</span>
+      <ul class="key-list">
+        <li>Дървото се записва с масив $\pi$ – $\pi[v]$ е родителят на $v$ в дървото.</li>
+        <li>Корен $s$ има $\pi[s] = \text{Nil}$.</li>
+        <li>Аналогично на BFS дървото, но с тегловни разстояния вместо брой ребра.</li>
+      </ul>
+    </div>
+
+    <div class="exam-question">
+      <strong>Изпитен въпрос</strong>
+      Обясни защо всички най-къси пътища от $s$ могат да бъдат представени с $\Theta(n)$ памет чрез арборесценция.
+    </div>
+  </article>
+
+  <!-- ======================================================= -->
+  <!-- TOPIC 5: MST vs SHORTEST PATH -->
+  <!-- ======================================================= -->
+  <article class="topic" id="sec-mst-vs-sp">
+    <div class="topic-title">Ключови разлики между МПД и Най-къс път</div>
+
+    <div class="subsection">
+      <span class="section-label label-explain">Обяснение</span>
+      <table>
+        <thead>
+          <tr><th>Аспект</th><th>МПД (Minimum Spanning Tree)</th><th>Дърво на най-кратките пътища</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Тип граф</td><td>Неориентиран тегловен</td><td>Ориентиран тегловен</td></tr>
+          <tr><td>Цел</td><td>Минимална сума от тегла на ребрата в обхващащо дърво</td><td>Минимален сбор за всеки $s \rightsquigarrow v$</td></tr>
+          <tr><td>Алгоритми</td><td>Prim, Kruskal</td><td>Dijkstra, Bellman-Ford, DAG</td></tr>
+          <tr><td>Отрицателни тегла</td><td>Без значение (може да се „повдигнат")</td><td>Значително усложняване</td></tr>
+          <tr><td>Уникалност</td><td>Ако теглата са уникални – уникално МПД</td><td>Може да има много дървета</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-example">Пример – разлика</span>
+      <div class="mermaid">
+graph LR
+    s -- "2" --- t
+    s -- "1" --- u
+    u -- "1" --- v
+    v -- "1" --- z
+    z -- "1" --- t
+    style s fill:#1c3a5c,color:#58a6ff
+    style t fill:#1c3a5c,color:#58a6ff
+      </div>
+      <p>Най-кратък $s$-$t$ е реброто $s$-$t$ с тегло 2. МПД-то обаче включва четирите ребра с тегло 1 и <strong>не</strong> включва $s$-$t$.</p>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-key">Ключово наблюдение (Наблюдение 73)</span>
+      <div class="info-box warning">
+        <strong>Трикът "повдигане на тегла" не работи при най-кратките пътища!</strong>
+        Ако добавим константа $c$ към всяко ребро, МПД-тата се запазват (Наблюдение 73 за МПД). Но дървото на най-кратките пътища може да се промени, защото по-дългите пътища (повече ребра) получават по-голяма добавка.
+      </div>
+    </div>
+
+    <div class="exam-question">
+      <strong>Изпитен въпрос</strong>
+      Обясни принципната разлика между МПД и дърво на най-кратките пътища. Защо "повдигането" на тегла работи за МПД, но не и за най-кратките пътища?
+    </div>
+  </article>
+
+  <!-- ======================================================= -->
+  <!-- TOPIC 6: ISS AND RELAX -->
+  <!-- ======================================================= -->
+  <article class="topic" id="sec-relax">
+    <div class="topic-title">Алгоритмични примитиви ISS и RELAX</div>
+
+    <div class="subsection">
+      <span class="section-label label-def">Примитив ISS (Initialize-Single-Source)</span>
+      <pre><code class="language-plaintext">ISS(G: ориентиран тегловен граф, s: връх)
+    foreach v ∈ V(G)
+        v.d  ← ∞       // Оценка за δ(s,v) – инициализирана с ∞
+        v.π  ← Nil     // Предшественик в дървото на пътищата
+    s.d ← 0            // Разстоянието от s до s е 0</code></pre>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-def">Примитив RELAX</span>
+      <pre><code class="language-plaintext">Relax((x,y) ∈ E(G))
+    if y.d > x.d + w((x,y))
+        y.d ← x.d + w((x,y))
+        y.π ← x</code></pre>
+      <p>Смисъл: опитваме да намерим по-кратък $s \rightsquigarrow y$, ползвайки $x$ като предпоследен връх.</p>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-explain">Свойства на релаксацията</span>
+
+      <div class="info-box theorem">
+        <strong>Лема 41 (в лекциите – Лема 42): Неравенство на триъгълника</strong>
+        За всяко ребро $(x,y) \in E(G)$:
+        $$\delta(s,y) \le \delta(s,x) + w((x,y))$$
+        <em>Доказателство</em>: Нека $p$ е най-кратък $s \rightsquigarrow x$. Пътят $p' = p, (x,y)$ минава от $s$ до $y$ с тегло $\delta(s,x) + w((x,y))$. Следователно $\delta(s,y) \le w(p') = \delta(s,x) + w((x,y))$. $\square$
+      </div>
+
+      <div class="info-box theorem">
+        <strong>Лема 42 (в лекциите – Лема 43): Горна граница</strong>
+        След ISS и произволна поредица от Relax:
+        $$\forall v \in V(G): v.d \ge \delta(s,v)$$
+        При постигане на равенство $v.d = \delta(s,v)$ – то остава такова завинаги.
+      </div>
+
+      <div class="info-box theorem">
+        <strong>Лема 43 (в лекциите – Лема 44): При липса на пътища</strong>
+        Ако няма $s \rightsquigarrow v$, то $v.d = \infty$ след всяка поредица от Relax.
+      </div>
+
+      <div class="info-box theorem">
+        <strong>Лема 44 (в лекциите – Лема 45): Конвергенция</strong>
+        Нека $p$ е най-кратък $s \rightsquigarrow v$ и $u$ е предпоследният връх. Ако $u.d = \delta(s,u)$ <em>преди</em> релаксиране на $(u,v)$, то $v.d = \delta(s,v)$ <em>след</em> него.
+      </div>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-key">Ключови точки</span>
+      <ul class="key-list">
+        <li>$v.d$ винаги е <em>горна граница</em> на $\delta(s,v)$.</li>
+        <li>Лема за конвергенция гарантира, че ако релаксираме в правилен ред – постигаме точни стойности.</li>
+        <li>Различните алгоритми се различават само по <em>реда</em> на релаксиране.</li>
+      </ul>
+    </div>
+
+    <div class="exam-question">
+      <strong>Изпитен въпрос</strong>
+      Запишете псевдокода на ISS и Relax. Формулирайте и докажете Лема за неравенство на триъгълника и Лема за горна граница.
+    </div>
+  </article>
+
+  <!-- ======================================================= -->
+  <!-- TOPIC 7: DIJKSTRA -->
+  <!-- ======================================================= -->
+  <article class="topic" id="sec-dijkstra">
+    <div class="topic-title">Алгоритъм на Dijkstra (Алгоритъм 34)</div>
+
+    <div class="subsection">
+      <span class="section-label label-def">Псевдокод</span>
+      <pre><code class="language-plaintext">SSShP Dijkstra2(G: ориент. тегл. граф, w: тегл. ф-я, s: стартов връх)
+  ISS(G, s)
+  D ← ∅
+  Q ← V          // Приоритетна min-опашка по d-стойности
+  while not isEmpty(Q) do
+      x ← ExtractMin(Q)    // Връх с мин. d-стойност
+      D ← D ∪ {x}
+      foreach y ∈ adj[x]
+          Relax((x,y))</code></pre>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-explain">Идея</span>
+      <p>Алгоритъмът е "алчен": на всяка стъпка избира незавършения връх с <strong>минимална d-стойност</strong> и го "финализира" (добавя в $D$). Работи само при <strong>неотрицателни тегла</strong> $w: E \to \mathbb{R}^+$.</p>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-explain">Теорема 100 – Коректност</span>
+      <div class="info-box theorem">
+        <strong>Теорема 100</strong>
+        За всеки $G$, $w \ge 0$, $s$: след терминирането на Dijkstra,
+        $$\forall v \in V(G): v.d = \delta(s,v)$$
+      </div>
+      <p><strong>Скица на доказателство</strong>: Допускаме, че $v$ е първият връх, влязъл в $D$ с $v.d > \delta(s,v)$. Нека $p$ е най-кратък $s \rightsquigarrow v$, и $u$ е първият връх на $p$ извън $D$, $a$ е предшественикът му. Тъй като $a$ вече е в $D$ и е коректен (той е преди $v$ в грешката), реброто $(a,u)$ е вече релаксирано $\Rightarrow$ $u.d = \delta(s,u)$. По Теорема 99 $\delta(s,u) < \delta(s,v) < v.d$, т.е. $u.d < v.d$, но алгоритъмът е избрал $v$ а не $u$ $\Rightarrow$ $v.d \le u.d$ – противоречие. $\square$</p>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-example">Пример – стъпки на Dijkstra</span>
+      <p>Граф: $s \to a$ (2), $s \to b$ (5), $a \to b$ (1), $a \to c$ (4), $b \to c$ (2).</p>
+      <table class="step-table">
+        <thead><tr><th>Стъпка</th><th>x</th><th>D</th><th>d[s]</th><th>d[a]</th><th>d[b]</th><th>d[c]</th></tr></thead>
+        <tbody>
+          <tr><td>Init</td><td>–</td><td>∅</td><td class="done">0</td><td>∞</td><td>∞</td><td>∞</td></tr>
+          <tr><td>1</td><td>s</td><td>{s}</td><td class="done">0</td><td class="highlight">2</td><td class="highlight">5</td><td>∞</td></tr>
+          <tr><td>2</td><td>a</td><td>{s,a}</td><td class="done">0</td><td class="done">2</td><td class="highlight">3</td><td class="highlight">6</td></tr>
+          <tr><td>3</td><td>b</td><td>{s,a,b}</td><td class="done">0</td><td class="done">2</td><td class="done">3</td><td class="highlight">5</td></tr>
+          <tr><td>4</td><td>c</td><td>{s,a,b,c}</td><td class="done">0</td><td class="done">2</td><td class="done">3</td><td class="done">5</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-explain">Теорема 101 – Ред на добавяне</span>
+      <div class="info-box theorem">
+        <strong>Теорема 101</strong>
+        Алгоритъмът на Dijkstra добавя върховете в $D$ в <strong>ненамаляващ ред</strong> на теглата $\delta(s,v)$ (и на d-стойностите).
+      </div>
+      <p><strong>Скица</strong>: Индукция по итерациите. При добавяне на $x$, $x.d$ е минималното сред VzD. При следващи релаксации нова d-стойност на $y \in V\setminus D$ може само да намалее, но нова стойност е $x.d + w(x,y) \ge x.d$ (тъй като $w > 0$). $\square$</p>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-key">Сложност</span>
+      <table>
+        <thead><tr><th>Вариант</th><th>Структура</th><th>Сложност</th></tr></thead>
+        <tbody>
+          <tr><td>Dijkstra1 (базов)</td><td>Линейно търсене на min</td><td>$\Theta(n^2)$</td></tr>
+          <tr><td>Dijkstra2 (изтънчен)</td><td>Двоична пирамида</td><td>$\Theta((n+m)\lg n)$</td></tr>
+          <tr><td>Dijkstra2 (оптимален)</td><td>Fibonacci heap</td><td>$\Theta(n\lg n + m)$</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-key">Ключови точки</span>
+      <ul class="key-list">
+        <li>Работи <strong>само при неотрицателни тегла</strong>. При дори едно отрицателно ребро – некоректен.</li>
+        <li>Аналогичен структурно на алгоритъма на Prim за МПД.</li>
+        <li>Разликата с Prim: при релаксация сравняваме $y.d$ с $x.d + w(x,y)$ вместо просто с $w(x,y)$.</li>
+      </ul>
+    </div>
+
+    <div class="exam-question">
+      <strong>Изпитен въпрос</strong>
+      Запишете псевдокода на Dijkstra. Докажете Теорема 100. Каква е сложността по време при двоична пирамида?
+    </div>
+  </article>
+
+  <!-- ======================================================= -->
+  <!-- TOPIC 8: DAG -->
+  <!-- ======================================================= -->
+  <article class="topic" id="sec-dag">
+    <div class="topic-title">Алгоритъм за най-кратки пътища в тегловни дагове (Алгоритъм 35)</div>
+
+    <div class="subsection">
+      <span class="section-label label-def">Псевдокод</span>
+      <pre><code class="language-plaintext">DAG SSShP(G: даг, w: тегловна функция, s: стартов връх)
+    Toposort(G)          // Топологично сортиране
+    ISS(G, s)            // Инициализация
+    foreach x ∈ V(G) в топологичната наредба
+        foreach y ∈ adj[x]
+            Relax((x,y))</code></pre>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-explain">Идея и коректност (Теорема 102)</span>
+      <p>В даг няма цикли. Топологичното сортиране гарантира, че ако има $s \rightsquigarrow v$, предпоследният връх $u$ в най-кратък $s \rightsquigarrow v$ е вляво от $v$ в топо-наредбата. Следователно когато обработваме $v$, всички потенциални предпоследни върхове са вече обработени и техните $d$-стойности са коректни. По Лема за конвергенция след релаксиране на $(u,v)$ имаме $v.d = \delta(s,v)$.</p>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-example">Пример</span>
+      <div class="mermaid">
+graph LR
+    s((s,0)) -- "3" --> a((a,3))
+    s -- "6" --> b((b,6))
+    a -- "2" --> b
+    a -- "1" --> c((c,4))
+    b -- "4" --> c
+    style s fill:#1c3a5c,color:#58a6ff
+    style a fill:#1c2d3c,color:#c9d1d9
+    style b fill:#1c2d3c,color:#c9d1d9
+    style c fill:#1c2d3c,color:#c9d1d9
+      </div>
+      <p>Топо-ред: $s, a, b, c$. Обработваме ребрата в този ред и получаваме $\delta(s,c) = 4$.</p>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-key">Предимства над Dijkstra</span>
+      <ul class="key-list">
+        <li><strong>По-бърз</strong>: Сложност $\Theta(n+m)$ – оптимална! По-добра от Dijkstra при всяка реализация.</li>
+        <li><strong>Работи с отрицателни тегла</strong>: В дагове няма цикли, следователно няма отрицателни цикли.</li>
+        <li><strong>Може да намира най-дълги пътища</strong>: Обратете неравенството в Relax и min в max.</li>
+        <li><strong>По-прост</strong> от Bellman-Ford при дагове.</li>
+      </ul>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-link">Връзки</span>
+      <p>Floyd-Warshall (Лекция 12) е алтернатива за APShP, но при произволни графи. DAG SSShP се базира на топо-сортиране, което ефективно "разгъва" дага в линия.</p>
+    </div>
+
+    <div class="exam-question">
+      <strong>Изпитен въпрос</strong>
+      Запишете псевдокода на DAG SSShP. Каква е сложността? Защо работи с отрицателни тегла? Защо Dijkstra е по-бавен?
+    </div>
+  </article>
+
+  <!-- ======================================================= -->
+  <!-- TOPIC 9: BELLMAN-FORD -->
+  <!-- ======================================================= -->
+  <article class="topic" id="sec-bellman">
+    <div class="topic-title">Алгоритъм на Bellman-Ford (Алгоритъм 36)</div>
+
+    <div class="subsection">
+      <span class="section-label label-def">Псевдокод</span>
+      <pre><code class="language-plaintext">Bellman-Ford(G: ориент. тегл. граф, w, s: стартов връх) → Bool
+    ISS(G, s)
+    for i ← 1 to n-1               // n-1 итерации
+        foreach (x,y) ∈ E(G)       // Релаксиране на всички ребра
+            Relax((x,y))
+    foreach (x,y) ∈ E(G)           // Проверка за отрицателни цикли
+        if y.d > x.d + w((x,y))
+            return False           // Има отрицателен цикъл!
+    return True</code></pre>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-explain">Идея и коректност</span>
+      <p>Ключово наблюдение: Ако $p$ е оптимален $s \rightsquigarrow v$ с $k$ ребра ($k \le n-1$ при прости пътища), след $k$-тата итерация $v.d = \delta(s,v)$. Доказва се с индукция: след $i$ итерации $v.d = \delta(s,v)$ за всеки $v$, достижим чрез оптимален път с $\le i$ ребра.</p>
+      <p><strong>Проверката за отрицателни цикли</strong>: Ако след $n-1$ итерации все още можем да подобрим d-стойност – значи има отрицателен цикъл.</p>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-example">Пример – Bellman-Ford</span>
+      <p>Граф с 5 върха: $s, a, b, c, d$. Ребра: $s \to a$ (−2), $s \to b$ (3), $a \to c$ (2), $b \to a$ (1), $c \to d$ (−1), $d \to b$ (−1).</p>
+      <table class="step-table">
+        <thead><tr><th>Итерация</th><th>d[s]</th><th>d[a]</th><th>d[b]</th><th>d[c]</th><th>d[d]</th></tr></thead>
+        <tbody>
+          <tr><td>Init</td><td class="done">0</td><td>∞</td><td>∞</td><td>∞</td><td>∞</td></tr>
+          <tr><td>1</td><td class="done">0</td><td class="highlight">−2</td><td class="highlight">3</td><td>∞</td><td>∞</td></tr>
+          <tr><td>2</td><td class="done">0</td><td class="done">−2</td><td class="highlight">2</td><td class="highlight">0</td><td>∞</td></tr>
+          <tr><td>3</td><td class="done">0</td><td class="done">−2</td><td class="highlight">1</td><td class="done">0</td><td class="highlight">−1</td></tr>
+          <tr><td>4 (n−1)</td><td class="done">0</td><td class="done">−2</td><td class="done">0</td><td class="done">0</td><td class="done">−1</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-key">Сложност и ключови точки</span>
+      <ul class="key-list">
+        <li><strong>Сложност</strong>: $\Theta(nm)$ – $n-1$ итерации × $m$ релаксации.</li>
+        <li>Работи с <strong>отрицателни тегла</strong> (без отрицателни цикли).</li>
+        <li>Открива наличието на <strong>отрицателни цикли</strong>.</li>
+        <li>По-бавен от Dijkstra при неотрицателни тегла.</li>
+        <li>При даг – DAG SSShP е по-ефикасен.</li>
+        <li>Приложение: намиране на арбитраж (Допълнение 53).</li>
+      </ul>
+    </div>
+
+    <div class="subsection">
+      <span class="section-label label-link">Връзки</span>
+      <p>Bellman-Ford е основа за Floyd-Warshall (APShP чрез ДП), разгледан в Лекция 12. Floyd-Warshall: $\Theta(n^3)$ срещу $n$ пускания на Bellman-Ford: $\Theta(n^2 m)$.</p>
+    </div>
+
+    <div class="exam-question">
+      <strong>Изпитен въпрос</strong>
+      Запишете псевдокода на Bellman-Ford. Докажете коректността (защо $n-1$ итерации са достатъчни). Как алгоритъмът открива отрицателни цикли? Каква е сложността?
+    </div>
+  </article>
+
+</main>
+
+<script>
+  hljs.highlightAll();
+  mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: {
+    primaryColor: '#1c3a5c', primaryTextColor: '#c9d1d9', primaryBorderColor: '#30363d',
+    lineColor: '#58a6ff', secondaryColor: '#161b22', tertiaryColor: '#21262d',
+    edgeLabelBackground: '#161b22', clusterBkg: '#161b22', titleColor: '#58a6ff',
+    nodeBorder: '#30363d', mainBkg: '#161b22'
+  }});
+</script>
+</body>
+</html>

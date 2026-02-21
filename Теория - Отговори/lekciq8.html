@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лекция 8 - DFS, Топологическо сортиране, Kosaraju | ДАА 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #1a1d27; --bg3: #242838;
+    --accent: #4f8ef7; --accent2: #7c5cbf; --green: #2ecc71;
+    --yellow: #f39c12; --red: #e74c3c; --text: #e8eaf0;
+    --text2: #9ca3af; --border: #2d3148;
+    --def-bg: #0d2137; --def-border: #1e5799;
+    --ex-bg: #0d2d1a; --ex-border: #1e7d3e;
+    --key-bg: #2d2100; --key-border: #7d5c00;
+    --code-bg: #141822;
+  }
+  [data-theme="light"] {
+    --bg: #f0f2f8; --bg2: #ffffff; --bg3: #e8ecf5;
+    --accent: #2563eb; --accent2: #7c3aed; --green: #16a34a;
+    --yellow: #d97706; --red: #dc2626; --text: #1e293b;
+    --text2: #64748b; --border: #cbd5e1;
+    --def-bg: #eff6ff; --def-border: #3b82f6;
+    --ex-bg: #f0fdf4; --ex-border: #22c55e;
+    --key-bg: #fffbeb; --key-border: #f59e0b;
+    --code-bg: #1e293b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  #layout { display: flex; min-height: 100vh; }
+  #sidebar {
+    width: 280px; background: var(--bg2); border-right: 1px solid var(--border);
+    position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto;
+    transition: transform 0.3s; z-index: 100; padding: 20px 0;
+  }
+  #sidebar h2 { color: var(--accent); font-size: 0.85rem; text-transform: uppercase;
+    letter-spacing: 1px; padding: 0 20px 10px; border-bottom: 1px solid var(--border); }
+  #sidebar ul { list-style: none; padding: 10px 0; }
+  #sidebar li a { display: block; padding: 8px 20px; color: var(--text2); text-decoration: none;
+    font-size: 0.88rem; border-left: 3px solid transparent; transition: all 0.2s; }
+  #sidebar li a:hover, #sidebar li a.active { color: var(--accent); border-left-color: var(--accent);
+    background: rgba(79,142,247,0.08); }
+  #main { margin-left: 280px; flex: 1; padding: 40px; max-width: 1000px; }
+  #topbar { position: sticky; top: 0; background: var(--bg2); border-bottom: 1px solid var(--border);
+    z-index: 50; display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 40px; margin: -40px -40px 40px; }
+  #topbar h1 { font-size: 1.1rem; color: var(--accent); }
+  .btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text); cursor: pointer; font-size: 0.85rem; }
+  .btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  #progress-wrap { background: var(--bg3); border-radius: 8px; padding: 16px 20px;
+    margin-bottom: 32px; border: 1px solid var(--border); }
+  #progress-wrap h3 { font-size: 0.9rem; color: var(--text2); margin-bottom: 10px; }
+  #progress-bar-outer { background: var(--bg); border-radius: 99px; height: 8px; overflow: hidden; }
+  #progress-bar-inner { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 99px; transition: width 0.5s; }
+  #progress-label { font-size: 0.85rem; color: var(--text2); margin-top: 6px; }
+  .topic { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 40px; overflow: hidden; scroll-margin-top: 80px; }
+  .topic-header { padding: 20px 24px; background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: space-between; }
+  .topic-header h2 { color: white; font-size: 1.15rem; }
+  .topic-num { background: rgba(255,255,255,0.2); color: white; border-radius: 50%;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .topic-body { padding: 24px; }
+  .card { border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .card.def { background: var(--def-bg); border-left: 4px solid var(--def-border); }
+  .card.def .card-label { color: var(--accent); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.ex { background: var(--ex-bg); border-left: 4px solid var(--ex-border); }
+  .card.ex .card-label { color: var(--green); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.key { background: var(--key-bg); border-left: 4px solid var(--key-border); }
+  .card.key .card-label { color: var(--yellow); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card.warn { background: rgba(231,76,60,0.07); border-left: 4px solid var(--red); }
+  .sec-h { font-size: 0.95rem; font-weight: 700; color: var(--accent); margin: 20px 0 8px;
+    display: flex; align-items: center; gap: 8px; }
+  .sec-h::before { content: ''; display: inline-block; width: 3px; height: 16px;
+    background: var(--accent); border-radius: 2px; }
+  pre { background: var(--code-bg); color: #cdd6f4; border-radius: 8px; padding: 16px 20px;
+    overflow-x: auto; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem;
+    line-height: 1.6; margin: 12px 0; border: 1px solid var(--border); }
+  code { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88rem; }
+  .kw { color: #cba6f7; } .cm { color: #6c7086; font-style: italic; }
+  .nm { color: #89dceb; } .op { color: #89b4fa; } .str { color: #a6e3a1; }
+  .num { color: #fab387; }
+  .viz { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 20px; font-family: monospace; font-size: 0.85rem; color: #cdd6f4;
+    white-space: pre; overflow-x: auto; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+  th { background: var(--bg3); color: var(--accent); padding: 10px 12px; text-align: left;
+    border-bottom: 2px solid var(--accent); }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: rgba(79,142,247,0.05); }
+  ul.bullet { list-style: none; padding: 0; }
+  ul.bullet li { padding: 6px 0 6px 24px; position: relative; }
+  ul.bullet li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+  .exam-box { background: linear-gradient(135deg, rgba(231,76,60,0.1), rgba(231,76,60,0.05));
+    border: 1px solid var(--red); border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .exam-box .card-label { color: var(--red); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .conn-box { background: rgba(124,92,191,0.1); border: 1px solid var(--accent2);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .conn-box .card-label { color: var(--accent2); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .thm { background: rgba(79,142,247,0.07); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+  .thm-title { color: var(--accent); font-weight: 700; margin-bottom: 8px; }
+  p { margin: 10px 0; }
+  b, strong { color: var(--accent); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  @media (max-width: 768px) {
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; padding: 20px; }
+    #topbar { padding: 12px 20px; margin: -20px -20px 20px; }
+  }
+</style>
+</head>
+<body data-theme="dark">
+<div id="layout">
+<nav id="sidebar">
+  <h2>Лекция 8 - Навигация</h2>
+  <ul>
+    <li><a href="#t1">Алгоритъм DFS</a></li>
+    <li><a href="#t2">Свойства на DFS</a></li>
+    <li><a href="#t3">Класификация на ребрата</a></li>
+    <li><a href="#t4">Топологическо сортиране (Tarjan)</a></li>
+    <li><a href="#t5">Алгоритъм на Kosaraju (СС)</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+  <div id="topbar">
+    <h1>ДАА 2026 - Лекция 8: DFS, Топосортиране, Kosaraju</h1>
+    <button class="btn" onclick="toggleTheme()">Тема</button>
+  </div>
+
+  <div id="progress-wrap">
+    <h3>Готовност за изпит</h3>
+    <div id="progress-bar-outer"><div id="progress-bar-inner" style="width:0%"></div></div>
+    <div id="progress-label">Отметнете темите, които сте научили</div>
+    <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;">
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> DFS алгоритъм</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Скобова структура</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Класификация на ребрата</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Топологическо сортиране</label>
+      <label style="font-size:0.85rem; color:var(--text2);"><input type="checkbox" onchange="updateProgress()"> Kosaraju</label>
+    </div>
+  </div>
+
+  <!-- TOPIC 1: DFS -->
+  <section class="topic" id="t1">
+    <div class="topic-header">
+      <h2>Алгоритъм DFS (Алгоритми 18 и 19)</h2>
+      <div class="topic-num">1</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — по лекции на проф. Марков (2026)</div>
+        <p>DFS (Depth-First Search, Обхождане в дълбочина) е алгоритъм за обхождане на граф, при който от даден връх x се "гмурваме" максимално дълбоко по ненамерени бели пътища преди да се върнем назад. Всеки връх получава <strong>времe на открване</strong> d[x] и <strong>время на финализиране</strong> f[x].</p>
+      </div>
+
+      <div class="sec-h">Псевдокод — Алгоритъм 18: DFS</div>
+<pre><code><span class="cm">-- Алгоритъм 18: DFS (обхожда целия граф)</span>
+<span class="kw">DFS</span>(G = ({1,...,n}, E))
+<span class="num">1</span>  time <span class="op">е глобална</span>
+<span class="num">2</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">3</span>      color[i] ← white
+<span class="num">4</span>      π[i] ← NIL
+<span class="num">5</span>  time ← 0
+<span class="num">6</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">7</span>      <span class="kw">if</span> color[i] = white
+<span class="num">8</span>          DFS-VISIT(G, i)</code></pre>
+
+      <div class="sec-h">Псевдокод — Алгоритъм 19: DFS-VISIT</div>
+<pre><code><span class="cm">-- Алгоритъм 19: DFS-VISIT (рекурсивно ядро)</span>
+<span class="kw">DFS-VISIT</span>(G = (V, E); x ∈ V)
+<span class="num">1</span>  time++
+<span class="num">2</span>  d[x] ← time          <span class="cm">-- момент на откриване (discovery time)</span>
+<span class="num">3</span>  color[x] ← gray      <span class="cm">-- x е открит, но не е финализиран</span>
+<span class="num">4</span>  <span class="kw">foreach</span> y ∈ adj[x]
+<span class="num">5</span>      <span class="kw">if</span> color[y] = white
+<span class="num">6</span>          π[y] ← x
+<span class="num">7</span>          DFS-VISIT(G, y)
+<span class="num">8</span>  color[x] ← black     <span class="cm">-- x е финализиран</span>
+<span class="num">9</span>  time++
+<span class="num">10</span> f[x] ← time          <span class="cm">-- момент на финализиране (finish time)</span></code></pre>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Представете си, че сте изследовател в пещера (графа). DFS означава: влезте в коридор, вървете дотам докъдето се стигне, маркирайте всяка стая (сив = в нея сте, черен = приключихте). Когато стигнете задънена улица, се върнете назад до последната стая с неизследвани коридори. Часовникът "time" тиктака всеки път: +1 при влизане в стая (d[x]), +1 при излизане (f[x]).</p>
+
+      <div class="sec-h">Визуализация — пример върху граф</div>
+      <div class="viz">
+Граф: A→B, A→C, B→D, C→D, D→E
+
+Изпълнение на DFS (ред на разглеждане: A, B, C, D, E):
+
+time=1: открий A  → d[A]=1, A=сив
+time=2: открий B  → d[B]=2, B=сив
+time=3: открий D  → d[D]=3, D=сив
+time=4: открий E  → d[E]=4, E=сив
+time=5: финализирай E → f[E]=5, E=черен  ← ФИНАЛИЗИРА
+time=6: финализирай D → f[D]=6, D=черен
+time=7: финализирай B → f[B]=7, B=черен
+time=8: открий C  → d[C]=8, C=сив
+         (D вече е черен — пропускаме)
+time=9: финализирай C → f[C]=9, C=черен
+time=10: финализирай A → f[A]=10, A=черен
+
+Таблица на резултатите:
+┌─────┬──────┬──────┬──────────────────────────────┐
+│ Връх│  d[] │  f[] │ Интервал                      │
+├─────┼──────┼──────┼──────────────────────────────┤
+│  A  │   1  │  10  │ [1, 10] — обхваща всички      │
+│  B  │   2  │   7  │ [2,  7] — вложен в A          │
+│  D  │   3  │   6  │ [3,  6] — вложен в B          │
+│  E  │   4  │   5  │ [4,  5] — вложен в D          │
+│  C  │   8  │   9  │ [8,  9] — вложен в A          │
+└─────┴──────┴──────┴──────────────────────────────┘
+
+Гора на DFS (масив π):
+π[B]=A, π[D]=B, π[E]=D, π[C]=A
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li><strong>Сложност по време: Θ(n + m)</strong> — минаваме всеки списък на съседство веднъж</li>
+          <li>Всеки връх се открива (gray) и финализира (black) точно по веднъж → 2n инкремента на time</li>
+          <li>d[x] и f[x] са двойки различни числа от {1, 2, ..., 2n}</li>
+          <li>Масивът π[1..n] реализира гората на обхождането</li>
+          <li>DFS НЕ изчислява разстояния (за разлика от BFS)</li>
+        </ul>
+      </div>
+
+      <div class="card warn">
+        <div class="card-label">Честа грешка!</div>
+        <p>Сложността НЕ е Θ(n·m). Правилното разсъждение: не броим колко пъти се изпълнява рекурсията, а общо колко пъти се изпълнява foreach-цикълът — а той минава през всички списъци на съседство: Θ(n + m).</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Опишете алгоритъма DFS (псевдокод). Каква е сложността му по време и защо? Какво представляват d[x] и f[x]?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 2: Properties of DFS -->
+  <section class="topic" id="t2">
+    <div class="topic-header">
+      <h2>Свойства на DFS: Скобова структура и бели пътища</h2>
+      <div class="topic-num">2</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — Теорема 78 (Скобова структура)</div>
+        <p>Нека i, j ∈ {1,...,n} и i ≠ j. Точно едно от следните е в сила:</p>
+        <ul class="bullet">
+          <li><strong>Непресичащи се интервали:</strong> [d[vᵢ], f[vᵢ]] ∩ [d[vⱼ], f[vⱼ]] = ∅ → нито единият не е предшественик на другия в гората</li>
+          <li><strong>Вложен i в j:</strong> [d[vᵢ], f[vᵢ]] ⊂ [d[vⱼ], f[vⱼ]] → vⱼ е предшественик на vᵢ</li>
+          <li><strong>Вложен j в i:</strong> [d[vᵢ], f[vᵢ]] ⊃ [d[vⱼ], f[vⱼ]] → vᵢ е предшественик на vⱼ</li>
+        </ul>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Теорема 79 — Теорема за белите пътища (White-Path Theorem)</div>
+        <p>Vertex v е потомък на u в гората на DFS обхождането тогава и само тогава, когато в момента d[u] (когато u тъкмо е бил открит) съществува бял път от u до v в графа.</p>
+      </div>
+
+      <div class="sec-h">Визуализация — Скобова структура</div>
+      <div class="viz">
+Интервалите от примера:
+A: [1, 10]
+B: [2,  7]
+D: [3,  6]
+E: [4,  5]
+C: [8,  9]
+
+Скобовото представяне:
+( A ( B ( D ( E ) E ) D ) B ( C ) C ) A
+  1   2   3   4   5   6   7   8   9  10
+
+Наблюдение: "( x" = d[x], ") x" = f[x]
+Вложените интервали <=> родител-дете в DFS гората:
+  E ⊂ D ⊂ B ⊂ A  (E е дете на D, D е дете на B, B е дете на A)
+  C ⊂ A           (C е дете на A)
+  [C] и [B] са непресичащи — нито един не е предшественик на другия
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Теорема 82 — DFS за намиране на цикличност</div>
+        <p>Ориентираният граф G е ацикличен (даг) тогава и само тогава, когато DFS(G) не открие нито едно <strong>ребро назад (back edge)</strong>. Ако DFS открие back edge, то в графа има цикъл, и обратно.</p>
+      </div>
+
+      <div class="sec-h">Конкретен пример — Тестване за цикличност</div>
+      <div class="card ex">
+        <div class="card-label">Пример</div>
+        <p>Граф с ребро E→B: В момента когато DFS разглежда ребро (E, B), B е сив (d[B]=2, все още отворен). Тъй като B е предшественик на E (B е сив), реброто (E, B) е <strong>back edge</strong>. Следователно графът съдържа цикъл: B→D→E→B.</p>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Теорема 78: интервалите са ЗАДЪЛЖИТЕЛНО или вложени, или непресичащи — не може да се пресичат частично</li>
+          <li>Скобовата структура еднозначно определя гората на DFS</li>
+          <li>Теорема 79: бял път при d[u] ↔ v е потомък на u</li>
+          <li>Теорема 82: back edge ↔ цикъл в графа</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Формулирайте Теорема 78 (Скобова структура). Обяснете как DFS може да намери дали граф е цикличен."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 3: Edge Classification -->
+  <section class="topic" id="t3">
+    <div class="topic-header">
+      <h2>Класификация на ребрата от DFS (Теореми 80 и 81)</h2>
+      <div class="topic-num">3</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — Теорема 80 (Ориентиран граф)</div>
+        <p>При изпълнение на DFS върху ориентиран граф, всяко ребро (x, y) попада в точно един от следните класове:</p>
+        <ul class="bullet">
+          <li><strong>Tree edge (дървесно ребро):</strong> y е бял при разглеждане на (x,y). Наредба: d[x] &lt; d[y] &lt; f[y] &lt; f[x]</li>
+          <li><strong>Back edge (ребро назад):</strong> y е сив при разглеждане на (x,y) — y е предшественик на x. Наредба: d[y] &lt; d[x] &lt; f[x] &lt; f[y]</li>
+          <li><strong>Forward edge (ребро напред):</strong> y е черен и d[x] &lt; d[y]. Наредба: d[x] &lt; d[y] &lt; f[y] &lt; f[x]</li>
+          <li><strong>Cross edge (ребро настрани):</strong> y е черен и d[y] &lt; d[x]. Наредба: d[y] &lt; f[y] &lt; d[x] &lt; f[x]</li>
+        </ul>
+      </div>
+
+      <div class="sec-h">Таблица на класификацията</div>
+      <table>
+        <tr><th>Вид ребро</th><th>Цвят на y при (x,y)</th><th>Наредба d/f</th><th>Значение</th></tr>
+        <tr><td><strong>Tree edge</strong></td><td>Бял</td><td>d[x] &lt; d[y] &lt; f[y] &lt; f[x]</td><td>Изгражда DFS гората</td></tr>
+        <tr><td><strong>Back edge</strong></td><td>Сив</td><td>d[y] &lt; d[x] &lt; f[x] &lt; f[y]</td><td>Сочи към предшественик → ЦИКЪЛ</td></tr>
+        <tr><td><strong>Forward edge</strong></td><td>Черен, d[y]&gt;d[x]</td><td>d[x] &lt; d[y] &lt; f[y] &lt; f[x]</td><td>Сочи към потомък (не в дървото)</td></tr>
+        <tr><td><strong>Cross edge</strong></td><td>Черен, d[y]&lt;d[x]</td><td>d[y] &lt; f[y] &lt; d[x] &lt; f[x]</td><td>Между непаралелни поддървета</td></tr>
+      </table>
+
+      <div class="card def">
+        <div class="card-label">Теорема 81 — Неориентиран граф</div>
+        <p>При изпълнение на DFS върху <strong>неориентиран граф</strong>, всяко ребро е или <strong>дървесно (tree edge)</strong>, или <strong>ребро назад (back edge)</strong>. Forward edges и cross edges не се появяват в неориентирани графи.</p>
+      </div>
+
+      <div class="sec-h">Конкретен пример — Класификация</div>
+      <div class="card ex">
+        <div class="card-label">Пример върху ориентиран граф</div>
+        <div class="viz">
+Граф: A→B, A→C, B→D, C→D, D→E, E→B
+
+DFS резултати (от предишния пример, добавяме E→B):
+d[A]=1, f[A]=10; d[B]=2, f[B]=7; d[D]=3, f[D]=6
+d[E]=4, f[E]=5;  d[C]=8, f[C]=9
+
+Класификация на ребрата:
+  (A→B): B=бял при разглеждане → TREE EDGE
+  (A→C): C=бял при разглеждане → TREE EDGE
+  (B→D): D=бял → TREE EDGE
+  (D→E): E=бял → TREE EDGE
+  (E→B): B=сив (d[B]=2 < d[E]=4 < f[E]=5 < f[B]=7) → BACK EDGE (цикъл!)
+  (C→D): d[D]=3 < d[C]=8, D=черен → CROSS EDGE
+        </div>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Само ориентирани графи имат forward и cross edges</li>
+          <li>Back edge ↔ y е сив ↔ цикъл в ориентиран граф</li>
+          <li>За неориентиран граф: само tree и back edges</li>
+          <li>Наредбата d[y] &lt; f[y] &lt; d[x] (cross edge) означава: y е финализиран преди x да е открит</li>
+          <li>Back edge: y е СИВ (все още отворен, предшественик на x)</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="card-label">Връзка с другите теми</div>
+        <p>Класификацията на ребрата е основа за Теорема 85 (коректност на топологическо сортиране на Tarjan) и Теорема 82 (цикличност). Back edges са точно тези ребра, чието наличие прави топологическото сортиране невъзможно.</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Опишете четирите вида ребра в ориентиран граф при DFS. За всеки тип дайте наредбата на d/f стойностите и обяснете как се разпознава. Защо в неориентиран граф има само два вида?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 4: Topological Sort (Tarjan) -->
+  <section class="topic" id="t4">
+    <div class="topic-header">
+      <h2>Топологическо сортиране — Алгоритъм на Tarjan</h2>
+      <div class="topic-num">4</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — Определение 73</div>
+        <p><strong>Топологическо сортиране</strong> на ориентиран граф G = (V, E) е биекция h: V → {1,...,n}, такава че за всяко ребро (u, v) ∈ E е вярно, че h(u) &lt; h(v).</p>
+        <p>С други думи: ако има ребро от u към v, то u трябва да е наредено ПРЕДИ v.</p>
+        <p><strong>Теорема 83:</strong> Съществува топологическо сортиране на G тогава и само тогава, когато G е даг (насочен ацикличен граф).</p>
+      </div>
+
+      <div class="sec-h">Лесно обяснение</div>
+      <p>Представете си зависимости между задачи: "За да направиш X, първо трябва да направиш Y". Топологическото сортиране наредja задачите така, че всяка предпоставка идва преди задачата, която я изисква. Ако има цикъл от зависимости (A зависи от B, B зависи от A) — сортирането е невъзможно.</p>
+
+      <div class="sec-h">Алгоритъм 20: Tsort и Алгоритъм 21: Tsort-rec</div>
+<pre><code><span class="cm">-- Алгоритъм 20: Tsort — топологическо сортиране на Tarjan</span>
+<span class="kw">Tsort</span>(Даг G = ({1,...,n}, E))
+<span class="num">1</span>  T[1..n], time и ℓ са глобални
+<span class="num">2</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">3</span>      color[i] ← white
+<span class="num">4</span>      π[i] ← NIL
+<span class="num">5</span>  time ← 0, ℓ ← n    <span class="cm">-- ℓ = текущата дясна позиция в T</span>
+<span class="num">6</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">7</span>      <span class="kw">if</span> color[i] = white
+<span class="num">8</span>          Tsort-rec(G, i)
+<span class="num">9</span>  <span class="kw">return</span> T[1..n]
+
+<span class="cm">-- Алгоритъм 21: Tsort-rec — рекурсивното ядро</span>
+<span class="kw">Tsort-rec</span>(G = (V, E); x ∈ V)
+<span class="num">1</span>  time++
+<span class="num">2</span>  d[x] ← time
+<span class="num">3</span>  color[x] ← gray
+<span class="num">4</span>  <span class="kw">foreach</span> y ∈ adj[x]
+<span class="num">5</span>      <span class="kw">if</span> color[y] = white
+<span class="num">6</span>          π[y] ← x
+<span class="num">7</span>          Tsort-rec(G, y)
+<span class="num">8</span>  color[x] ← black
+<span class="num">9</span>  time++
+<span class="num">10</span> f[x] ← time
+<span class="num">11</span> T[ℓ] ← x    <span class="cm">-- слагаме x в позиция ℓ (от дясно наляво)</span>
+<span class="num">12</span> ℓ--</code></pre>
+
+      <div class="card def">
+        <div class="card-label">Теорема 85 — Коректността на топологическото сортиране на Tarjan</div>
+        <p>Ако G е даг, пермутацията π = ⟨u₁, u₂, ..., uₙ⟩ на върховете на G, такава че f[u₁] &gt; f[u₂] &gt; ... &gt; f[uₙ] след терминирането на DFS(G), реализира топологическо сортиране.</p>
+        <p><strong>Доказателство (скица):</strong> За произволно ребро (u, v) в G разглеждаме три случая от Теорема 80:</p>
+        <ul class="bullet">
+          <li>Tree/Forward edge: d[u] &lt; d[v] &lt; f[v] &lt; f[u] → f[u] &gt; f[v] → u е вляво от v в T. OK.</li>
+          <li>Back edge: Невъзможно, защото G е даг (Теорема 82).</li>
+          <li>Cross edge: d[v] &lt; f[v] &lt; d[u] &lt; f[u] → f[u] &gt; f[v] → u е вляво от v в T. OK.</li>
+        </ul>
+        <p>Следователно нито едно ребро не сочи "отдясно наляво" в T → T е топологическо сортиране.</p>
+      </div>
+
+      <div class="sec-h">Конкретен пример</div>
+      <div class="card ex">
+        <div class="card-label">Граф от задачи с предпоставки</div>
+        <div class="viz">
+Граф: болт1→колело, болт2→колело, колело→ролка, ролка→ремък, ремък→генератор
+
+DFS резултати (ред: болт1, болт2, колело, ролка, ремък, генератор):
+f[генератор]=2, f[ремък]=4, f[ролка]=6, f[колело]=8, f[болт2]=10, f[болт1]=12
+
+Сортиране по намаляващи f-стойности:
+T = [болт1, болт2, колело, ролка, ремък, генератор]
+      1        2      3       4      5         6
+
+Проверка: болт1→колело: болт1 е на поз.1, колело на поз.3 → h(болт1)=1 < h(колело)=3 ✓
+        </div>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Tsort = DFS + ред 11 (слагаме x в T[ℓ] при финализиране)</li>
+          <li>Масивът T се пълни отдясно наляво — сифоните (върхове без деца) са вдясно</li>
+          <li>Сложност: Θ(n + m) — само Θ(1) допълнителна работа спрямо DFS</li>
+          <li>Ако входят не е даг, Tsort НЕ дава грешка — просто T не е топо-сортиране</li>
+          <li>Ключово за Kosaraju: Tsort работи и върху не-даг, генерирайки наредба по f-стойности</li>
+        </ul>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Дефинирайте топологическо сортиране. Опишете алгоритъма на Tarjan (псевдокод). Формулирайте и докажете Теорема 85."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPIC 5: Kosaraju -->
+  <section class="topic" id="t5">
+    <div class="topic-header">
+      <h2>Алгоритъм на Kosaraju за силно свързани компоненти</h2>
+      <div class="topic-num">5</div>
+    </div>
+    <div class="topic-body">
+
+      <div class="card def">
+        <div class="card-label">Точна дефиниция — Определения 74, 75, 76, 77</div>
+        <p><strong>Фактор-граф (Определение 74):</strong> За ориентиран граф G и релация на еквивалентност R върху V(G), фактор-графът G/R е ориентиран граф с върхове = класовете на еквивалентност на R, като ребро (P, Q) съществува тстк ∃ a∈P, b∈Q: (a,b) ∈ E(G).</p>
+        <p><strong>Транспониран граф (Определение 77):</strong> G<sup>T</sup> = (V, {(u,v) | (v,u) ∈ E}) — всички ребра са обърнати.</p>
+        <p><strong>Благоприятна СС компонента (Определение 75):</strong> СС компонента, от която обхождането не може да излезе — тоест от нея не излизат важни ребра (Определение 76: ребра между различни СС компоненти).</p>
+        <p><strong>Наблюдение 57:</strong> G/SC(G) е даг.</p>
+        <p><strong>Наблюдение 60:</strong> Благоприятните СС компоненти са тези, индуцирани от сифоните на фактор-графа G/SC(G).</p>
+      </div>
+
+      <div class="sec-h">Алгоритъм 22: StrConn и Алгоритъм 23: SC-rec</div>
+<pre><code><span class="cm">-- Алгоритъм 22: StrConn — DFS с предварителна наредба на върховете</span>
+<span class="kw">StrConn</span>(G = (V, E); L[1..n]: пермутация на върховете)
+<span class="num">1</span>  S и time са глобални
+<span class="num">2</span>  T ← ∅
+<span class="num">3</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">4</span>      color[i] ← white
+<span class="num">5</span>  time ← 0
+<span class="num">6</span>  <span class="kw">for</span> i ← 1 <span class="kw">to</span> n
+<span class="num">7</span>      <span class="kw">if</span> color[L[i]] = white
+<span class="num">8</span>          S ← ∅
+<span class="num">9</span>          SC-rec(G, L[i])
+<span class="num">10</span>         T ← T ∪ {S}    <span class="cm">-- S е множеството на една СС компонента</span>
+<span class="num">11</span> <span class="kw">return</span> T
+
+<span class="cm">-- Алгоритъм 23: SC-rec</span>
+<span class="kw">SC-rec</span>(G = (V, E); x ∈ V)
+<span class="num">1</span>  time++
+<span class="num">2</span>  d[x] ← time
+<span class="num">3</span>  color[x] ← gray
+<span class="num">4</span>  S ← S ∪ {x}
+<span class="num">5</span>  <span class="kw">foreach</span> y ∈ adj[x]
+<span class="num">6</span>      <span class="kw">if</span> color[y] = white
+<span class="num">7</span>          SC-rec(G, y)
+<span class="num">8</span>  color[x] ← black
+<span class="num">9</span>  time++
+<span class="num">10</span> f[x] ← time</code></pre>
+
+      <div class="sec-h">Алгоритъм 24: Kosaraju</div>
+<pre><code><span class="cm">-- Алгоритъм 24: Kosaraju — намиране на СС компоненти</span>
+<span class="kw">Kosaraju</span>(Ориентиран граф G = (V, E))
+<span class="num">1</span>  L[1..n] ← Tsort(G)     <span class="cm">-- Tarjan DFS → наредба по намаляващи f-стойности</span>
+<span class="num">2</span>  конструирай G<sup>T</sup>         <span class="cm">-- транспониран граф</span>
+<span class="num">3</span>  Q ← StrConn(G<sup>T</sup>, L)      <span class="cm">-- DFS върху G<sup>T</sup> в наредбата L</span>
+<span class="num">4</span>  <span class="kw">return</span> Q</code></pre>
+
+      <div class="card def">
+        <div class="card-label">Теорема 87 — Tarjan топосортира фактор-графа</div>
+        <p>Наредбата L[1..n], генерирана от Tsort(G) върху произволен ориентиран граф G, индуцира топологическо сортиране на фактор-графа G/SC(G). Тоест, СС компонентите се появяват в L в топологически ред на фактор-графа.</p>
+      </div>
+
+      <div class="card def">
+        <div class="card-label">Теорема 88 — Kosaraju коректно намира СС компонентите</div>
+        <p>Алгоритъмът на Kosaraju коректно намиPA всички силно свързани компоненти на входния ориентиран граф G.</p>
+        <p><strong>Интуиция:</strong> Tsort наражда СС компонентите в топологически ред на G/SC(G). В G<sup>T</sup> (обърнатия граф), топологическият ред се обръща. Така в StrConn(G<sup>T</sup>, L), при обхождане от ляво надясно в L, срещаме СС компонентите като благоприятни (сифони) в G<sup>T</sup>/SC(G<sup>T</sup>) — DFS не може да "излезе" от тях.</p>
+      </div>
+
+      <div class="sec-h">Конкретен пример — Два прохода на DFS</div>
+      <div class="card ex">
+        <div class="card-label">Граф с 5 върха и 2 СС компоненти</div>
+        <div class="viz">
+Граф G: a→b, b→c, c→a (цикъл = СС₁={a,b,c}), c→d, d→e, e→d (цикъл = СС₂={d,e})
+
+Важно ребро: c→d (от СС₁ към СС₂)
+Фактор-граф: СС₁ → СС₂  (даг)
+
+ПРОХОД 1 — Tsort(G):
+DFS от a: a→b→c→d→e (f[e]=2, f[d]=4), обратно c→a
+f[e]=2, f[d]=4, f[c]=7, f[b]=9, f[a]=11
+
+L = [a, b, c, d, e]  (намаляващи f-стойности)
+          11  9  7  4  2
+
+ПРОХОД 2 — StrConn(G^T, L):
+G^T: b→a, c→b, a→c, d→c, e→d
+
+Обхождаме L отляво надясно:
+- L[1]=a, color[a]=white:
+  SC-rec(G^T, a): a→c→b (e→d са недостижими от a в G^T)
+  Първото StrConn викане открива: S={a,c,b} = СС₁ ✓
+
+- L[2]=b, color[b]=black → прескачаме
+- L[3]=c, color[c]=black → прескачаме
+- L[4]=d, color[d]=white:
+  SC-rec(G^T, d): d→e
+  Второто StrConn викане открива: S={d,e} = СС₂ ✓
+
+Резултат: Q = {{a,b,c}, {d,e}} ← КОРЕКТНО!
+        </div>
+      </div>
+
+      <div class="card key">
+        <div class="card-label">Ключови неща за запомняне</div>
+        <ul class="bullet">
+          <li>Kosaraju = <strong>две</strong> пускания на DFS: (1) Tsort(G), (2) StrConn(G<sup>T</sup>, L)</li>
+          <li>Сложност: Θ(n + m) — два линейни прохода плюс Θ(n + m) за конструиране на G<sup>T</sup></li>
+          <li>Tsort работи върху всеки ориентиран граф (не само дагове)</li>
+          <li>Благоприятна СС = от нея не излизат важни ребра = сифон в фактор-графа</li>
+          <li>Обръщането на графа (G<sup>T</sup>) превръща сифоните в източници и обратно</li>
+        </ul>
+      </div>
+
+      <div class="conn-box">
+        <div class="card-label">Връзка с другите теми</div>
+        <p>Алгоритъмът на Kosaraju използва директно алгоритъма на Tarjan за топологическо сортиране (Лекция 8/9). СС компонентите и фактор-графът намират приложение в 2SAT задачата от съждителната логика. Транспонирането на граф се свързва с Single Destination Shortest Paths (Лекция 11).</p>
+      </div>
+
+      <div class="exam-box">
+        <div class="card-label">Изпитен въпрос</div>
+        <p>"Опишете алгоритъма на Kosaraju (псевдокод). Обяснете ролята на двата прохода на DFS. Формулирайте Теорема 87 и 88. Покажете пример с граф от 5 върха."</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const body = document.body;
+  body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+function updateProgress() {
+  const boxes = document.querySelectorAll('input[type="checkbox"]');
+  const checked = Array.from(boxes).filter(b => b.checked).length;
+  const pct = Math.round(checked / boxes.length * 100);
+  document.getElementById('progress-bar-inner').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${pct}% готовност (${checked}/${boxes.length} теми)`;
+}
+const sections = document.querySelectorAll('.topic');
+const links = document.querySelectorAll('#sidebar a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+  links.forEach(a => { a.classList.remove('active'); if (a.getAttribute('href') === '#' + current) a.classList.add('active'); });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лекция 13 — Долни граници върху сложност на задачи</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] }, options: { skipHtmlTags: ['script','noscript','style','textarea'] } };</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117; --bg2: #161b22; --bg3: #1f2937; --bg4: #243040;
+    --accent: #58a6ff; --accent2: #3fb950; --accent3: #f78166;
+    --accent4: #d2a679; --accent5: #bc8cff;
+    --text: #e6edf3; --text2: #8b949e; --text3: #cdd9e5;
+    --border: #30363d; --shadow: rgba(0,0,0,0.5);
+    --theorem-bg: #1a2332; --theorem-border: #58a6ff;
+    --def-bg: #1a2a1a; --def-border: #3fb950;
+    --warn-bg: #2a1f10; --warn-border: #f78166;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; line-height: 1.7; display: flex; min-height: 100vh; }
+  #sidebar { width: 280px; background: var(--bg2); border-right: 1px solid var(--border); position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; padding: 20px 0; z-index: 100; }
+  #sidebar h2 { color: var(--accent); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; padding: 0 20px 12px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+  #sidebar a { display: block; padding: 8px 20px; color: var(--text2); text-decoration: none; font-size: 13.5px; transition: all 0.2s; border-left: 3px solid transparent; }
+  #sidebar a:hover, #sidebar a.active { color: var(--accent); background: var(--bg3); border-left-color: var(--accent); }
+  #sidebar .section-label { padding: 12px 20px 4px; color: var(--accent4); font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; }
+  main { margin-left: 280px; padding: 40px 48px; max-width: 1000px; width: 100%; }
+  h1 { font-size: 2.2rem; color: var(--accent); margin-bottom: 8px; border-bottom: 2px solid var(--border); padding-bottom: 16px; }
+  .subtitle { color: var(--text2); font-size: 1rem; margin-bottom: 36px; }
+  h2.section-title { font-size: 1.5rem; color: var(--accent4); margin: 48px 0 16px; padding-left: 14px; border-left: 4px solid var(--accent4); }
+  h3.sub-title { font-size: 1.15rem; color: var(--accent2); margin: 28px 0 12px; }
+  h4.sub-sub { font-size: 1rem; color: var(--accent5); margin: 20px 0 8px; }
+  .box { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 22px 26px; margin: 18px 0; }
+  .theorem-box { background: var(--theorem-bg); border-left: 4px solid var(--theorem-border); border-radius: 0 10px 10px 0; padding: 18px 22px; margin: 18px 0; }
+  .theorem-box .label { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 8px; }
+  .theorem-box .title { font-size: 1.05rem; font-weight: 700; color: var(--text3); margin-bottom: 10px; }
+  .def-box { background: var(--def-bg); border-left: 4px solid var(--def-border); border-radius: 0 10px 10px 0; padding: 18px 22px; margin: 18px 0; }
+  .def-box .label { font-size: 11px; color: var(--accent2); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 8px; }
+  .warn-box { background: var(--warn-bg); border-left: 4px solid var(--accent3); border-radius: 0 10px 10px 0; padding: 18px 22px; margin: 18px 0; }
+  .warn-box .label { font-size: 11px; color: var(--accent3); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 8px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
+  .card h4 { color: var(--accent); margin-bottom: 8px; font-size: 0.95rem; }
+  .tree-vis { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 18px 0; font-family: monospace; font-size: 13px; overflow-x: auto; }
+  .tree-vis pre { color: var(--text3); }
+  .diagram-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 18px 0; }
+  .diagram-box .mermaid { display: flex; justify-content: center; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th { background: var(--bg3); color: var(--accent); padding: 10px 14px; text-align: left; border: 1px solid var(--border); }
+  td { padding: 9px 14px; border: 1px solid var(--border); color: var(--text3); }
+  tr:nth-child(even) td { background: var(--bg2); }
+  .exam-box { background: linear-gradient(135deg, #1e1b2e, #1a2535); border: 1px solid var(--accent5); border-radius: 10px; padding: 20px 24px; margin: 22px 0; }
+  .exam-box .label { font-size: 11px; color: var(--accent5); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 10px; }
+  .key-points { background: var(--bg3); border-radius: 10px; padding: 18px 22px; margin: 16px 0; }
+  .key-points ul { padding-left: 20px; }
+  .key-points li { color: var(--text3); margin-bottom: 6px; }
+  .key-points li strong { color: var(--accent2); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; margin-right: 6px; }
+  .badge-blue { background: #1c3a5c; color: var(--accent); }
+  .badge-green { background: #1a3a1a; color: var(--accent2); }
+  .badge-red { background: #3a1a1a; color: var(--accent3); }
+  .badge-purple { background: #2a1a3a; color: var(--accent5); }
+  .step { display: flex; gap: 14px; margin: 12px 0; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #000; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; margin-top: 2px; }
+  .step-content { flex: 1; }
+  hr.section-divider { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+  .connect-box { background: var(--bg3); border: 1px dashed var(--accent4); border-radius: 8px; padding: 14px 18px; margin: 14px 0; font-size: 14px; color: var(--text2); }
+  .connect-box strong { color: var(--accent4); }
+  .adv-table { background: var(--bg3); border-radius: 8px; overflow: hidden; margin: 16px 0; }
+  code.inline { background: var(--bg3); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 14px; color: var(--accent4); }
+</style>
+</head>
+<body>
+<nav id="sidebar">
+  <h2>Лекция 13</h2>
+  <div class="section-label">Дефиниции</div>
+  <a href="#def107">Опр. 107: Сравнителен сорт</a>
+  <a href="#def111">Опр. 111: Граф на сравненията</a>
+  <a href="#def112">Опр. 112: Граф с повтаряния</a>
+  <div class="section-label">Теореми</div>
+  <a href="#thm112">Теор. 112: Ω(n lg n) долна граница</a>
+  <a href="#thm113">Теор. 113: Сравнения на съседни</a>
+  <a href="#thm114">Теор. 114–115: EU дървета</a>
+  <div class="section-label">Редукции</div>
+  <a href="#red-najblizki">Най-близки елементи</a>
+  <a href="#red-moda">Мода</a>
+  <a href="#red-2sum">2SUM</a>
+  <a href="#red-interval">Interval Scheduling</a>
+  <div class="section-label">Противников аргумент</div>
+  <a href="#adv-max">Намиране на максимум</a>
+  <a href="#adv-minmax">Минимум и максимум</a>
+  <a href="#adv-median">Медиана</a>
+</nav>
+
+<main>
+<h1>Лекция 13</h1>
+<p class="subtitle">Долни граници върху сложност на задачи — Дървета за вземане на решение и аргументиране чрез противник</p>
+
+<!-- ======================================================= -->
+<h2 class="section-title" id="def107">Определение 107/110: Сортиращ алгоритъм, базиран на сравнения</h2>
+
+<div class="def-box">
+  <div class="label">Определение 110</div>
+  <div class="title">Сортиращ алгоритъм, базиран на сравнения</div>
+  <p>Сортиращ алгоритъм, <strong>базиран на сравнения</strong>, е всеки сортиращ алгоритъм, който извършва сравнения от вида $a_i \stackrel{?}{<} a_j$ върху входните елементи и <strong>изходът се определя еднозначно от извършените сравнения и резултатите от тях</strong>.</p>
+</div>
+
+<h3 class="sub-title">Обяснение</h3>
+<p>Образно казано, всеки алгоритъм за сортиране, базиран на сравнения, използва <em>везна с два изхода</em>. Сравненията разкриват относителния ред на елементите, но нищо повече — алгоритъмът не може да "вижда" действителните стойности.</p>
+
+<div class="grid-2">
+  <div class="card"><h4>Примери (базирани на сравнения)</h4>
+    <ul><li>Insertion Sort</li><li>Merge Sort</li><li>Heap Sort</li><li>Quick Sort</li></ul>
+  </div>
+  <div class="card"><h4>Примери (НЕ базирани на сравнения)</h4>
+    <ul><li>Counting Sort</li><li>Radix Sort</li><li>Bucket Sort</li></ul>
+  </div>
+</div>
+
+<h3 class="sub-title">Дървото на сравненията (Decision Tree)</h3>
+<p>За всеки сортиращ алгоритъм, базиран на сравнения, може да се нарисува <strong>дърво за вземане на решение</strong>. Всеки вътрешен връх е сравнение $a_i \stackrel{?}{<} a_j$, левият клон отговаря на "да" (True), десният — на "не" (False). Всяко листо е пермутация (наредба), отговаряща на корректния сортиран изход.</p>
+
+<div class="tree-vis">
+<pre>
+Дърво за вземане на решение на Insertion Sort (n=3):
+                       a₂ < a₁?
+                      /         \
+                   ДА            НЕ
+                  /               \
+           a₃ < a₁?           a₃ < a₂?
+           /      \            /       \
+         ДА       НЕ         ДА         НЕ
+         /         \          /          \
+    a₃<a₂?    [a₂<a₁<a₃]  [a₁<a₃<a₂]  [a₁<a₂<a₃]
+     /    \
+   ДА    НЕ
+   /       \
+[a₃<a₂<a₁] [a₂<a₃<a₁]
+
+Листа = всички 3! = 6 пермутации (наредби).
+</pre>
+</div>
+
+<div class="key-points">
+  <ul>
+    <li><strong>Ключово наблюдение (Наблюдение 83):</strong> Да сортираме входа е <em>еквивалентно</em> на да определим коя пермутация е истината.</li>
+    <li>При $n$ елемента има $n!$ пермутации, следователно трябва поне $n!$ листа в дървото.</li>
+    <li>Двоично дърво с $k$ нива има <em>най-много</em> $2^k$ листа, следователно трябва $2^h \geq n!$, откъдето $h \geq \log_2(n!)$.</li>
+  </ul>
+</div>
+
+<div class="exam-box">
+  <div class="label">Изпитен въпрос</div>
+  <p><strong>Въпрос:</strong> Защо дървото за вземане на решение на сортиращ алгоритъм трябва да има поне $n!$ листа?</p>
+  <p><strong>Отговор:</strong> Защото при $n$ различни елемента съществуват точно $n!$ пермутации. Всяко листо на дървото представлява конкретна наредба на входа. За да може алгоритъмът да разграничи всички пермутации, трябва да има поне толкова листа, колкото са пермутациите — в противен случай две различни пермутации ще бъдат третирани еднакво и резултатът ще е грешен.</p>
+</div>
+
+<!-- ======================================================= -->
+<hr class="section-divider">
+<h2 class="section-title" id="thm112">Теорема 112: Ω(n lg n) е долна граница за Сортиране</h2>
+
+<div class="theorem-box">
+  <div class="label">Теорема 112</div>
+  <div class="title">Долна граница Ω(n lg n) за сортиращи алгоритми, базирани на сравнения</div>
+  <p>Всеки сортиращ алгоритъм, базиран на сравнения, за да сортира $n$ различни елемента, извършва <strong>поне $\lceil \log_2(n!) \rceil = \Omega(n \lg n)$</strong> сравнения в най-лошия случай.</p>
+</div>
+
+<h3 class="sub-title">Доказателство</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">При $n$ различни елемента съществуват $n!$ пермутации. Алгоритъмът трябва да определи коя е истинската.</div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">Дървото за вземане на решение е <strong>двоично дърво</strong> (всяко сравнение има два изхода). При двоично дърво с височина $h$ броят на листата е <strong>най-много</strong> $2^h$.</div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">За да може алгоритъмът да е коректен: $2^h \geq n!$, следователно $h \geq \log_2(n!)$.</div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-content">По формулата на Стирлинг: $\log_2(n!) = \Theta(n \lg n)$.
+  Формален аргумент:
+  $$\log_2(n!) = \sum_{k=1}^{n} \log_2 k \geq \sum_{k=\lceil n/2 \rceil}^{n} \log_2 k \geq \frac{n}{2} \log_2\!\left(\frac{n}{2}\right) = \Omega(n \lg n)$$</div>
+</div>
+<div class="step">
+  <div class="step-num">5</div>
+  <div class="step-content">Следователно всеки сортиращ алгоритъм, базиран на сравнения, прави <strong>поне $\Omega(n \lg n)$</strong> сравнения в най-лошия случай. $\square$</div>
+</div>
+
+<div class="key-points">
+  <ul>
+    <li><strong>Merge Sort е оптимален</strong>: работи в $\Theta(n \lg n)$ сравнения — постига долната граница.</li>
+    <li>Долната граница е <em>за задачата</em>, не за алгоритъм. Важи за всеки базиран на сравнения алгоритъм.</li>
+    <li>Counting/Radix Sort не са базирани на сравнения и работят по-бързо за специфични входове.</li>
+  </ul>
+</div>
+
+<div class="exam-box">
+  <div class="label">Изпитен въпрос</div>
+  <p><strong>Въпрос:</strong> Докажете, че всеки сортиращ алгоритъм, базиран на сравнения, извършва $\Omega(n \lg n)$ сравнения в най-лошия случай.</p>
+  <p><strong>Ключови стъпки:</strong> (1) $n!$ пермутации → дървото има $\geq n!$ листа. (2) Двоично дърво с $h$ нива → $\leq 2^h$ листа → $h \geq \log_2(n!)$. (3) $\log_2(n!) = \Omega(n \lg n)$ по Стирлинг.</p>
+</div>
+
+<!-- ======================================================= -->
+<hr class="section-divider">
+<h2 class="section-title" id="thm113">Теорема 113: Сравнение на съседни елементи &amp; Определение 111</h2>
+
+<div class="def-box">
+  <div class="label">Определение 111</div>
+  <div class="title">Граф на сравненията за уникални елементи</div>
+  <p>За даден сортиращ алгоритъм $A$ и вход $\langle a_1,\ldots,a_n\rangle$ с <strong>уникални</strong> елементи, <em>графът на сравненията</em> $G_A$ е неориентиран граф с върхове $\{1,\ldots,n\}$, в който има ребро $(i,j)$ тстк $A$ е сравнил $a_i$ с $a_j$.</p>
+</div>
+
+<div class="theorem-box">
+  <div class="label">Теорема 113</div>
+  <div class="title">Сортиращите дървета сравняват всяка двойка съседни по величина елементи</div>
+  <p>Нека $A$ е сортиращ алгоритъм, базиран на сравнения, и нека $\langle a_1,\ldots,a_n\rangle$ са уникални елементи, наредени така, че $a_{\sigma(1)} < a_{\sigma(2)} < \cdots < a_{\sigma(n)}$. Тогава в изпълнението на $A$ върху тях, за всяко $i \in \{1,\ldots,n-1\}$, елементите $a_{\sigma(i)}$ и $a_{\sigma(i+1)}$ са сравнявани <strong>поне веднъж</strong>.</p>
+  <p><em>Т.е.: всеки сортиращ алгоритъм трябва да сравни всяка двойка <strong>съседни по наредба</strong> елементи.</em></p>
+</div>
+
+<h3 class="sub-title">Интуиция</h3>
+<p>Ако два съседни по величина елемента $a_{\sigma(i)}$ и $a_{\sigma(i+1)}$ никога не са сравнявани директно, съществуват два различни входа, които са неразличими от алгоритъма, но изискват различни изходи — противоречие с коректността.</p>
+
+<div class="connect-box">
+  <strong>Връзка:</strong> Теорема 113 е ключова за доказателството на долната граница за Уникалност на елементите (EU). Ако сортираме, автоматично сме сравнили всяка съседна двойка → EU е "по-лесна" от Сортиране.
+</div>
+
+<!-- ======================================================= -->
+<hr class="section-divider">
+<h2 class="section-title" id="def112">Долна граница Ω(n lg n) за Уникалност на елементите (EU)</h2>
+
+<div class="def-box">
+  <div class="label">Изч. задача: EU (Element Uniqueness)</div>
+  <div class="title">Уникалност на елементите</div>
+  <p><strong>Вход:</strong> Редица $\langle a_1, \ldots, a_n \rangle$ от числа.<br>
+  <strong>Въпрос:</strong> Дали всички елементи са различни?</p>
+</div>
+
+<div class="def-box">
+  <div class="label">Определение 112</div>
+  <div class="title">Граф на сравненията при възможни повтаряния</div>
+  <p>За алгоритъм $A$ за EU и вход с <em>евентуални повтаряния</em>, графът на сравненията $G_A$ е неориентиран граф с върхове $\{1,\ldots,n\}$, в който $(i,j) \in E$ тстк $A$ е сравнил $a_i$ с $a_j$ при дадения вход.</p>
+</div>
+
+<div class="theorem-box">
+  <div class="label">Теорема 114</div>
+  <div class="title">Дървета на EU върху Да-екземплярите</div>
+  <p>Нека $A$ е алгоритъм за EU, базиран на сравнения. Тогава върху <strong>Да-екземплярите</strong> (всички елементи различни), $A$ трябва да сравни всяка двойка съседни по наредба елементи — точно като при сортиране.</p>
+</div>
+
+<div class="theorem-box">
+  <div class="label">Следствие 36 и Теорема 115</div>
+  <div class="title">Ω(n lg n) долна граница за EU</div>
+  <p>Всеки алгоритъм за Уникалност на елементите, базиран на сравнения, извършва $\Omega(n \lg n)$ сравнения в най-лошия случай.</p>
+</div>
+
+<h3 class="sub-title">Визуализация: EU срещу сортиране</h3>
+<div class="diagram-box">
+  <div class="mermaid">
+graph LR
+  A["Сортиране<br/>Ω(n lg n)"]
+  B["EU<br/>Уникалност<br/>Ω(n lg n)"]
+  A -- "Сортирам → зная уникалност" --> B
+  B -- "EU≤Сортиране: EU е поне толкова лесна" --> A
+  style A fill:#1a2332,stroke:#58a6ff
+  style B fill:#1a2a1a,stroke:#3fb950
+  </div>
+</div>
+
+<!-- ======================================================= -->
+<hr class="section-divider">
+<h2 class="section-title" id="red-najblizki">Редукции: Долни граници чрез EU</h2>
+
+<h3 class="sub-title" id="red-najblizki">Долна граница Ω(n lg n) за Най-близки елементи</h3>
+
+<div class="def-box">
+  <div class="label">Задача: Най-близки елементи (Closest Pair)</div>
+  <p><strong>Вход:</strong> Редица $\langle a_1,\ldots,a_n\rangle$.<br>
+  <strong>Изход:</strong> Двойка $(a_i, a_j)$, $i \neq j$, с минимален $|a_i - a_j|$.</p>
+</div>
+
+<div class="theorem-box">
+  <div class="label">Редукция: EU $\leq$ Най-близки елементи</div>
+  <p>Ако имаме алгоритъм за Най-близки елементи, можем да решим EU: ако минималното разстояние е $0$, значи има повтаряне. Следователно EU се свежда до Най-близки елементи и долната граница $\Omega(n \lg n)$ за EU е валидна и за Най-близки елементи.</p>
+</div>
+
+<div class="step"><div class="step-num">1</div><div class="step-content">Имаме алгоритъм $B$ за Най-близки елементи.</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-content">Ако пуснем $B$ на входа, получаваме двойка $a_i, a_j$ с минимален $|a_i - a_j|$.</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-content">Ако $|a_i - a_j| = 0$, отговаряме "Не" (има дублирани). Иначе отговаряме "Да".</div></div>
+<div class="step"><div class="step-num">4</div><div class="step-content">Получаваме алгоритъм за EU. Тъй като EU $\in \Omega(n \lg n)$, следва $B \in \Omega(n \lg n)$.</div></div>
+
+<h3 class="sub-title" id="red-moda">Долна граница Ω(n lg n) за Мода</h3>
+
+<div class="def-box">
+  <div class="label">Задача: Мода</div>
+  <p><strong>Вход:</strong> Редица $\langle a_1,\ldots,a_n\rangle$.<br>
+  <strong>Изход:</strong> Елементът, срещащ се най-много пъти (модата).</p>
+</div>
+
+<div class="box">
+  <p><strong>Редукция:</strong> EU $\leq$ Мода. Ако изчислим модата и тя се среща $\geq 2$ пъти, отговаряме "Не" за EU. Иначе — "Да". Следователно Мода изисква $\Omega(n \lg n)$ сравнения.</p>
+</div>
+
+<h3 class="sub-title" id="red-2sum">Долна граница Ω(n lg n) за 2SUM</h3>
+
+<div class="def-box">
+  <div class="label">Задача: 2SUM</div>
+  <p><strong>Вход:</strong> Редица $\langle a_1,\ldots,a_n\rangle$ и число $T$.<br>
+  <strong>Въпрос:</strong> Дали съществуват $i \neq j$, такива че $a_i + a_j = T$?</p>
+</div>
+
+<div class="box">
+  <p><strong>Редукция:</strong> EU $\leq$ 2SUM. Дадена редица $a_1,\ldots,a_n$, строим нов вход $b_i = a_i - a_1$ и $T = 0$. Ако $b_i + b_j = 0$ за $i \neq j$, то $a_i = a_j$ и EU е "Не". Следователно 2SUM изисква $\Omega(n \lg n)$ сравнения.</p>
+</div>
+
+<h3 class="sub-title" id="red-interval">Долна граница Ω(n lg n) за Interval Scheduling</h3>
+
+<div class="def-box">
+  <div class="label">Задача: Interval Scheduling</div>
+  <p><strong>Вход:</strong> Множество от интервали $[s_i, f_i]$.<br>
+  <strong>Изход:</strong> Максимален брой съвместими (непресичащи се) интервали.</p>
+</div>
+
+<div class="box">
+  <p><strong>Редукция:</strong> Сортиране $\leq$ Interval Scheduling. Дадени числа $a_1,\ldots,a_n$, строим интервали $[a_i, a_i + \varepsilon]$. Решението на Interval Scheduling изисква да сравним/наредим интервалите по начален край, което е равносилно на сортиране. Следователно $\Omega(n \lg n)$ долна граница.</p>
+</div>
+
+<div class="diagram-box">
+  <div class="mermaid">
+graph TD
+  EU["EU<br/>Ω(n lg n)"] --> |"EU ≤ B"| NC["Най-близки<br/>елементи<br/>Ω(n lg n)"]
+  EU --> |"EU ≤ M"| MOD["Мода<br/>Ω(n lg n)"]
+  EU --> |"EU ≤ 2SUM"| SUM["2SUM<br/>Ω(n lg n)"]
+  SORT["Сортиране<br/>Ω(n lg n)"] --> |"Sort ≤ IS"| IS["Interval<br/>Scheduling<br/>Ω(n lg n)"]
+  style EU fill:#1a2332,stroke:#58a6ff
+  style SORT fill:#1a2332,stroke:#58a6ff
+  </div>
+</div>
+
+<div class="exam-box">
+  <div class="label">Изпитен въпрос</div>
+  <p><strong>Въпрос:</strong> Как се доказва, че Мода изисква $\Omega(n \lg n)$ сравнения?</p>
+  <p><strong>Отговор:</strong> Чрез редукция от EU. Показваме, че алгоритъм за Мода може да се използва за решаване на EU: ако модата се среща $\geq 2$ пъти, значи има повтаряне. Тъй като EU изисква $\Omega(n \lg n)$, следва, че и Мода изисква $\Omega(n \lg n)$.</p>
+</div>
+
+<!-- ======================================================= -->
+<hr class="section-divider">
+<h2 class="section-title" id="adv-max">Аргументиране чрез противник (Adversary Argument)</h2>
+
+<div class="def-box">
+  <div class="label">Определение: Adversary Argument</div>
+  <div class="title">Аргументиране чрез противник</div>
+  <p>При аргументирането чрез противник, <strong>противникът</strong> (adversary) отговаря на всяко сравнение на алгоритъма така, че да принуди алгоритъма да извърши <em>максимален брой</em> сравнения. Противникът трябва обаче да е <strong>консистентен</strong>: отговорите му трябва да са съвместими с поне един валиден вход.</p>
+  <p><strong>Формално:</strong> Противникът поддържа множество $S$ от входове, консистентни с отговорите му. Задачата е решена само ако $|S|=1$. Ако алгоритъмът извърши $k$ сравнения, противникът може да гарантира, че $k$ е достатъчно голямо.</p>
+</div>
+
+<h3 class="sub-title" id="adv-max">Долна граница n−1 за намиране на максималния елемент. Теорема 117.</h3>
+
+<div class="theorem-box">
+  <div class="label">Теорема 117</div>
+  <div class="title">Намиране на максимум изисква n−1 сравнения</div>
+  <p>Всеки алгоритъм за намиране на максималния елемент от $n$ елемента извършва <strong>поне $n-1$</strong> сравнения.</p>
+</div>
+
+<h3 class="sub-title">Доказателство (adversary argument)</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">Назоваваме елемент <em>"загубил"</em>, ако е загубил поне едно сравнение (т.е. бил е по-малкият в сравнение). Максималният елемент никога не е загубил.</div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">Противникът отговаря на всяко сравнение $(a_i, a_j)$ така, че единият загубва за пръв път (ако и двата са "непобедени" досега) — гарантирайки, че всяко сравнение добавя точно един "загубил".</div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">За да извади максимума, алгоритъмът трябва да "елиминира" $n-1$ елемента (всеки трябва да е загубил поне веднъж). Всяко сравнение добавя най-много един загубил.</div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-content">Следователно са нужни поне $n-1$ сравнения. $\square$</div>
+</div>
+
+<h3 class="sub-title" id="adv-minmax">Намиране на максимален и минимален елемент с ⌈3n/2⌉−2 сравнения</h3>
+
+<div class="box">
+  <p><strong>Алгоритъм:</strong></p>
+  <div class="step"><div class="step-num">1</div><div class="step-content">Разбиваме $n$ елемента на $\lfloor n/2 \rfloor$ двойки. Сравняваме всяка двойка: $\lfloor n/2 \rfloor$ сравнения.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-content">Намираме максимума от "победителите" в двойките: $\lfloor n/2 \rfloor - 1$ сравнения.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-content">Намираме минимума от "загубилите" в двойките: $\lfloor n/2 \rfloor - 1$ сравнения.</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-content">Ако $n$ е нечетно, обработваме последния елемент отделно: 2 сравнения.</div></div>
+  <p><strong>Общо:</strong> $\lceil 3n/2 \rceil - 2$ сравнения.</p>
+</div>
+
+<h3 class="sub-title">Доказателство на долната граница ⌈3n/2⌉−2 чрез Таблица 13.1</h3>
+
+<div class="box">
+  <p>Противникът поддържа за всеки елемент едно от четири <em>статуса</em>:</p>
+</div>
+
+<table>
+  <thead><tr><th>Статус</th><th>Значение</th><th>Може да е максимум?</th><th>Може да е минимум?</th></tr></thead>
+  <tbody>
+    <tr><td><strong>W</strong> (Winner)</td><td>Само победи</td><td>Да</td><td>Не</td></tr>
+    <tr><td><strong>L</strong> (Loser)</td><td>Само загуби</td><td>Не</td><td>Да</td></tr>
+    <tr><td><strong>WL</strong></td><td>Победи и загуби</td><td>Не</td><td>Не</td></tr>
+    <tr><td><strong>N</strong> (Never compared)</td><td>Не е сравняван</td><td>Да</td><td>Да</td></tr>
+  </tbody>
+</table>
+
+<div class="box">
+  <p><strong>Идея:</strong> Противникът отговаря така, че да промени статуса на колкото е възможно по-малко елементи:</p>
+  <ul style="padding-left: 20px; color: var(--text3);">
+    <li>N vs N → 1 W, 1 L: 1 "полезно" сравнение (2 промени на статус)</li>
+    <li>W vs L → 1 WL: 1 промяна — но от гледна точка на противника е "изгодно" да дава тази информация</li>
+    <li>W vs W, L vs L → 1 W, 1 L: само 1 нова информация на сравнение</li>
+  </ul>
+  <p>Анализът показва, че за да намерим и максимума, и минимума, на всеки от $n$ елементи трябва да знаем: максимумът трябва да е победил $\geq 1$ пъти, минимумът — да е загубил $\geq 1$ пъти, останалите са WL. Необходимото число сравнения е $\lceil 3n/2 \rceil - 2$.</p>
+</div>
+
+<h3 class="sub-title" id="adv-median">Долна граница n−1 за намиране на медиана. Лема 58. Теорема 120.</h3>
+
+<div class="theorem-box">
+  <div class="label">Лема 58</div>
+  <div class="title">Свойство на медианата</div>
+  <p>За намиране на медианата на $n$ елемента, <strong>всеки елемент</strong> трябва да участва в поне едно сравнение. Ако даден елемент не е сравняван, не можем да определим позицията му спрямо медианата.</p>
+</div>
+
+<div class="theorem-box">
+  <div class="label">Теорема 120</div>
+  <div class="title">Долна граница за намиране на медиана</div>
+  <p>Намирането на медианата изисква поне $n - 1$ сравнения. При по-прецизен adversary argument, долната граница е $\frac{3}{2}(n-1)$.</p>
+</div>
+
+<div class="key-points">
+  <ul>
+    <li><strong>Adversary argument:</strong> противникът поддържа консистентен набор от входове, докато алгоритъмът не изключи всички "невалидни" стойности за медианата.</li>
+    <li><strong>Интуиция:</strong> за да знаем, че $m$ е медиана, трябва $\lfloor n/2 \rfloor$ елемента да са &lt; $m$ и $\lfloor n/2 \rfloor$ елемента да са &gt; $m$, което изисква много сравнения.</li>
+  </ul>
+</div>
+
+<div class="exam-box">
+  <div class="label">Изпитен въпрос</div>
+  <p><strong>Въпрос:</strong> Обяснете метода на аргументиране чрез противник и покажете долна граница $n-1$ за намирането на максималния елемент.</p>
+  <p><strong>Отговор:</strong> Противникът отговаря консистентно, но така, че да принуди максимален брой сравнения. За максимума: всеки от $n-1$ "не-максимуми" трябва да е загубил поне едно сравнение. Всяко сравнение добавя поне един загубил → нужни са $\geq n-1$ сравнения.</p>
+</div>
+
+<hr class="section-divider">
+<div class="connect-box">
+  <strong>Резюме на Лекция 13:</strong> Въведохме три техники за доказване на долни граници: (1) Дървета за вземане на решение — доказахме $\Omega(n \lg n)$ за Сортиране и EU. (2) Редукции — EU $\leq$ Най-близки елементи, Мода, 2SUM; Сортиране $\leq$ Interval Scheduling. (3) Adversary argument — долни граници $n-1$ за максимум и медиана, и $\lceil 3n/2 \rceil - 2$ за едновременно намиране на максимум и минимум.
+</div>
+
+</main>
+
+<script>hljs.highlightAll(); mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
+</body>
+</html>
