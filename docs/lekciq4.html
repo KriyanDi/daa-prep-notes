@@ -344,6 +344,50 @@ mjx-container svg { max-width: 100%; }
   .rbar-inner { gap: 10px; }
 }
 </style>
+<style>
+/* ── lekciq4 content-specific classes ── */
+:root {
+  --l4-blue:#1f6feb; --l4-blue-l:#388bfd; --l4-blue-bg:#0d2140;
+  --l4-green-l:#56d364; --l4-green-bg:#0d3020;
+  --l4-yellow:#d29922; --l4-yellow-l:#e3b341; --l4-yellow-bg:#2d2000;
+  --l4-purple:#8957e5; --l4-purple-l:#bc8cff; --l4-purple-bg:#1c1040;
+  --l4-red:#da3633; --l4-red-l:#f85149; --l4-red-bg:#2d0606;
+  --l4-muted:#8b949e; --l4-card:#1c2128; --l4-border:#30363d;
+}
+.page-header { border-bottom:1px solid var(--l4-border); margin-bottom:40px; padding-bottom:24px; }
+.page-header .lecture-badge { background:var(--l4-blue-bg); color:var(--l4-blue-l); border:1px solid var(--l4-blue); padding:4px 12px; border-radius:20px; font-size:13px; display:inline-block; margin-bottom:12px; }
+.page-header h1 { font-size:2rem; font-weight:700; margin-bottom:8px; }
+.page-header .subtitle { color:var(--l4-muted); font-size:15px; }
+.page-header .meta { margin-top:12px; font-size:13px; color:var(--l4-muted); }
+.topic-title { font-size:1.5rem; font-weight:700; margin-bottom:24px; color:var(--text); display:flex; align-items:center; gap:12px; }
+.topic-title .icon { font-size:1.2rem; }
+.card-blue   { background:var(--l4-blue-bg);   border-color:var(--l4-blue)!important; }
+.card-green  { background:var(--l4-green-bg);  border-color:var(--l4-green-l)!important; }
+.card-yellow { background:var(--l4-yellow-bg); border-color:var(--l4-yellow)!important; }
+.card-purple { background:var(--l4-purple-bg); border-color:var(--l4-purple)!important; }
+.card-red    { background:var(--l4-red-bg);    border-color:var(--l4-red)!important; }
+.card-gray   { background:var(--bg3);          border-color:var(--border)!important; }
+.card-blue   .card-label { color:var(--l4-blue-l); }
+.card-green  .card-label { color:var(--l4-green-l); }
+.card-yellow .card-label { color:var(--l4-yellow-l); }
+.card-purple .card-label { color:var(--l4-purple-l); }
+.card-red    .card-label { color:var(--l4-red-l); }
+.card-gray   .card-label { color:var(--l4-muted); }
+.ascii-box { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:16px; font-family:monospace; font-size:13px; white-space:pre; overflow-x:auto; color:var(--l4-green-l); margin:12px 0; }
+.steps { counter-reset:step; }
+.step { display:flex; gap:14px; margin-bottom:14px; align-items:flex-start; }
+.step-num { background:var(--l4-blue); color:#fff; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; margin-top:2px; }
+.step-content { flex:1; }
+.hl-blue   { color:var(--l4-blue-l);   font-weight:600; }
+.hl-green  { color:var(--l4-green-l);  font-weight:600; }
+.hl-yellow { color:var(--l4-yellow-l); font-weight:600; }
+.hl-purple { color:var(--l4-purple-l); font-weight:600; }
+.hl-red    { color:var(--l4-red-l);    font-weight:600; }
+.proof-block { border-left:4px solid var(--l4-purple); padding-left:16px; margin:12px 0; }
+.proof-block .proof-label { font-size:12px; text-transform:uppercase; color:var(--l4-purple-l); font-weight:700; margin-bottom:8px; }
+code:not(pre code) { background:var(--bg3); border:1px solid var(--border); padding:2px 6px; border-radius:4px; font-size:13px; }
+#sidebar .section-header { padding:10px 16px 4px; font-size:11px; text-transform:uppercase; color:var(--l4-blue-l); letter-spacing:1px; margin-top:8px; }
+</style>
 </head>
 <body>
 <!-- ☕ Revolut Top Bar -->

@@ -350,6 +350,45 @@ mjx-container svg { max-width: 100%; }
   .rbar-inner { gap: 10px; }
 }
 </style>
+<style>
+/* ── lekciq10 content-specific classes ── */
+:root {
+  --l10-c1:#58a6ff; --l10-c2:#3fb950; --l10-c3:#f0883e;
+  --l10-c4:#ff7b72; --l10-c5:#d2a8ff; --l10-hl:#ffa657;
+  --l10-dim:#8b949e; --l10-s2:#21262d; --l10-border:#30363d;
+}
+.page-title { background:linear-gradient(135deg,var(--l10-c1),var(--l10-c5)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; font-size:2.2rem; font-weight:700; margin-bottom:.5rem; }
+.page-subtitle { color:var(--l10-dim); font-size:1rem; margin-bottom:2.5rem; }
+.topic-title { color:var(--l10-c1); font-size:1.4rem; font-weight:700; margin-bottom:1.2rem; padding-bottom:.6rem; border-bottom:2px solid var(--l10-border); display:flex; align-items:center; gap:.6rem; }
+.topic-title::before { content:''; display:inline-block; width:4px; height:1.4rem; background:var(--l10-c1); border-radius:2px; }
+.subsection { margin:1.2rem 0; }
+.section-label { display:inline-block; background:var(--l10-s2); border:1px solid var(--l10-border); border-radius:6px; padding:.2rem .6rem; font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:.08em; margin-bottom:.5rem; margin-right:.4rem; }
+.label-def   { color:var(--l10-c5); border-color:var(--l10-c5)!important; }
+.label-explain { color:var(--l10-c2); border-color:var(--l10-c2)!important; }
+.label-viz   { color:var(--l10-c3); border-color:var(--l10-c3)!important; }
+.label-example { color:var(--l10-hl); border-color:var(--l10-hl)!important; }
+.label-key   { color:var(--l10-c4); border-color:var(--l10-c4)!important; }
+.label-link  { color:var(--l10-c1); border-color:var(--l10-c1)!important; }
+.label-exam  { color:var(--l10-c2); border-color:var(--l10-c2)!important; background:rgba(63,185,80,.08); }
+.info-box { border-radius:8px; padding:1rem 1.2rem; margin:1rem 0; border-left:4px solid; }
+.info-box.definition { background:rgba(88,166,255,.08); border-color:var(--l10-c1); }
+.info-box.theorem    { background:rgba(210,168,255,.08); border-color:var(--l10-c5); }
+.info-box.warning    { background:rgba(255,123,114,.08); border-color:var(--l10-c4); }
+.info-box.success    { background:rgba(63,185,80,.08);  border-color:var(--l10-c2); }
+.info-box.note       { background:rgba(240,136,62,.08); border-color:var(--l10-c3); }
+.info-box strong { display:block; margin-bottom:.4rem; font-size:.85rem; text-transform:uppercase; letter-spacing:.06em; }
+.key-list { list-style:none; }
+.key-list li { padding:.4rem 0; padding-left:1.4rem; position:relative; }
+.key-list li::before { content:'▸'; color:var(--l10-c3); position:absolute; left:0; font-size:.8rem; top:.5rem; }
+.mermaid { background:var(--l10-s2); border-radius:8px; padding:1rem; margin:1rem 0; text-align:center; border:1px solid var(--l10-border); }
+.exam-question { background:linear-gradient(135deg,rgba(63,185,80,.06),rgba(88,166,255,.06)); border:1px solid var(--l10-c2); border-radius:8px; padding:1.2rem; margin-top:1.2rem; }
+.exam-question strong { color:var(--l10-c2); display:block; margin-bottom:.4rem; }
+.step-table { font-size:.85rem; }
+.step-table td.highlight { background:rgba(88,166,255,.15); color:var(--l10-c1); font-weight:600; }
+.step-table td.done { background:rgba(63,185,80,.1); color:var(--l10-c2); }
+code:not(pre code) { background:var(--l10-s2); color:var(--l10-c5); padding:.1em .35em; border-radius:4px; font-size:.9em; }
+#sidebar li.section-header a { color:var(--text); font-weight:600; font-size:.9rem; margin-top:.8rem; }
+</style>
 </head>
 <body>
 <!-- ☕ Revolut Top Bar -->
