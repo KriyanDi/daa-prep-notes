@@ -283,7 +283,7 @@ mjx-container svg { max-width: 100%; }
 @media (min-width: 1101px) {
   #sidebar    { transform: none; }
   #menu-toggle { display: none; }
-  .btn-back   { display: inline-flex; }
+  .btn-back   { display: none; }
   .sidebar-close { display: none; }
 }
 
