@@ -492,6 +492,20 @@ body { overflow-x: hidden; width: 100%; }
   }
 }
 </style>
+<style>
+/* ═══════ FULLSCREEN FIX (v5) ═══════ */
+/*
+  Sidebar MUST be position:fixed so it is removed from the flex flow.
+  (fix_tablet.py accidentally set it to position:relative globally,
+   causing #main to get only ~110 px on phones.)
+  A fixed element is still a valid containing block for position:absolute
+  children, so the ✕ close button keeps working.
+*/
+#sidebar { position: fixed !important; }
+
+/* Ensure the flex container fills the full viewport width */
+#layout { width: 100%; }
+</style>
 </head>
 <body>
 <!-- ☕ Revolut Top Bar -->
