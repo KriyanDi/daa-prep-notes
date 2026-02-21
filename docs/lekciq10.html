@@ -843,5 +843,55 @@ graph LR
     nodeBorder: '#30363d', mainBkg: '#161b22'
   }});
 </script>
+
+<!-- ☕ Coffee Section -->
+<div id="coffee-section" style="
+  text-align:center;
+  padding: 50px 24px 40px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0,117,235,0.04) 100%);
+  border-top: 1px solid var(--border, #2a2f52);
+  margin-top: 60px;
+">
+  <div style="font-size:3rem; margin-bottom:14px; animation: bounce 2s infinite;">☕</div>
+  <h3 style="font-size:1.4rem; font-weight:800; color:var(--text,#e8eaf0); margin-bottom:10px; letter-spacing:-0.5px;">
+    Черпи ме кафе
+  </h3>
+  <p style="color:var(--text2,#9ca3af); font-size:0.95rem; margin-bottom:24px; max-width:380px; margin-left:auto; margin-right:auto; line-height:1.6;">
+    Ако тези материали са ти помогнали за изпита —<br>
+    ще ценя едно кафе 😊
+  </p>
+  <a href="https://revolut.me/kriyandi" target="_blank" rel="noopener noreferrer"
+     style="
+       display:inline-flex; align-items:center; gap:12px;
+       background: linear-gradient(135deg, #0075eb 0%, #00b4ff 100%);
+       color:#fff; text-decoration:none;
+       padding:14px 32px; border-radius:50px;
+       font-weight:700; font-size:1.05rem;
+       box-shadow: 0 6px 24px rgba(0,117,235,0.4);
+       transition: transform 0.2s, box-shadow 0.2s;
+       letter-spacing: 0.3px;
+     "
+     onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 32px rgba(0,117,235,0.55)'"
+     onmouseout="this.style.transform='';this.style.boxShadow='0 6px 24px rgba(0,117,235,0.4)'"
+  >
+    <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+      <rect width="64" height="64" rx="16" fill="white" fill-opacity="0.15"/>
+      <path d="M44 18H22C19.8 18 18 19.8 18 22v20c0 2.2 1.8 4 4 4h22c2.2 0 4-1.8 4-4V22c0-2.2-1.8-4-4-4z" fill="white" fill-opacity="0.9"/>
+      <path d="M36 28h-9v-4h9c1.1 0 2 .9 2 2s-.9 2-2 2zm0 8h-9v-4h9c1.1 0 2 .9 2 2s-.9 2-2 2z" fill="#0075eb"/>
+      <circle cx="27" cy="26" r="2" fill="#0075eb"/>
+      <circle cx="27" cy="34" r="2" fill="#0075eb"/>
+    </svg>
+    Revolut &nbsp;·&nbsp; @kriyandi
+  </a>
+  <p style="color:var(--text2,#9ca3af); font-size:0.78rem; margin-top:14px; opacity:0.7;">
+    revolut.me/kriyandi
+  </p>
+</div>
+<style>
+@keyframes bounce {
+  0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)}
+}
+</style>
+<!-- End Coffee Section -->
 </body>
 </html>
